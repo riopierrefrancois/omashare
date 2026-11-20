@@ -121,3 +121,28 @@ Biome on the touched files, `bun run typecheck`, and vitest for the touched and 
 - The guest name being remembered.
 
 Then stop and report. The orchestrator then checks the page in the browser at http://localhost:3001/s/<id> as the owner and as a signed-out guest.
+
+---
+
+## Phase C: commenting in the Timeline view (PF, 2026-11-20)
+
+PF found there's no visible way to comment in the Timeline view. Stock Cap only has hover-the-strip-and-click, plus a bar button on touch screens, and that composer requires sign-in. PF picked: **the same Comments section under the Timeline card too.**
+
+### Task C1: the same comments section in both views
+- [ ] Render `ShareComments` under the Timeline card as well, so both views have the same list, cards, replies and bottom box, with guests welcome. It uses the same state as in the Player view, so a comment made in either place (the strip composer or the bottom box) appears in the list and on the timeline at once.
+- [ ] The timeline markers, strip hover and click-to-add stay as they are.
+
+### Task C2: the strip composer takes guests too
+- [ ] `TimelineComposer` lets guests write a text comment with the same guest-name rule as the bottom box: one shared hook/helper, the same `localStorage["omashare.guestName"]` key, and the same honeypot. No sign-in overlay for text. Media recording still needs sign-in, as today.
+- [ ] Same focus rule as the bottom box: after sending, focus doesn't fall to `<body>`.
+
+### Task C3: the "comment here" button is always visible
+- [ ] The control bar's "Comment at current time" button in `TimelineView.tsx` shows on every screen, not only on touch or compact ones. It opens the strip composer at the playhead, as it does today.
+
+### Phase C gate
+Biome on the touched files, `bun run typecheck`, and vitest for the touched and new tests. Add tests for:
+- The list rendering in the Timeline view.
+- A guest posting from the strip composer.
+- The bar button rendering with a hover pointer.
+
+Then stop and report.
