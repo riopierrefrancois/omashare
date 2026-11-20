@@ -139,7 +139,7 @@ afterEach(async () => {
 	vi.unstubAllGlobals();
 });
 
-async function render(onSeek = seek, disabled = false) {
+async function render(onSeek = seek, disabled = false, isVideoOwner = false) {
 	await act(async () => {
 		const props = {
 			videoRef: { current: video },
@@ -155,6 +155,7 @@ async function render(onSeek = seek, disabled = false) {
 					setComments,
 					setShowAuthOverlay: showAuth,
 					commentsDisabled: disabled,
+					isVideoOwner,
 					onSeek,
 				}),
 			),
@@ -210,6 +211,26 @@ function contents() {
 }
 
 describe("share comments rendering", () => {
+	it("shows the guest name and gives the video owner the delete control", async () => {
+		comments = [
+			{
+				...comment("guest"),
+				authorId: null,
+				authorName: "Sam",
+				guestName: "Sam",
+			},
+		];
+
+		await render();
+		expect(row("guest").textContent).toContain("Sam");
+		expect(row("guest").querySelector('[title="Delete comment"]')).toBeNull();
+
+		await render(seek, false, true);
+		expect(
+			row("guest").querySelector('[title="Delete comment"]'),
+		).not.toBeNull();
+	});
+
 	it("only renders the affected threads when opening and switching replies", async () => {
 		await render();
 		expect(mocks.rowRenders).toBe(300);

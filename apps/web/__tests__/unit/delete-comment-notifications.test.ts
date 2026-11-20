@@ -48,7 +48,7 @@ describe("deleted comment notifications", () => {
 
 			expect(mocks.query).toHaveBeenCalledWith(
 				expect.stringContaining("delete from `comments`"),
-				[commentId, "viewer"],
+				[commentId, videoId],
 				"execute",
 			);
 			expect(mocks.query).toHaveBeenCalledWith(
@@ -93,6 +93,29 @@ describe("deleted comment notifications", () => {
 		]);
 	});
 
+	it("lets the video owner delete a guest comment", async () => {
+		mocks.getCurrentUser.mockResolvedValue({ id: "owner" });
+
+		await expect(
+			deleteComment({ commentId, videoId, parentId: null }),
+		).resolves.toEqual({ success: true });
+
+		expect(mocks.query).toHaveBeenNthCalledWith(
+			1,
+			expect.stringContaining(
+				"(`comments`.`authorId` is null and `videos`.`ownerId` = ?)",
+			),
+			[commentId, videoId, "owner", "owner", 1],
+			"all",
+		);
+		expect(mocks.query).toHaveBeenNthCalledWith(
+			2,
+			expect.stringContaining("delete from `comments`"),
+			[commentId, videoId],
+			"execute",
+		);
+	});
+
 	it("does not delete notifications for a missing or unowned comment", async () => {
 		mocks.query.mockReset();
 		mocks.query.mockResolvedValue({ rows: [] });
@@ -104,7 +127,7 @@ describe("deleted comment notifications", () => {
 
 		expect(mocks.query).toHaveBeenCalledExactlyOnceWith(
 			expect.stringContaining("`comments`.`authorId` = ?"),
-			[commentId, "viewer", 1],
+			[commentId, videoId, "viewer", "viewer", 1],
 			"all",
 		);
 		expect(mocks.revalidatePath).not.toHaveBeenCalled();

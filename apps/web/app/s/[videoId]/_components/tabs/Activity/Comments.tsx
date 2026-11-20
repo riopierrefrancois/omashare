@@ -40,6 +40,7 @@ export const Comments = Object.assign(
 			onSeek?: (time: number) => void;
 			setShowAuthOverlay: (v: boolean) => void;
 			commentsDisabled: boolean;
+			isVideoOwner?: boolean;
 			ownerName?: string | null;
 			canRecordMedia?: boolean;
 		}
@@ -282,6 +283,7 @@ export const Comments = Object.assign(
 									// card's mount, so the settle can't restart its playback.
 									key={comment.clientKey ?? comment.id}
 									comment={comment}
+									isVideoOwner={props.isVideoOwner}
 									replies={replies}
 									onReply={handleStartReply}
 									replyingToId={

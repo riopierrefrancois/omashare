@@ -73,6 +73,7 @@ export const Activity = Object.assign(
 							setShowAuthOverlay={setShowAuthOverlay}
 							onSeek={props.onSeek}
 							commentsDisabled={commentsDisabled}
+							isVideoOwner={isOwner}
 							ownerName={ownerName}
 							canRecordMedia={canRecordMedia}
 						/>

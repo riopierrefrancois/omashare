@@ -51,10 +51,10 @@ Use Cap's own Tailwind tokens (`gray-1…gray-12`, `bg-white`, `border-gray-5`, 
 - [x] The notification to the video owner still fires, naming the guest. Make `lib/Notification.ts` handle a null `authorId`: use `guestName` for the name, and leave out anything that needs an author account.
 
 ### Task A3: reading and deleting guest comments
-- [ ] Every read of `comments.authorId` must handle null, and the author name shown is `users.name ?? comments.guestName ?? "Guest"`. The files are listed below. Re-check with `grep -rn "comments.authorId" apps packages`.
+- [x] Every read of `comments.authorId` must handle null, and the author name shown is `users.name ?? comments.guestName ?? "Guest"`. The files are listed below. Re-check with `grep -rn "comments.authorId" apps packages`.
   `actions/videos/delete-comment.ts`, `app/api/upload/[...route]/comment-media.ts`, `app/api/video/comment/delete/route.ts`, `app/api/mobile/[...route]/route.ts`, `app/api/v1/[...route]/route.ts`, `app/embed/[videoId]/page.tsx`, `app/s/[videoId]/page.tsx`, `lib/Notification.ts`, `lib/agent-write.ts`.
-- [ ] A guest comment can be deleted only by people who can already delete others' comments on that video (the owner and the existing org rules). Nobody can delete it "as its author".
-- [ ] Unit tests (vitest, next to the existing ones in `apps/web/__tests__/unit/`):
+- [x] A guest comment can be deleted only by people who can already delete others' comments on that video (the owner and the existing org rules). Nobody can delete it "as its author".
+- [x] Unit tests (vitest, next to the existing ones in `apps/web/__tests__/unit/`):
   - A guest comment needs a name.
   - The honeypot is refused.
   - A guest emoji or media comment is refused.

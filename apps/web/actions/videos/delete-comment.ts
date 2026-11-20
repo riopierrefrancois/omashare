@@ -2,10 +2,10 @@
 
 import { db } from "@cap/database";
 import { getCurrentUser } from "@cap/database/auth/session";
-import { comments, notifications } from "@cap/database/schema";
+import { comments, notifications, videos } from "@cap/database/schema";
 import { Storage, VideosRepo } from "@cap/web-backend";
 import type { Comment, Video } from "@cap/web-domain";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { Effect, Option } from "effect";
 import { revalidatePath } from "next/cache";
 import * as EffectRuntime from "@/lib/server";
@@ -37,7 +37,10 @@ export async function deleteComment({
 		} | null = null;
 
 		await db().transaction(async (tx) => {
-			// First, verify the comment exists and belongs to the current user
+			const target = and(
+				eq(comments.id, commentId),
+				eq(comments.videoId, videoId),
+			);
 			const [existingComment] = await tx
 				.select({
 					id: comments.id,
@@ -46,8 +49,18 @@ export async function deleteComment({
 					mediaMeta: comments.mediaMeta,
 				})
 				.from(comments)
-				.where(and(eq(comments.id, commentId), eq(comments.authorId, user.id)))
-				.limit(1);
+				.innerJoin(videos, eq(comments.videoId, videos.id))
+				.where(
+					and(
+						target,
+						or(
+							eq(comments.authorId, user.id),
+							and(isNull(comments.authorId), eq(videos.ownerId, user.id)),
+						),
+					),
+				)
+				.limit(1)
+				.for("update");
 
 			if (!existingComment) {
 				throw new Error(
@@ -65,9 +78,7 @@ export async function deleteComment({
 				};
 			}
 
-			await tx
-				.delete(comments)
-				.where(and(eq(comments.id, commentId), eq(comments.authorId, user.id)));
+			await tx.delete(comments).where(target);
 
 			// Delete related notifications
 			if (parentId) {

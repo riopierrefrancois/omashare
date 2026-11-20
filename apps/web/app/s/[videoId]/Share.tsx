@@ -2,7 +2,7 @@
 
 import type { comments as commentsSchema } from "@cap/database/schema";
 import type { ViewerSettingKey } from "@cap/web-backend";
-import type { ImageUpload, Video } from "@cap/web-domain";
+import type { Comment, ImageUpload, Video } from "@cap/web-domain";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";

@@ -788,6 +788,7 @@ async function AuthorizedContent({
 						timestamp: comments.timestamp,
 						type: comments.type,
 						authorId: comments.authorId,
+						guestName: comments.guestName,
 						videoId: comments.videoId,
 						createdAt: comments.createdAt,
 						updatedAt: comments.updatedAt,
@@ -795,7 +796,7 @@ async function AuthorizedContent({
 						mediaKey: comments.mediaKey,
 						mediaDuration: comments.mediaDuration,
 						mediaMeta: comments.mediaMeta,
-						authorName: users.name,
+						authorName: sql<string>`coalesce(${users.name}, ${comments.guestName}, ${"Guest"})`,
 						authorImage: users.image,
 					})
 					.from(comments)

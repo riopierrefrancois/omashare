@@ -1027,7 +1027,7 @@ const getFeedback = Effect.fn("Agent.getFeedback")(function* (
 				createdAt: Db.comments.createdAt,
 				updatedAt: Db.comments.updatedAt,
 				authorId: Db.comments.authorId,
-				authorName: Db.users.name,
+				authorName: sql<string>`coalesce(${Db.users.name}, ${Db.comments.guestName}, ${"Guest"})`,
 			})
 			.from(Db.comments)
 			.leftJoin(Db.users, eq(Db.comments.authorId, Db.users.id))
@@ -1095,17 +1095,23 @@ const getContext = Effect.fn("Agent.getContext")(function* (
 			updatedAt: item.updatedAt.toISOString(),
 			author: { id: item.authorId, name: item.authorName },
 		}));
-	const reactions = feedback
-		.filter((item) => item.type === "emoji")
-		.map((item) => ({
-			id: Comment.CommentId.make(item.id),
-			videoId: item.videoId,
-			content: item.content,
-			timestampMs:
-				item.timestamp === null ? null : Math.round(item.timestamp * 1000),
-			createdAt: item.createdAt.toISOString(),
-			author: { id: item.authorId, name: item.authorName },
-		}));
+	const reactions = feedback.flatMap((item) =>
+		item.type === "emoji" && item.authorId !== null
+			? [
+					{
+						id: Comment.CommentId.make(item.id),
+						videoId: item.videoId,
+						content: item.content,
+						timestampMs:
+							item.timestamp === null
+								? null
+								: Math.round(item.timestamp * 1000),
+						createdAt: item.createdAt.toISOString(),
+						author: { id: item.authorId, name: item.authorName },
+					},
+				]
+			: [],
+	);
 
 	return {
 		cap,

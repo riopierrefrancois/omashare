@@ -23,6 +23,7 @@ const EMPTY_REPLIES: CommentType[] = [];
 
 const CommentComponent: React.FC<{
 	comment: CommentType;
+	isVideoOwner?: boolean;
 	replies: CommentType[];
 	onReply: (commentId: Comment.CommentId) => void;
 	replyingToId: Comment.CommentId | null;
@@ -36,6 +37,7 @@ const CommentComponent: React.FC<{
 	onSeek?: (time: number) => void;
 }> = ({
 	comment,
+	isVideoOwner,
 	replies,
 	onReply,
 	replyingToId,
@@ -47,7 +49,9 @@ const CommentComponent: React.FC<{
 }) => {
 	const user = useCurrentUser();
 	const isReplying = replyingToId === comment.id;
-	const isOwnComment = user?.id === comment.authorId;
+	const canDelete =
+		user?.id === comment.authorId ||
+		(isVideoOwner && comment.authorId === null);
 	const commentParams = useSearchParams().get("comment");
 	const replyParams = useSearchParams().get("reply");
 
@@ -158,7 +162,7 @@ const CommentComponent: React.FC<{
 								/>
 							</Tooltip>
 						)}
-						{isOwnComment && !comment.sending && (
+						{canDelete && !comment.sending && (
 							<Tooltip content="Delete comment">
 								<Button
 									onClick={handleDelete}
@@ -193,6 +197,7 @@ const CommentComponent: React.FC<{
 						<CommentComponent
 							key={reply.clientKey ?? reply.id}
 							comment={reply}
+							isVideoOwner={isVideoOwner}
 							replies={EMPTY_REPLIES}
 							onReply={onReply}
 							replyingToId={replyingToId}
