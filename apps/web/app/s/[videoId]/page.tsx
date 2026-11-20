@@ -66,7 +66,7 @@ import { playerBrandAttributes, resolvePlayerBrand } from "@/lib/player-brand";
 import { getPublicShareVideo } from "@/lib/public-share-video";
 import * as EffectRuntime from "@/lib/server";
 import { runPromise } from "@/lib/server";
-import { getShareBrand } from "@/lib/share-branding";
+import { getShareBrand, shareBrandStyle } from "@/lib/share-branding";
 import {
 	resolveShareCallToAction,
 	withoutWorkspaceCallToAction,
@@ -112,6 +112,7 @@ import {
 import { PasswordGate } from "./_components/PasswordGate";
 import { PendingRecordingShare } from "./_components/PendingRecordingShare";
 import { ShareHeader } from "./_components/ShareHeader";
+import { ShareTopBar } from "./_components/ShareTopBar";
 import { Share } from "./Share";
 
 const VIEW_NOTIFICATION_DELAY_MS = 2 * 60 * 1000;
@@ -487,16 +488,9 @@ export default async function ShareVideoPage(props: PageProps<"/s/[videoId]">) {
 			data.needsPassword ? (
 				<PasswordGate key={videoId} videoId={videoId} />
 			) : (
-				// overflow-x-clip: the timeline view's theater strip breaks out to
-				// 100vw, which overshoots by the scrollbar width on OSes with classic
-				// scrollbars; clipping here keeps the page from gaining a horizontal
-				// scroll without creating a new scroll container.
-				// Desktop pins the page to the viewport so the comments rail can run
-				// full height and the video column scrolls on its own; phones keep
-				// ordinary document flow.
 				<div
 					key={videoId}
-					className="flex overflow-x-clip flex-col min-h-screen bg-gray-2 lg:h-screen lg:min-h-0 lg:overflow-hidden"
+					className="flex overflow-x-clip flex-col min-h-screen"
 					{...playerBrandAttributes(
 						resolvePlayerBrand(
 							getShareBrand(
@@ -1119,17 +1113,22 @@ async function AuthorizedContent({
 		organizationMetadata,
 	);
 
-	// Bottom padding lives in Share (classic view only): the timeline view's
-	// theater strip must end flush with the viewport, and Share is the one that
-	// knows which view is active. Gutters moved into Share too — the comments
-	// rail is flush to the viewport edge, so only the video column is centred
-	// in a container.
 	return (
 		<div
-			className="flex flex-col flex-1 min-h-0"
+			className="share-brand flex flex-col flex-1 min-h-0"
+			style={shareBrandStyle(shareBrand)}
 			data-share-font={shareBrand.font}
 		>
 			<Share
+				topBar={
+					<ShareTopBar
+						brand={shareBrand}
+						videoId={video.id}
+						title={video.name}
+						customDomain={customDomain}
+						domainVerified={domainVerified}
+					/>
+				}
 				footer={
 					<SourceCredit
 						website={

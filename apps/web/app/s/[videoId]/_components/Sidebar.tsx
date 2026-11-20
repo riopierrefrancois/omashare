@@ -19,7 +19,6 @@ const tabs = [
 type Tab = (typeof tabs)[number]["id"];
 
 export function Sidebar({
-	sidebarId,
 	data,
 	hasSummary,
 	hasTranscript,
@@ -28,9 +27,7 @@ export function Sidebar({
 	aiData,
 	aiGenerationEnabled,
 	onSeek,
-	onCollapse,
 }: {
-	sidebarId?: string;
 	data: VideoData;
 	hasSummary: boolean;
 	hasTranscript: boolean;
@@ -39,7 +36,6 @@ export function Sidebar({
 	aiData?: ComponentProps<typeof Summary>["initialAiData"];
 	aiGenerationEnabled?: boolean;
 	onSeek?: (time: number) => void;
-	onCollapse?: () => void;
 }) {
 	const user = useCurrentUser();
 	const [selected, setSelected] = useState<Tab>();
@@ -57,10 +53,10 @@ export function Sidebar({
 				window.confirm("Discard your unsaved summary and chapter changes?")));
 
 	return (
-		<div className="bg-white rounded-2xl border border-gray-5 overflow-hidden h-[70svh] flex flex-col lg:h-full lg:rounded-none lg:border-0">
-			<div className="flex shrink-0 border-b border-gray-5">
+		<div className="flex max-h-[75svh] flex-col overflow-hidden rounded-xl bg-white p-3 shadow-sm">
+			<div className="flex shrink-0 rounded-xl bg-gray-2 p-1">
 				{available.length === 1 ? (
-					<h2 className="flex-1 px-5 py-3 text-sm font-medium">
+					<h2 className="flex-1 rounded-lg px-5 py-2.5 text-sm font-medium">
 						{active.label}
 					</h2>
 				) : (
@@ -77,28 +73,13 @@ export function Sidebar({
 							onPointerEnter={() => void prefetch()}
 							onFocus={() => void prefetch()}
 							className={clsx(
-								"flex-1 px-5 py-3 text-sm font-medium hover:bg-gray-1",
-								active.id === id && "bg-gray-3 text-gray-12",
+								"flex-1 rounded-lg px-5 py-2.5 text-sm font-medium hover:bg-gray-1",
+								active.id === id && "bg-white shadow-sm",
 							)}
 						>
 							{label}
 						</button>
 					))
-				)}
-				{onCollapse && (
-					<button
-						type="button"
-						onClick={() => {
-							if (canLeave()) onCollapse();
-						}}
-						aria-label="Hide sidebar"
-						title="Hide sidebar"
-						aria-controls={sidebarId}
-						aria-expanded={true}
-						className="hidden shrink-0 items-center justify-center px-3 text-gray-9 hover:bg-gray-1 hover:text-gray-12 lg:flex"
-					>
-						<span aria-hidden="true">›</span>
-					</button>
 				)}
 			</div>
 			<div className="min-h-0 flex-1 overflow-auto">

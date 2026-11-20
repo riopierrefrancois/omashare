@@ -15,14 +15,12 @@ import {
 	use,
 	useCallback,
 	useEffect,
-	useId,
 	useMemo,
 	useOptimistic,
 	useRef,
 	useState,
 } from "react";
 import type { OrganizationSettings } from "@/app/(org)/dashboard/dashboard-data";
-import { SignedImageUrl } from "@/components/SignedImageUrl";
 import type { ShareDashboardDestination } from "@/lib/share-dashboard-destination";
 import type { SpaceUpNext } from "@/lib/space-up-next";
 import {
@@ -34,15 +32,12 @@ import { SHARE_COMMENT_FIELD_ID } from "./_components/comments/CommentComposer";
 import { GuestCommentNameProvider } from "./_components/comments/GuestCommentName";
 import { ReactionCounts } from "./_components/comments/ReactionCounts";
 import { ShareComments } from "./_components/comments/ShareComments";
-import { DashboardBackLink } from "./_components/DashboardBackLink";
 import { seekLength } from "./_components/early-length";
 import { PlaybackProvider } from "./_components/playback/PlaybackContext";
-import { RelativeTime } from "./_components/RelativeTime";
 import { ShareVideo } from "./_components/ShareVideo";
 import { type ShareView, ShareViewToggle } from "./_components/ShareViewToggle";
 import { Sidebar } from "./_components/Sidebar";
 import { Toolbar } from "./_components/Toolbar";
-import { formatTimeAgo } from "./_components/tabs/Activity/utils";
 import { TimelineSkeleton } from "./_components/timeline/TimelineSkeleton";
 import type { FilmstripSource } from "./_components/timeline/useFilmstripFrames";
 import type { VideoData } from "./types";
@@ -213,12 +208,8 @@ interface ShareProps {
 	captionsInitiallyOff?: boolean;
 	canRecordMedia?: boolean;
 	viewerSignedIn?: boolean;
-	/**
-	 * The page header. Passed in rather than rendered above `Share` so the
-	 * timeline view can swap it for a slim bar without the page owning which
-	 * view is active.
-	 */
 	header?: React.ReactNode;
+	topBar?: React.ReactNode;
 	footer?: React.ReactNode;
 	dashboardDestination?: ShareDashboardDestination | null;
 }
@@ -342,8 +333,8 @@ export const Share = ({
 	canRecordMedia = false,
 	viewerSignedIn = false,
 	header,
+	topBar,
 	footer,
-	dashboardDestination = null,
 	upNext = null,
 }: ShareProps) => {
 	const isScreenshot = data.isScreenshot === true;
@@ -694,12 +685,6 @@ export const Share = ({
 	]);
 
 	const showRail = view === "classic" && (hasSummary || hasTranscript);
-	const sidebarId = useId();
-	const [railCollapsed, setRailCollapsed] = useState(false);
-
-	const toggleRail = useCallback(() => {
-		setRailCollapsed((collapsed) => !collapsed);
-	}, []);
 
 	return (
 		<ShareProviders videoId={data.id} transcriptionStatus={transcriptionStatus}>
@@ -708,403 +693,301 @@ export const Share = ({
 				stageRef={stageRef}
 				fallbackDuration={data.duration}
 			>
-				{/*
-				 * The page bar. It spans the video column AND the comments rail, so
-				 * the rail hangs beneath it the way Loom's panel hangs beneath its
-				 * top bar. Hidden (never unmounted) in timeline view, which carries
-				 * its own slim title row: the header owns dialogs and the inline
-				 * title editor, and toggling views must not discard them.
-				 */}
-				<div
-					className={clsx(
-						"shrink-0 border-b border-gray-5 bg-white px-4 lg:px-8",
-						view === "timeline" && "hidden",
-					)}
-				>
-					{header}
-				</div>
-
-				{/*
-				 * The two-pane shell. On desktop the page itself no longer scrolls
-				 * (see `page.tsx`): the video column scrolls inside the left pane and
-				 * the comments rail runs the full height beside it.
-				 * Phones stack the two and scroll the document as normal.
-				 */}
-				<div className="flex flex-col flex-1 min-h-0 lg:flex-row">
-					<div className="flex flex-col flex-1 min-w-0 lg:overflow-y-auto">
-						{/* Gutters live here rather than on the page, so the rail can sit
-						    flush against the viewport edge while the video stays centred
-						    inside what's left. */}
-						<div className="flex flex-col flex-1 px-4 mx-auto w-full max-w-[80rem] lg:px-8">
-							<div
-								className={
-									view === "timeline" ? "mt-2 pb-8 lg:mt-4" : "mt-4 pb-8"
-								}
-							>
-								{timelineAvailable && view === "timeline" && (
-									// The top edge of the player card. It sits flush on the grid
-									// below (which carries the bottom corners and the rest of the
-									// border), so the two read as one contained, rounded unit,
-									// centred at the same width. Classic view's toggle lives under
-									// the player instead.
-									<div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-3 rounded-t-xl border border-b-0 border-gray-5 bg-white px-5">
-										<div className="flex min-w-0 items-center gap-3">
-											{dashboardDestination && (
-												<DashboardBackLink
-													destination={dashboardDestination}
-													compact
-												/>
-											)}
-											<SignedImageUrl
-												image={data.owner.image}
-												name={data.owner.name ?? "Someone"}
-												className="size-8 shrink-0 rounded-full"
-												letterClass="text-xs font-medium"
-											/>
-											<div className="min-w-0">
-												<p className="truncate text-sm font-medium leading-tight text-gray-12">
-													{videoStatus?.name ?? data.name}
-												</p>
-												<p className="truncate text-xs leading-tight text-gray-10">
-													{data.owner.name ?? "Someone"}
-													{" · "}
-													<RelativeTime
-														date={effectiveDate}
-														format={formatTimeAgo}
-													/>
-												</p>
-											</div>
-										</div>
-										<div className="flex shrink-0 items-center gap-2">
-											<ShareViewToggle
-												view={view}
-												onChange={setViewAndUrl}
-												// Fullscreen: a morph would rip the video out of the
-												// fullscreen element. Recording: leaving the timeline
-												// unmounts the recorder and silently discards the take.
-												disabled={stageFullscreen || timelineRecording}
-												prefetch={prefetchTimeline}
-											/>
-										</div>
-									</div>
-								)}
-
-								{/*
-								 * One grid, two arrangements. The stage below is a single JSX node
-								 * at a single tree position in both views. Only its grid placement
-								 * and its siblings change, because remounting it would tear down
-								 * the media-chrome store inside the player and restart playback.
-								 */}
-								<div
-									className={clsx(
-										"grid relative",
-										// In timeline view the grid is the body of the player card:
-										// contained, centred, bottom corners rounded (the title row
-										// above carries the top ones). Background clips to the radius
-										// on its own, so no overflow-clip — the shelf's cards must
-										// escape.
-										view === "timeline"
-											? "mx-auto w-full max-w-6xl gap-0 rounded-b-xl border border-t-0 border-gray-5 bg-white"
-											: "gap-4",
-										// One column in both views: the comments rail left the grid to
-										// become a full-height pane beside it.
-										"lg:grid-cols-1",
-									)}
-								>
-									<motion.div
-										ref={stageRef}
-										layout
-										data-morphing={morphing ? "" : undefined}
-										onLayoutAnimationStart={() => setMorphing(true)}
-										onLayoutAnimationComplete={() => setMorphing(false)}
-										transition={
-											reduceMotion
-												? { duration: 0 }
-												: {
-														type: "spring",
-														stiffness: 260,
-														damping: 32,
-														mass: 0.9,
-													}
-										}
-										className={clsx(
-											"min-w-0",
-											// Contained card, not full-bleed: the unit keeps the page's
-											// gutters and sits centred with everything else.
-											view === "timeline"
-												? "lg:col-span-full lg:row-start-1"
-												: "lg:col-start-1 lg:row-start-1",
-										)}
-									>
-										{/*
-										 * Classic: a white page card holding the video. Timeline: the
-										 * screen at the top of the card, edge to edge and squared off,
-										 * with the light chrome (strip, comments, controls) below it.
-										 */}
-										<div
-											className={clsx(
-												"overflow-visible relative transition-[border-radius] duration-300",
-												// Timeline: the screen, sized by the video's own aspect ratio
-												// (style below), so a landscape recording meets the strip
-												// with no bar of black under it. It stays dark — the screen
-												// is the one part of the card that isn't chrome, same as the
-												// black box classic view paints inside its white card. The
-												// colour is the player's dark `--background` token spelled
-												// out (a `dark` class here would restyle every overlay
-												// inside the stage).
-												// The 340px budget covers the card's own chrome (title row,
-												// strip, shelf, bar) plus page margins, so the centred card
-												// always fits the viewport — justify-center clips at the
-												// top if its content overflows.
-												// The 280px floor is desktop-only: on a phone it would beat
-												// the aspect ratio and letterbox the video away from the
-												// strip. The 65svh cap keeps a portrait video from pushing
-												// the deck below the fold; the video pillarboxes inside.
-												view === "timeline"
-													? "rounded-none bg-[hsl(224,71.4%,4.1%)] w-full max-h-[65svh] lg:min-h-[280px] lg:max-h-[calc(100vh-340px)]"
-													: "rounded-2xl border border-gray-5 bg-white aspect-video",
-											)}
-											style={
-												view === "timeline"
-													? { aspectRatio: String(stageAspect) }
-													: undefined
-											}
-										>
-											<div
-												className={
-													isScreenshot
-														? "absolute inset-3 w-[calc(100%-1.5rem)] h-[calc(100%-1.5rem)] overflow-visible rounded-xl"
-														: view === "timeline"
-															? "absolute inset-0 overflow-visible"
-															: "absolute inset-x-3 top-1/2 aspect-video -translate-y-1/2 overflow-visible rounded-xl"
-												}
-											>
-												{isScreenshot ? (
-													<ScreenshotImage
-														src={screenshotImageUrl}
-														alt={data.name}
-													/>
-												) : (
-													<ShareVideo
-														initialPlaybackUrl={initialPlaybackUrl}
-														serverPlaybackUrl={serverPlaybackUrl}
-														posterUrl={posterUrl}
-														data={shareVideoData}
-														comments={comments}
-														areChaptersDisabled={areChaptersDisabled}
-														areCaptionsDisabled={areCaptionsDisabled}
-														captionsInitiallyOff={captionsInitiallyOff}
-														// The deck under the video owns seeking, the clock and
-														// comments in timeline view; duplicating them inside the
-														// video reads as two players. Fullscreen hides the deck,
-														// so the in-video versions come back for its duration.
-														externalTimeline={
-															view === "timeline" && !stageFullscreen
-														}
-														controlsPortalEl={
-															view === "timeline" && !stageFullscreen
-																? controlsSlot
-																: null
-														}
-														areCommentStampsDisabled={
-															areCommentStampsDisabled ||
-															(view === "timeline" && !stageFullscreen)
-														}
-														areReactionStampsDisabled={
-															areReactionStampsDisabled ||
-															(view === "timeline" && !stageFullscreen)
-														}
-														chapters={aiData?.chapters ?? undefined}
-														aiGenerationStatus={aiData?.aiGenerationStatus}
-														canRetryProcessing={viewerId === data.owner.id}
-														canFinalizeDesktopSegments={
-															viewerId === data.owner.id
-														}
-														showPlaybackStatusBadge={viewerId === data.owner.id}
-														isEditProcessing={isEditProcessing}
-														recordingStopped={recordingStopped}
-														earlySegmentPlayback={earlySegmentPlayback}
-														defaultPlaybackSpeed={defaultPlaybackSpeed}
-														viewerIsOwner={viewerId === data.owner.id}
-														callToAction={data.callToAction}
-														upNext={upNext}
-														ref={playerRef}
-													/>
-												)}
-											</div>
-										</div>
-									</motion.div>
-
-									<AnimatePresence mode="popLayout" initial={false}>
-										{view === "classic" ? (
-											<motion.div
-												key="toolbar"
-												className="lg:col-span-full lg:row-start-2"
-												initial={{ opacity: 0 }}
-												animate={{ opacity: 1 }}
-												exit={{ opacity: 0 }}
-												transition={{ duration: reduceMotion ? 0 : 0.14 }}
-											>
-												{/*
-												 * The view toggle sits to the left under the player; the
-												 * absolute placement (desktop) keeps the toolbar pill
-												 * centred rather than pushed aside.
-												 */}
-												<div
-													className={clsx(
-														"relative",
-														showRail && railCollapsed && "lg:min-h-10 lg:px-40",
-													)}
-												>
-													{timelineAvailable && (
-														<div className="mb-3 flex justify-start lg:absolute lg:left-0 lg:top-1/2 lg:mb-0 lg:-translate-y-1/2">
-															<ShareViewToggle
-																view={view}
-																onChange={setViewAndUrl}
-																disabled={stageFullscreen || timelineRecording}
-																prefetch={prefetchTimeline}
-															/>
-														</div>
-													)}
-													<Toolbar
-														onOptimisticComment={handleOptimisticComment}
-														onCommentSuccess={handleCommentSuccess}
-														disableComments={areCommentStampsDisabled}
-														disableReactions={areReactionStampsDisabled}
-														onWriteComment={focusComment}
-														data={data}
-													/>
-													{showRail && railCollapsed && (
-														<button
-															type="button"
-															onClick={toggleRail}
-															aria-controls={sidebarId}
-															aria-expanded={false}
-															className="hidden absolute right-0 top-1/2 items-center justify-center gap-2 -translate-y-1/2 rounded-lg border border-gray-5 bg-white h-10 px-3 text-sm font-medium text-gray-10 shadow-sm transition-colors hover:text-gray-12 lg:flex"
-														>
-															<ChevronGlyph direction="left" />
-															Show sidebar
-														</button>
-													)}
-												</div>
-												{!areReactionStampsDisabled && (
-													<div className="[&:empty]:hidden mt-2">
-														<ReactionCounts comments={visibleComments} />
-													</div>
-												)}
-											</motion.div>
-										) : (
-											// The band runs its own enter/exit; this wrapper only exists
-											// to give popLayout a motion child to pop out of the grid.
-											<motion.div
-												key="timeline"
-												className="lg:col-span-full lg:row-start-2"
-											>
-												<Suspense fallback={<TimelineSkeleton />}>
-													<TimelineView
-														comments={visibleComments}
-														videoId={data.id}
-														chapters={aiData?.chapters ?? undefined}
-														transcriptionStatus={transcriptionStatus}
-														filmstripSource={filmstripSource}
-														onOptimisticComment={handleOptimisticComment}
-														onCommentSuccess={handleCommentSuccess}
-														canRecordMedia={canRecordMedia}
-														viewerSignedIn={viewerSignedIn}
-														disableReactions={areReactionStampsDisabled}
-														onRecordingActiveChange={setTimelineRecording}
-														onControlsSlotChange={setControlsSlot}
-													/>
-												</Suspense>
-											</motion.div>
-										)}
-									</AnimatePresence>
-								</div>
-								<div
-									className={clsx(
-										"mt-4",
-										view === "timeline" && "mx-auto w-full max-w-6xl",
-									)}
-								>
-									<ShareComments
-										videoId={data.id}
-										commentsData={commentsData}
-										optimisticComments={visibleComments}
-										setComments={setCommentsData}
-										setOptimisticComments={setOptimisticComments}
-										handleCommentSuccess={handleCommentSuccess}
-										onSeek={isScreenshot ? undefined : handleSeek}
-										commentsDisabled={areCommentStampsDisabled}
-										isVideoOwner={viewerId === data.owner.id}
-										ownerOrMemberViews={
-											viewerId &&
-											(viewerId === data.owner.id ||
-												data.organizationMembers?.some((id) => id === viewerId))
-												? views
-												: undefined
-										}
-										isScreenshot={isScreenshot}
-										canRecordMedia={canRecordMedia && !isScreenshot}
+				{topBar}
+				<main className="mx-auto flex w-full max-w-[1240px] flex-1 flex-col items-start gap-6 p-4 sm:p-6 lg:flex-row">
+					<div
+						className={clsx(
+							"min-w-0 w-full flex-1",
+							view === "classic" && "rounded-xl bg-white shadow-sm",
+						)}
+					>
+						<div
+							className={clsx(
+								view === "classic"
+									? "px-4 pt-5 sm:px-10 sm:pt-8"
+									: "mx-auto w-full max-w-6xl rounded-t-xl border border-b-0 border-gray-5 bg-white px-5 pt-4",
+							)}
+						>
+							{header}
+						</div>
+						{timelineAvailable && view === "timeline" && (
+							// The top edge of the player card. It sits flush on the grid
+							// below (which carries the bottom corners and the rest of the
+							// border), so the two read as one contained, rounded unit,
+							// centred at the same width. Classic view's toggle lives under
+							// the player instead.
+							<div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-end gap-3 border-x border-gray-5 bg-white px-5">
+								<div className="flex shrink-0 items-center gap-2">
+									<ShareViewToggle
+										view={view}
+										onChange={setViewAndUrl}
+										// Fullscreen: a morph would rip the video out of the
+										// fullscreen element. Recording: leaving the timeline
+										// unmounts the recorder and silently discards the take.
+										disabled={stageFullscreen || timelineRecording}
+										prefetch={prefetchTimeline}
 									/>
 								</div>
 							</div>
-						</div>
-						{footer}
-					</div>
+						)}
 
-					{showRail && (
-						<aside
-							id={sidebarId}
+						{/*
+						 * One grid, two arrangements. The stage below is a single JSX node
+						 * at a single tree position in both views. Only its grid placement
+						 * and its siblings change, because remounting it would tear down
+						 * the media-chrome store inside the player and restart playback.
+						 */}
+						<div
 							className={clsx(
-								"shrink-0 px-4 pb-8 lg:p-0 lg:h-full lg:border-l lg:border-gray-5 lg:bg-white lg:overflow-hidden",
-								reduceMotion
-									? undefined
-									: "lg:transition-[width] lg:duration-300 lg:ease-out",
-								railCollapsed ? "lg:w-0" : "lg:w-[22rem] xl:w-[24rem]",
+								"grid relative",
+								// In timeline view the grid is the body of the player card:
+								// contained, centred, bottom corners rounded (the title row
+								// above carries the top ones). Background clips to the radius
+								// on its own, so no overflow-clip — the shelf's cards must
+								// escape.
+								view === "timeline"
+									? "mx-auto w-full max-w-6xl gap-0 rounded-b-xl border border-t-0 border-gray-5 bg-white"
+									: "gap-4 px-4 py-5 sm:px-10",
+								"lg:grid-cols-1",
 							)}
 						>
-							<div
+							<motion.div
+								ref={stageRef}
+								layout
+								data-morphing={morphing ? "" : undefined}
+								onLayoutAnimationStart={() => setMorphing(true)}
+								onLayoutAnimationComplete={() => setMorphing(false)}
+								transition={
+									reduceMotion
+										? { duration: 0 }
+										: {
+												type: "spring",
+												stiffness: 260,
+												damping: 32,
+												mass: 0.9,
+											}
+								}
 								className={clsx(
-									"lg:h-full lg:w-[22rem] xl:w-[24rem]",
-									railCollapsed && "lg:invisible",
+									"min-w-0",
+									// Contained card, not full-bleed: the unit keeps the page's
+									// gutters and sits centred with everything else.
+									view === "timeline"
+										? "lg:col-span-full lg:row-start-1"
+										: "lg:col-start-1 lg:row-start-1",
 								)}
 							>
-								<Sidebar
-									sidebarId={sidebarId}
-									data={sidebarData}
-									hasSummary={hasSummary}
-									hasTranscript={hasTranscript}
-									isSummaryDisabled={isSummaryDisabled}
-									areChaptersDisabled={areChaptersDisabled}
-									onSeek={handleSeek}
-									aiData={aiData}
-									aiGenerationEnabled={aiGenerationAvailable}
-									onCollapse={toggleRail}
-								/>
-							</div>
+								{/*
+								 * Classic: a white page card holding the video. Timeline: the
+								 * screen at the top of the card, edge to edge and squared off,
+								 * with the light chrome (strip, comments, controls) below it.
+								 */}
+								<div
+									className={clsx(
+										"overflow-visible relative transition-[border-radius] duration-300",
+										// Timeline: the screen, sized by the video's own aspect ratio
+										// (style below), so a landscape recording meets the strip
+										// with no bar of black under it. It stays dark — the screen
+										// is the one part of the card that isn't chrome, same as the
+										// black box classic view paints inside its white card. The
+										// colour is the player's dark `--background` token spelled
+										// out (a `dark` class here would restyle every overlay
+										// inside the stage).
+										// The 340px budget covers the card's own chrome (title row,
+										// strip, shelf, bar) plus page margins, so the centred card
+										// always fits the viewport — justify-center clips at the
+										// top if its content overflows.
+										// The 280px floor is desktop-only: on a phone it would beat
+										// the aspect ratio and letterbox the video away from the
+										// strip. The 65svh cap keeps a portrait video from pushing
+										// the deck below the fold; the video pillarboxes inside.
+										view === "timeline"
+											? "rounded-none bg-[hsl(224,71.4%,4.1%)] w-full max-h-[65svh] lg:min-h-[280px] lg:max-h-[calc(100vh-340px)]"
+											: "rounded-xl bg-white aspect-video",
+									)}
+									style={
+										view === "timeline"
+											? { aspectRatio: String(stageAspect) }
+											: undefined
+									}
+								>
+									<div
+										className={
+											isScreenshot
+												? "absolute inset-3 w-[calc(100%-1.5rem)] h-[calc(100%-1.5rem)] overflow-visible rounded-xl"
+												: view === "timeline"
+													? "absolute inset-0 overflow-visible"
+													: "absolute inset-x-3 top-1/2 aspect-video -translate-y-1/2 overflow-visible rounded-xl"
+										}
+									>
+										{isScreenshot ? (
+											<ScreenshotImage
+												src={screenshotImageUrl}
+												alt={data.name}
+											/>
+										) : (
+											<ShareVideo
+												initialPlaybackUrl={initialPlaybackUrl}
+												serverPlaybackUrl={serverPlaybackUrl}
+												posterUrl={posterUrl}
+												data={shareVideoData}
+												comments={comments}
+												areChaptersDisabled={areChaptersDisabled}
+												areCaptionsDisabled={areCaptionsDisabled}
+												captionsInitiallyOff={captionsInitiallyOff}
+												// The deck under the video owns seeking, the clock and
+												// comments in timeline view; duplicating them inside the
+												// video reads as two players. Fullscreen hides the deck,
+												// so the in-video versions come back for its duration.
+												externalTimeline={
+													view === "timeline" && !stageFullscreen
+												}
+												controlsPortalEl={
+													view === "timeline" && !stageFullscreen
+														? controlsSlot
+														: null
+												}
+												areCommentStampsDisabled={
+													areCommentStampsDisabled ||
+													(view === "timeline" && !stageFullscreen)
+												}
+												areReactionStampsDisabled={
+													areReactionStampsDisabled ||
+													(view === "timeline" && !stageFullscreen)
+												}
+												chapters={aiData?.chapters ?? undefined}
+												aiGenerationStatus={aiData?.aiGenerationStatus}
+												canRetryProcessing={viewerId === data.owner.id}
+												canFinalizeDesktopSegments={viewerId === data.owner.id}
+												showPlaybackStatusBadge={viewerId === data.owner.id}
+												isEditProcessing={isEditProcessing}
+												recordingStopped={recordingStopped}
+												earlySegmentPlayback={earlySegmentPlayback}
+												defaultPlaybackSpeed={defaultPlaybackSpeed}
+												viewerIsOwner={viewerId === data.owner.id}
+												callToAction={data.callToAction}
+												upNext={upNext}
+												ref={playerRef}
+											/>
+										)}
+									</div>
+								</div>
+							</motion.div>
+
+							<AnimatePresence mode="popLayout" initial={false}>
+								{view === "classic" ? (
+									<motion.div
+										key="toolbar"
+										className="lg:col-span-full lg:row-start-2"
+										initial={{ opacity: 0 }}
+										animate={{ opacity: 1 }}
+										exit={{ opacity: 0 }}
+										transition={{ duration: reduceMotion ? 0 : 0.14 }}
+									>
+										<div className="flex flex-wrap items-center gap-2">
+											{timelineAvailable && (
+												<div className="flex justify-start">
+													<ShareViewToggle
+														view={view}
+														onChange={setViewAndUrl}
+														disabled={stageFullscreen || timelineRecording}
+														prefetch={prefetchTimeline}
+													/>
+												</div>
+											)}
+											<Toolbar
+												onOptimisticComment={handleOptimisticComment}
+												onCommentSuccess={handleCommentSuccess}
+												disableComments={areCommentStampsDisabled}
+												disableReactions={areReactionStampsDisabled}
+												onWriteComment={focusComment}
+												data={data}
+											/>
+										</div>
+										{!areReactionStampsDisabled && (
+											<div className="[&:empty]:hidden mt-2">
+												<ReactionCounts comments={visibleComments} />
+											</div>
+										)}
+									</motion.div>
+								) : (
+									// The band runs its own enter/exit; this wrapper only exists
+									// to give popLayout a motion child to pop out of the grid.
+									<motion.div
+										key="timeline"
+										className="lg:col-span-full lg:row-start-2"
+									>
+										<Suspense fallback={<TimelineSkeleton />}>
+											<TimelineView
+												comments={visibleComments}
+												videoId={data.id}
+												chapters={aiData?.chapters ?? undefined}
+												transcriptionStatus={transcriptionStatus}
+												filmstripSource={filmstripSource}
+												onOptimisticComment={handleOptimisticComment}
+												onCommentSuccess={handleCommentSuccess}
+												canRecordMedia={canRecordMedia}
+												viewerSignedIn={viewerSignedIn}
+												disableReactions={areReactionStampsDisabled}
+												onRecordingActiveChange={setTimelineRecording}
+												onControlsSlotChange={setControlsSlot}
+											/>
+										</Suspense>
+									</motion.div>
+								)}
+							</AnimatePresence>
+						</div>
+						<div
+							className={clsx(
+								"rounded-b-xl border-t-2 border-gray-5 bg-[color-mix(in_srgb,var(--share-page)_50%,white)] px-4 py-5 sm:px-10",
+								view === "timeline" &&
+									"mx-auto mt-4 w-full max-w-6xl rounded-xl",
+							)}
+						>
+							<ShareComments
+								videoId={data.id}
+								commentsData={commentsData}
+								optimisticComments={visibleComments}
+								setComments={setCommentsData}
+								setOptimisticComments={setOptimisticComments}
+								handleCommentSuccess={handleCommentSuccess}
+								onSeek={isScreenshot ? undefined : handleSeek}
+								commentsDisabled={areCommentStampsDisabled}
+								isVideoOwner={viewerId === data.owner.id}
+								ownerOrMemberViews={
+									viewerId &&
+									(viewerId === data.owner.id ||
+										data.organizationMembers?.some((id) => id === viewerId))
+										? views
+										: undefined
+								}
+								isScreenshot={isScreenshot}
+								canRecordMedia={canRecordMedia && !isScreenshot}
+							/>
+						</div>
+					</div>
+					{showRail && (
+						<aside
+							aria-label="Summary and transcript"
+							className="w-full shrink-0 lg:w-[min(32%,360px)]"
+						>
+							<Sidebar
+								data={sidebarData}
+								hasSummary={hasSummary}
+								hasTranscript={hasTranscript}
+								isSummaryDisabled={isSummaryDisabled}
+								areChaptersDisabled={areChaptersDisabled}
+								onSeek={handleSeek}
+								aiData={aiData}
+								aiGenerationEnabled={aiGenerationAvailable}
+							/>
 						</aside>
 					)}
-				</div>
+				</main>
+				{footer}
 			</PlaybackProvider>
 		</ShareProviders>
 	);
 };
-
-function ChevronGlyph({ direction }: { direction: "left" | "right" }) {
-	return (
-		<svg
-			viewBox="0 0 16 16"
-			className={clsx(
-				"size-4 fill-current",
-				direction === "right" && "rotate-180",
-			)}
-			aria-hidden
-		>
-			<title>{direction === "left" ? "Expand" : "Collapse"}</title>
-			<path d="M10.3 3.3a.6.6 0 0 1 0 .85L6.45 8l3.85 3.85a.6.6 0 1 1-.85.85l-4.27-4.27a.6.6 0 0 1 0-.86L9.45 3.3a.6.6 0 0 1 .85 0Z" />
-		</svg>
-	);
-}
 
 function ScreenshotImage({ src, alt }: { src?: string | null; alt: string }) {
 	if (!src) {

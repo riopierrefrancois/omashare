@@ -96,14 +96,14 @@ The brand preview computes chip colors by mixing 12% accent with 88% page color,
   - When an organization has the old one set and no accent, use it as the accent.
 
 ### Task E1: layout (desktop)
-- [ ] Rebuild the Player view of `/s/[videoId]` to `WorkhiveSheet.dc.html`, using the brand from D2:
+- [x] Rebuild the Player view of `/s/[videoId]` to `WorkhiveSheet.dc.html`, using the brand from D2:
   - **Header:** 60 px; organization logo and name; an outlined **Copy link** button (40 px); the website button (40 px, filled accent, white text) only when `websiteUrl` is set.
   - **One white sheet:** title (28 px bold), owner line, video (rounded 12), reactions row.
   - **Comments area** below a 2 px border line, on a tint that is half the page color over white. Use the page color at 50% opacity over white, like Workhive's `bg-background-primary/50`.
   - **Summary/Transcript** as their own white sheet on the right, with the existing visibility rules from `share-page-plan.md` B1.
   - **Footer** at the bottom of the screen (`min-h-screen` flex column), centered, as described in "The idea".
   - Owner and member tools (edit title, privacy, analytics, manage) stay. Restyle them quietly to match, and move them so they don't crowd the header.
-- [ ] The Timeline view keeps its own layout, with the same header, footer, colors and the comments section below (from Phase C).
+- [x] The Timeline view keeps its own layout, with the same header, footer, colors and the comments section below (from Phase C).
 
 ### Task E2: comments
 - [ ] Cards follow `WorkhiveSheet.dc.html`:

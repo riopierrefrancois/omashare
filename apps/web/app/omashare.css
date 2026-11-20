@@ -13,3 +13,8 @@ body {
 [data-share-font="geist"] {
 	font-family: var(--omashare-geist), system-ui, sans-serif;
 }
+
+.share-brand {
+	background-color: var(--share-page);
+	color: var(--share-ink);
+}

@@ -1,4 +1,5 @@
 import type { ImageUpload, Organisation } from "@cap/web-domain";
+import type { CSSProperties } from "react";
 import { playerColorFromOrganizationMetadata } from "@/lib/player-brand";
 
 const hexColor = (value: unknown) =>
@@ -120,3 +121,13 @@ export function getShareBrand(
 }
 
 export type ShareBrand = ReturnType<typeof getShareBrand>;
+
+export function shareBrandStyle(brand: ShareBrand) {
+	return {
+		"--share-accent": brand.accent,
+		"--share-accent-text": brand.accentText,
+		"--share-accent-soft": brand.accentSoft,
+		"--share-ink": brand.ink,
+		"--share-page": brand.page,
+	} as CSSProperties;
+}

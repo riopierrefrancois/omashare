@@ -22,9 +22,6 @@ import { faUnlock } from "@fortawesome/free-solid-svg-icons/faUnlock";
 import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import {
-	Check,
-	Clock,
-	Copy,
 	Download,
 	FolderInput,
 	Globe2,
@@ -36,7 +33,6 @@ import {
 	Users,
 } from "lucide-react";
 import dynamic from "next/dynamic";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Suspense, use, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -50,10 +46,6 @@ import { FontAwesomeIcon } from "@/components/FontAwesomeIcon";
 import { SignedImageUrl } from "@/components/SignedImageUrl";
 import { Tooltip } from "@/components/Tooltip";
 import type { ShareDashboardDestination } from "@/lib/share-dashboard-destination";
-import {
-	copyRichVideoLink,
-	videoPreviewImageUrl,
-} from "@/lib/video-share-clipboard";
 import { usePublicEnv } from "@/utils/public-env";
 import { navigateWithTransition } from "@/utils/view-transition";
 import type { ShareBrand, VideoData } from "../types";
@@ -133,8 +125,7 @@ const DuplicateCapMenuItem = dynamic(() => import("./DuplicateCapMenuItem"), {
  * same size on the same baseline — the line heights are spelled out because a
  * bare `h1` and a bare `input` each pick up a different one from the base layer.
  */
-const TITLE_TEXT_CLASS =
-	"text-xl leading-7 font-normal sm:text-2xl sm:leading-8";
+const TITLE_TEXT_CLASS = "text-2xl leading-tight font-bold sm:text-[28px]";
 
 const TITLE_PLACEHOLDER = "video title";
 
@@ -263,9 +254,6 @@ export const ShareHeader = ({
 	const [passwordProtected, setPasswordProtected] = useState(
 		Boolean(data.hasPassword),
 	);
-	const [linkCopied, setLinkCopied] = useState(false);
-	const [showCopyOptions, setShowCopyOptions] = useState(false);
-	const [capturedTime, setCapturedTime] = useState(0);
 	const [isOpeningBrandingSettings, setIsOpeningBrandingSettings] =
 		useState(false);
 	const titleInputRef = useRef<HTMLInputElement>(null);
@@ -284,23 +272,6 @@ export const ShareHeader = ({
 	const titleRevealEndTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
 		null,
 	);
-
-	useEffect(() => {
-		if (!showCopyOptions) return;
-		// The control renders twice (full link on desktop, compact button below
-		// it) with only one visible, so "outside" means outside either copy.
-		const handler = (e: MouseEvent) => {
-			if (
-				e.target instanceof Element &&
-				e.target.closest("[data-copy-link-control]")
-			) {
-				return;
-			}
-			setShowCopyOptions(false);
-		};
-		document.addEventListener("mousedown", handler);
-		return () => document.removeEventListener("mousedown", handler);
-	}, [showCopyOptions]);
 
 	const contextData = useDashboardContext();
 	const contextSharedSpaces = contextData?.sharedSpaces || null;
@@ -452,57 +423,6 @@ export const ShareHeader = ({
 		return `${webUrl}/s/${data.id}`;
 	};
 
-	const getDisplayLink = () => {
-		if (
-			(NODE_ENV === "development" || buildEnv.NEXT_PUBLIC_IS_CAP) &&
-			customDomain &&
-			domainVerified
-		) {
-			return `${customDomain}/s/${data.id}`;
-		}
-		return `${webUrl}/s/${data.id}`;
-	};
-
-	const formatTimestamp = (seconds: number): string => {
-		const h = Math.floor(seconds / 3600);
-		const m = Math.floor((seconds % 3600) / 60);
-		const s = seconds % 60;
-		if (h > 0)
-			return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-		return `${m}:${String(s).padStart(2, "0")}`;
-	};
-
-	const copyShareLink = (url: string) =>
-		copyRichVideoLink({
-			url,
-			title: displayTitle || "Video recording",
-			previewImageUrl: videoPreviewImageUrl(webUrl, data.id),
-		});
-
-	const handleCopyClick = () => {
-		const video = document.querySelector("video");
-		const currentTime = video ? Math.floor(video.currentTime) : 0;
-
-		if (currentTime > 3) {
-			setCapturedTime(currentTime);
-			setShowCopyOptions(true);
-		} else {
-			copyShareLink(getVideoLink());
-			setLinkCopied(true);
-			setTimeout(() => setLinkCopied(false), 2000);
-		}
-	};
-
-	const handleCopyLink = (withTimestamp: boolean) => {
-		const link = withTimestamp
-			? `${getVideoLink()}?t=${capturedTime}`
-			: getVideoLink();
-		copyShareLink(link);
-		setShowCopyOptions(false);
-		setLinkCopied(true);
-		setTimeout(() => setLinkCopied(false), 2000);
-	};
-
 	const openShareLinkDialog = () => {
 		setShareLinkDialogMounted(true);
 		setIsShareLinkDialogOpen(true);
@@ -600,70 +520,6 @@ export const ShareHeader = ({
 		</Button>
 	);
 
-	const renderCopyLinkControl = (variant: "link" | "button") => (
-		<div
-			className={clsx("relative", variant === "button" && "min-w-0")}
-			data-copy-link-control
-		>
-			{variant === "link" ? (
-				<Button
-					variant="white"
-					className="max-w-full px-3"
-					onClick={handleCopyClick}
-				>
-					<span className="max-w-96 truncate">{getDisplayLink()}</span>
-					{linkCopied ? (
-						<Check className="ml-2 w-4 h-4 svgpathanimation" />
-					) : (
-						<Copy className="ml-2 w-4 h-4" />
-					)}
-				</Button>
-			) : (
-				<Button
-					variant="gray"
-					size="xs"
-					className={clsx(ACTION_BAR_BUTTON_CLASS, "w-full")}
-					aria-label="Copy link"
-					onClick={handleCopyClick}
-				>
-					{linkCopied ? (
-						<Check className="size-3.5 shrink-0 svgpathanimation" />
-					) : (
-						<Copy className="size-3.5 shrink-0" />
-					)}
-					<span className="truncate">
-						{linkCopied ? "Copied" : "Copy link"}
-					</span>
-				</Button>
-			)}
-			{showCopyOptions && (
-				<div
-					className={clsx(
-						"absolute top-full z-50 mt-1 min-w-full w-max overflow-hidden rounded-lg border border-gray-6 bg-white shadow-lg",
-						variant === "link" ? "right-0" : "left-1/2 -translate-x-1/2",
-					)}
-				>
-					<button
-						type="button"
-						className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-12 transition-colors hover:bg-gray-3"
-						onClick={() => handleCopyLink(false)}
-					>
-						<Copy className="w-3.5 h-3.5 shrink-0" />
-						Copy link
-					</button>
-					<button
-						type="button"
-						className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-12 transition-colors hover:bg-gray-3"
-						onClick={() => handleCopyLink(true)}
-					>
-						<Clock className="w-3.5 h-3.5 shrink-0" />
-						Copy link at {formatTimestamp(capturedTime)}
-					</button>
-				</div>
-			)}
-		</div>
-	);
-
 	const userIsOwnerAndNotPro = user?.id === data.owner.id && !data.owner.isPro;
 	const canEditVideo =
 		isOwner &&
@@ -699,62 +555,8 @@ export const ShareHeader = ({
 		}
 	};
 
-	const renderBranding = () => {
-		if (!branding?.name) return null;
-
-		return (
-			<div className="group relative inline-flex shrink-0 items-center">
-				{canManageSharePageBranding && (
-					<div className="pointer-events-none absolute left-0 top-full z-10 pt-1 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
-						<div className="flex items-center gap-1 rounded-full border border-gray-5 bg-white p-1 shadow-sm">
-							<Button
-								variant="gray"
-								size="xs"
-								aria-label="Edit shareable link branding"
-								className="h-7 gap-1 whitespace-nowrap rounded-full px-2 text-[11px]"
-								disabled={isOpeningBrandingSettings}
-								onClick={handleEditBranding}
-							>
-								<Pencil className="size-3.5 text-gray-12" />
-								Change logo
-							</Button>
-						</div>
-					</div>
-				)}
-				<div className="inline-flex h-11 max-w-56 items-center gap-2">
-					{branding.logo && (
-						<Image
-							src={branding.logo}
-							alt=""
-							width={32}
-							height={32}
-							unoptimized
-							className="size-8 object-contain"
-						/>
-					)}
-					<span className="truncate font-semibold">{branding.name}</span>
-				</div>
-			</div>
-		);
-	};
-
 	return (
 		<>
-			{userIsOwnerAndNotPro && (
-				<div className="flex sticky flex-col sm:flex-row inset-x-0 top-0 z-10 gap-4 justify-center items-center px-3 py-2 mx-auto w-[calc(100%-20px)] max-w-fit rounded-b-xl border bg-gray-4 border-gray-6">
-					<p className="text-center text-gray-12">
-						Shareable links are limited to 5 mins on the free plan.
-					</p>
-					<Button
-						type="button"
-						onClick={() => setUpgradeModalOpen(true)}
-						size="sm"
-						variant="blue"
-					>
-						Upgrade to Pro
-					</Button>
-				</div>
-			)}
 			{sharingDialogMounted && (
 				<SharingDialog
 					isOpen={isSharingDialogOpen}
@@ -865,20 +667,24 @@ export const ShareHeader = ({
 					)}
 				</>
 			)}
-			{/* Sits in the page bar above both panes, so the spacing is the bar's
-			    own padding rather than a top margin against the video. */}
-			<div
-				className={clsx(
-					"pb-4",
-					dashboardDestination || (isOwner && canMoveToFolder)
-						? "pt-2"
-						: "pt-4",
-				)}
-			>
-				{(dashboardDestination || (isOwner && canMoveToFolder)) && (
+			<div className="min-w-0">
+				{(dashboardDestination ||
+					(isOwner && canMoveToFolder) ||
+					(branding?.name && canManageSharePageBranding)) && (
 					<div className="flex flex-wrap gap-1 items-center -ml-1.5 mb-1.5 min-w-0">
 						{dashboardDestination && (
 							<DashboardBackLink destination={dashboardDestination} />
+						)}
+						{branding?.name && canManageSharePageBranding && (
+							<button
+								type="button"
+								onClick={handleEditBranding}
+								disabled={isOpeningBrandingSettings}
+								className="inline-flex h-8 items-center gap-1 rounded-full px-2 text-xs text-gray-11 hover:bg-gray-3"
+							>
+								<Pencil className="size-3.5" aria-hidden />
+								Change logo
+							</button>
 						)}
 						{isOwner && canMoveToFolder && (
 							<button
@@ -901,9 +707,7 @@ export const ShareHeader = ({
 						    the link button: `justify-between` on two shrinkable items had
 						    both of them truncating at once, so the title ran out of room
 						    while there was still empty header to its right. */}
-						<div className="flex min-w-0 items-center gap-3 lg:min-w-[400px] lg:flex-1">
-							{renderBranding()}
-							{branding && <div className="h-7 w-px shrink-0 bg-gray-6" />}
+						<div className="flex min-w-0 items-center gap-3 lg:flex-1">
 							<div className="min-w-0 flex-1">
 								{/*
 								 * Heading and rename field are the same box: same width, same
@@ -964,7 +768,7 @@ export const ShareHeader = ({
 										<h1
 											className={clsx(
 												TITLE_TEXT_CLASS,
-												"col-start-1 row-start-1 min-w-0 truncate",
+												"col-start-1 row-start-1 min-w-0 break-words",
 											)}
 										>
 											{isOwner ? (
@@ -975,7 +779,7 @@ export const ShareHeader = ({
 													// button a 1.5rem line height, which would leave the
 													// heading stubbier than the field and bump the text
 													// every time you clicked it.
-													className="block w-full cursor-text truncate text-left leading-[inherit] outline-none"
+													className="block w-full cursor-text break-words text-left leading-[inherit] outline-none"
 													onClick={startEditing}
 												>
 													{displayTitle}
@@ -991,49 +795,24 @@ export const ShareHeader = ({
 								</div>
 							</div>
 						</div>
-						{user !== null && (
-							// Holds its own width so the title, not this, absorbs what the
-							// row has left over. Its own link label already truncates.
-							<div className="hidden lg:block lg:shrink-0">
-								<div className="flex gap-2 items-center">
-									{(data.hasPassword || data.hasInheritedPassword) && (
-										<FontAwesomeIcon
-											className="text-amber-600 size-4"
-											icon={faLock}
-										/>
-									)}
-									{renderCopyLinkControl("link")}
-								</div>
-								{userIsOwnerAndNotPro && (
-									<button
-										type="button"
-										className="flex items-center mt-2 mb-3 text-sm text-gray-400 duration-200 cursor-pointer hover:text-blue-500"
-										onClick={() => setUpgradeModalOpen(true)}
-									>
-										<Globe2 className="mr-1 w-4 h-4" />
-										Connect a custom domain
-									</button>
-								)}
-							</div>
-						)}
 					</div>
 					<div className="flex flex-col gap-3 lg:flex-row lg:items-center">
 						<div className="flex min-w-0 items-center justify-between gap-3 lg:justify-start lg:gap-5">
 							<div className="flex min-w-0 items-center gap-2">
 								{data.name && (
 									<SignedImageUrl
-										name={data.name}
+										name={data.owner.name ?? "Someone"}
 										image={data.owner.image}
-										className="size-8 shrink-0"
-										letterClass="text-base"
+										className="size-6 shrink-0 rounded-full"
+										letterClass="text-xs"
 									/>
 								)}
-								<div className="flex min-w-0 flex-col text-left">
-									<p className="truncate text-sm text-gray-12">
+								<div className="flex min-w-0 flex-wrap items-center gap-x-2 text-left">
+									<p className="truncate text-sm font-medium">
 										{data.owner.name}
 									</p>
 									<p className="truncate text-xs text-gray-10">
-										<RelativeTime date={data.createdAt} format={fromNow} />
+										· <RelativeTime date={data.createdAt} format={fromNow} />
 										{views !== undefined && (
 											<Suspense fallback={null}>
 												<ViewCount views={views} />
@@ -1067,9 +846,6 @@ export const ShareHeader = ({
 						{user !== null && (
 							<div className="grid auto-cols-fr grid-flow-col gap-2 sm:flex sm:items-center lg:flex-1">
 								{renderShareButton(ACTION_BAR_BUTTON_CLASS)}
-								<div className="min-w-0 lg:hidden">
-									{renderCopyLinkControl("button")}
-								</div>
 								<div className="contents sm:ml-auto sm:flex sm:items-center sm:gap-2">
 									{isOwner && (
 										<>

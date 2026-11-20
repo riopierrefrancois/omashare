@@ -131,9 +131,11 @@ function project(
 ) {
 	return query
 		.slice(7, query.indexOf(" from "))
-		.split(", ")
+		.split(/, (?![^()]*\))/)
 		.map((column) => {
 			if (column.includes(" IS NOT NULL")) return 0;
+			if (column === "coalesce(`users`.`name`, `comments`.`guestName`, ?)")
+				return tables.users?.name ?? tables.comments?.guestName ?? "Guest";
 			const match = /^`(\w+)`\.`(\w+)`$/.exec(column);
 			if (!match) throw new Error(`Unexpected projection: ${column}`);
 			return tables[match[1] ?? ""]?.[match[2] ?? ""] ?? null;
