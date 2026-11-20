@@ -40,15 +40,15 @@ Use Cap's own Tailwind tokens (`gray-1…gray-12`, `bg-white`, `border-gray-5`, 
 - [x] Update the comment types in `packages/web-domain` (and anywhere `CommentType` is declared) so `authorId` can be null and `guestName?: string | null` exists.
 
 ### Task A2: posting as a guest (`apps/web/actions/videos/new-comment.ts`)
-- [ ] A signed-in user posts exactly as today.
-- [ ] With no user, accept a **text** comment or reply only if all of these hold. Otherwise throw an `Error` with a plain message.
+- [x] A signed-in user posts exactly as today.
+- [x] With no user, accept a **text** comment or reply only if all of these hold. Otherwise throw an `Error` with a plain message.
   - `guestName`, trimmed, is 1–80 characters. Otherwise: "Please add your name."
   - The honeypot field `website` is empty. Otherwise fail quietly with the same generic error the action already uses.
   - The type is `"text"`. Guests can't leave emoji reactions or media comments: "Sign in to react."
   - The existing checks still pass: the video exists and is viewable through `Policy.withPublicPolicy`, comments aren't disabled, and the reply parent is on this video.
   - Rate limit with `isRateLimited(RATE_LIMIT_IDS.COMMENT_CREATE, { key: \`comment:guest:${ip ?? "unknown"}\` })`. Get `ip` from `getClientIp` (`lib/client-ip.ts`) using the request headers (`next/headers`).
-- [ ] Insert with `authorId: null` and `guestName`. Return the comment with `authorName = guestName`.
-- [ ] The notification to the video owner still fires, naming the guest. Make `lib/Notification.ts` handle a null `authorId`: use `guestName` for the name, and leave out anything that needs an author account.
+- [x] Insert with `authorId: null` and `guestName`. Return the comment with `authorName = guestName`.
+- [x] The notification to the video owner still fires, naming the guest. Make `lib/Notification.ts` handle a null `authorId`: use `guestName` for the name, and leave out anything that needs an author account.
 
 ### Task A3: reading and deleting guest comments
 - [ ] Every read of `comments.authorId` must handle null, and the author name shown is `users.name ?? comments.guestName ?? "Guest"`. The files are listed below. Re-check with `grep -rn "comments.authorId" apps packages`.

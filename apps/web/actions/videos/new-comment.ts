@@ -10,12 +10,15 @@ import { Comment, Policy, type Video } from "@cap/web-domain";
 import { eq } from "drizzle-orm";
 import { Effect, Exit } from "effect";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import { getClientIp } from "@/lib/client-ip";
 import {
 	COMMENT_RATE_LIMITED_MESSAGE,
 	isCommentRateLimited,
 } from "@/lib/comment-rate-limit";
 import { isReplyParentOnVideo } from "@/lib/comment-reply-parent";
 import { createNotification } from "@/lib/Notification";
+import { isRateLimited, RATE_LIMIT_IDS } from "@/lib/rate-limit";
 import * as EffectRuntime from "@/lib/server";
 import { isVideoFeedbackDisabled } from "@/lib/video-feedback-rules";
 
@@ -26,11 +29,18 @@ export async function newComment(data: {
 	authorImage: ImageUpload.ImageUrl | null;
 	parentCommentId: Comment.CommentId;
 	timestamp: number | null;
+	guestName?: string;
+	website?: string;
 }) {
 	const user = await getCurrentUser();
 
+	let guestName: string | null = null;
 	if (!user) {
-		throw new Error("User not authenticated");
+		if (data.website) throw new Error("User not authenticated");
+		if (data.type !== "text") throw new Error("Sign in to react.");
+		guestName = typeof data.guestName === "string" ? data.guestName.trim() : "";
+		if (!guestName || [...guestName].length > 80)
+			throw new Error("Please add your name.");
 	}
 
 	const content = data.content;
@@ -48,7 +58,10 @@ export async function newComment(data: {
 		throw new Error("Content and videoId are required");
 	}
 
-	if (await isCommentRateLimited(user.id)) {
+	const rateLimited = user
+		? await isCommentRateLimited(user.id)
+		: await isGuestCommentRateLimited();
+	if (rateLimited) {
 		throw new Error(COMMENT_RATE_LIMITED_MESSAGE);
 	}
 
@@ -96,7 +109,8 @@ export async function newComment(data: {
 
 	const newComment = {
 		id: id,
-		authorId: user.id,
+		authorId: user?.id ?? null,
+		guestName,
 		type: type,
 		content: content,
 		videoId: videoId,
@@ -112,13 +126,21 @@ export async function newComment(data: {
 	await db().insert(comments).values(newComment);
 
 	try {
-		await createNotification({
-			type: conditionalType,
-			videoId,
-			authorId: user.id,
-			comment: { id, content },
-			parentCommentId,
-		});
+		const details = { videoId, comment: { id, content }, parentCommentId };
+		if (user) {
+			await createNotification({
+				...details,
+				type: conditionalType,
+				authorId: user.id,
+			});
+		} else {
+			await createNotification({
+				...details,
+				type: parentCommentId ? "reply" : "comment",
+				authorId: null,
+				guestName,
+			});
+		}
 	} catch (error) {
 		console.error("Failed to create notification:", error);
 	}
@@ -126,12 +148,20 @@ export async function newComment(data: {
 	// Add author name to the returned data
 	const commentWithAuthor = {
 		...newComment,
-		authorName: user.name,
-		authorImage: data.authorImage,
+		authorName: user ? user.name : guestName,
+		authorImage: user ? data.authorImage : null,
 		sending: false,
 	};
 
 	revalidatePath(`/s/${videoId}`);
 
 	return commentWithAuthor;
+}
+
+async function isGuestCommentRateLimited() {
+	const requestHeaders = await headers();
+	const ip = getClientIp((name) => requestHeaders.get(name));
+	return isRateLimited(RATE_LIMIT_IDS.COMMENT_CREATE, {
+		key: `comment:guest:${ip ?? "unknown"}`,
+	});
 }

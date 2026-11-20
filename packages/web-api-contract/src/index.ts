@@ -11,7 +11,7 @@ export {
 } from "./desktop";
 
 export const NotificationAuthor = z.object({
-	id: z.string(),
+	id: z.string().nullable(),
 	name: z.string(),
 	avatar: z.string().nullable(),
 });

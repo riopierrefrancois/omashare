@@ -708,7 +708,8 @@ export const notifications = mysqlTable(
 		data: json("data")
 			.$type<{
 				videoId?: string;
-				authorId?: string;
+				authorId?: string | null;
+				guestName?: string | null;
 				comment?: {
 					id: string;
 					content: string;

@@ -82,6 +82,7 @@ beforeEach(() => {
 			...data,
 			id: "comment" as Comment.CommentId,
 			authorId: "viewer" as User.UserId,
+			guestName: null,
 			authorName: "Viewer",
 			createdAt: new Date(),
 			updatedAt: new Date(),

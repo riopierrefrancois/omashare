@@ -29,11 +29,18 @@ type AuthoredNotificationData = Exclude<
 	{ type: "anon_view" }
 >;
 
+type NotificationActor =
+	| { authorId: string; guestName?: never }
+	| { authorId: null; guestName: string | null };
+
 type CreateNotificationInput<D = AuthoredNotificationData> =
 	D extends AuthoredNotificationData
-		? Omit<D, "author"> & { authorId: string } & {
-				parentCommentId?: Comment.CommentId;
-			}
+		? Omit<D, "author"> &
+				(D["type"] extends "comment" | "reply"
+					? NotificationActor
+					: { authorId: string; guestName?: never }) & {
+					parentCommentId?: Comment.CommentId;
+				}
 		: never;
 
 const ANON_NOTIF_WINDOW_MS = 5 * 60 * 1000;
@@ -102,7 +109,11 @@ export async function createNotification(
 
 		const { type, ...data } = notification;
 
-		if (type === "reply" && notification.parentCommentId) {
+		if (
+			type === "reply" &&
+			notification.authorId &&
+			notification.parentCommentId
+		) {
 			const [parentComment] = await db()
 				.select({ authorId: comments.authorId })
 				.from(comments)
@@ -182,6 +193,7 @@ export async function createNotification(
 
 			const shouldSkipNotification =
 				(type === "comment" && notificationPrefs.pauseComments) ||
+				(type === "reply" && notificationPrefs.pauseReplies) ||
 				(type === "view" && notificationPrefs.pauseViews) ||
 				(type === "reaction" && notificationPrefs.pauseReactions);
 
@@ -206,7 +218,7 @@ export async function createNotification(
 				.limit(1);
 
 			hasExistingNotification = !!existingNotification;
-		} else if (type === "comment" || type === "reaction") {
+		} else if (type === "comment" || type === "reaction" || type === "reply") {
 			const [existingNotification] = await db()
 				.select({ id: notifications.id })
 				.from(notifications)
@@ -248,7 +260,8 @@ export async function createNotification(
 			type,
 			recipientId: videoResult.ownerId,
 			videoId: notification.videoId,
-			authorId: notification.authorId,
+			authorId: notification.authorId ?? undefined,
+			...(notification.guestName ? { anonName: notification.guestName } : {}),
 			content: "comment" in notification ? notification.comment.content : null,
 		});
 
@@ -257,6 +270,7 @@ export async function createNotification(
 				videoId: notification.videoId,
 				recipientId: videoResult.ownerId,
 				authorId: notification.authorId,
+				guestName: notification.guestName,
 				comment: notification.comment,
 			});
 		}
@@ -271,7 +285,8 @@ export async function createNotification(
 async function sendNewCommentEmail(params: {
 	videoId: string;
 	recipientId: string;
-	authorId: string;
+	authorId: string | null;
+	guestName?: string | null;
 	comment: { id: string; content: string };
 }) {
 	try {
@@ -297,7 +312,10 @@ async function sendNewCommentEmail(params: {
 						isNull(comments.parentCommentId),
 						eq(comments.parentCommentId, Comment.CommentId.make("")),
 					),
-					ne(comments.authorId, User.UserId.make(params.recipientId)),
+					or(
+						isNull(comments.authorId),
+						ne(comments.authorId, User.UserId.make(params.recipientId)),
+					),
 					gte(comments.createdAt, throttleStart),
 					ne(comments.id, Comment.CommentId.make(params.comment.id)),
 				),
@@ -322,13 +340,15 @@ async function sendNewCommentEmail(params: {
 
 		const videoName = video?.name || "Untitled Video";
 
-		const [commenter] = await database
-			.select({ name: users.name })
-			.from(users)
-			.where(eq(users.id, User.UserId.make(params.authorId)))
-			.limit(1);
+		const [commenter] = params.authorId
+			? await database
+					.select({ name: users.name })
+					.from(users)
+					.where(eq(users.id, User.UserId.make(params.authorId)))
+					.limit(1)
+			: [];
 
-		const commenterName = commenter?.name || "Someone";
+		const commenterName = commenter?.name || params.guestName || "Someone";
 
 		const videoUrl = `${serverEnv().WEB_URL}/s/${params.videoId}`;
 

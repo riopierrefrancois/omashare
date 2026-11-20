@@ -103,9 +103,10 @@ export async function GET() {
 							});
 						}
 
-						if (!author) return null;
+						const guestName = notification.data.guestName;
+						if (!author && !guestName) return null;
 
-						const resolvedAvatar = author.avatar
+						const resolvedAvatar = author?.avatar
 							? yield* imageUploads
 									.resolveImageUrl(author.avatar)
 									.pipe(Effect.catchAll(() => Effect.succeed(null)))
@@ -120,8 +121,8 @@ export async function GET() {
 							data: notification.data,
 							comment: notification.data.comment,
 							author: {
-								id: author.id,
-								name: author.name ?? "Unknown",
+								id: author?.id ?? null,
+								name: author?.name ?? guestName ?? "Unknown",
 								avatar: resolvedAvatar,
 							},
 						});
