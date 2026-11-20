@@ -106,13 +106,13 @@ The brand preview computes chip colors by mixing 12% accent with 88% page color,
 - [x] The Timeline view keeps its own layout, with the same header, footer, colors and the comments section below (from Phase C).
 
 ### Task E2: comments
-- [ ] Cards follow `WorkhiveSheet.dc.html`:
+- [x] Cards follow `WorkhiveSheet.dc.html`:
   - 32 px avatar vertically centered with the name and time.
   - The timestamp is a chip right after the time: soft tint background, `accentText` color, Geist Mono, `▶ 2:31`.
   - **Reply** (no icon) in blue `#4F75FE` under each comment.
   - Replies sit inside the card under a 1 px line, as bubbles with the avatar outside, on the page color.
-- [ ] **One level only:** remove the Reply button under replies. A reply's parent is always a top-level comment. In `actions/videos/new-comment.ts`, refuse a `parentCommentId` that is itself a reply ("You can only reply to a comment."), for guests and signed-in users alike.
-- [ ] The comment box follows the design: 1.5 px accent outline, no inner border on the text area, "Commenting as Alex · Change" (Change in `accentText`), the `at 1:13 ✕` chip, and an accent **Send**.
+- [x] **One level only:** remove the Reply button under replies. A reply's parent is always a top-level comment. In `actions/videos/new-comment.ts`, refuse a `parentCommentId` that is itself a reply ("You can only reply to a comment."), for guests and signed-in users alike.
+- [x] The comment box follows the design: 1.5 px accent outline, no inner border on the text area, "Commenting as Alex · Change" (Change in `accentText`), the `at 1:13 ✕` chip, and an accent **Send**.
 
 ### Task E3: phone
 - [ ] Below 640 px, follow `WorkhivePlatformPhone.dc.html`:

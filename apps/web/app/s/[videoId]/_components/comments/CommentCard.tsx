@@ -99,12 +99,21 @@ function DeleteControl({
 	);
 }
 
-function Face({ comment }: { comment: CommentType }) {
+function Face({
+	comment,
+	isReply,
+}: {
+	comment: CommentType;
+	isReply?: boolean;
+}) {
 	return (
 		<SignedImageUrl
 			image={comment.authorImage}
 			name={nameOf(comment)}
-			className="size-7 shrink-0 rounded-full"
+			className={clsx(
+				"shrink-0 rounded-full",
+				isReply ? "mt-1 size-7" : "size-8",
+			)}
 			letterClass="text-xs"
 		/>
 	);
@@ -129,7 +138,7 @@ function CommentDetails({
 		<>
 			<div className="flex flex-wrap items-center gap-x-2 gap-y-1">
 				{!isReply && <Face comment={comment} />}
-				<span className="min-w-0 break-all text-sm font-semibold text-gray-12">
+				<span className="min-w-0 break-all text-sm font-semibold">
 					{nameOf(comment)}
 				</span>
 				<span className="text-xs text-gray-10" title={formatTimestamp(date)}>
@@ -138,10 +147,12 @@ function CommentDetails({
 				{!isReply && timestamp !== null && onSeek && (
 					<button
 						type="button"
-						className="rounded-full bg-gray-3 px-2 py-0.5 text-xs text-gray-11 hover:bg-gray-4"
+						className="min-h-7 rounded-md bg-[var(--share-accent-soft)] px-2 font-mono text-xs font-semibold text-[var(--share-accent-text)] hover:brightness-95"
+						aria-label={`Seek to ${formatClock(timestamp)}`}
 						onClick={() => onSeek(timestamp)}
 					>
-						at {formatClock(timestamp)}
+						<span aria-hidden>▶ </span>
+						{formatClock(timestamp)}
 					</button>
 				)}
 				{onDelete && (
@@ -156,7 +167,7 @@ function CommentDetails({
 				<MediaCommentBody comment={comment} compact />
 			)}
 			{comment.content && (
-				<p className="mt-2 whitespace-pre-wrap break-words text-sm text-gray-12">
+				<p className="mt-2 whitespace-pre-wrap break-words text-[15px] leading-relaxed">
 					<LinkifiedText text={comment.content} />
 				</p>
 			)}
@@ -190,15 +201,11 @@ export const CommentCard = memo(function CommentCard({
 	flashId?: string | null;
 }) {
 	const rootReply = useRef<HTMLButtonElement>(null);
-	const returnTo = useRef<HTMLButtonElement | null>(null);
 	const restoreReplyFocus = useRef(false);
 	useLayoutEffect(() => {
 		if (recipient || !restoreReplyFocus.current) return;
 		restoreReplyFocus.current = false;
-		(returnTo.current?.isConnected
-			? returnTo.current
-			: rootReply.current
-		)?.focus();
+		rootReply.current?.focus();
 	}, [recipient]);
 	const [expanded, setExpanded] = useState<boolean>();
 	const hidden = Math.max(0, replies.length - 2);
@@ -231,7 +238,7 @@ export const CommentCard = memo(function CommentCard({
 			id={`comment-${comment.id}`}
 			className={clsx(
 				"flex min-w-0 flex-col gap-2 rounded-2xl border border-gray-5 bg-white px-3 py-2",
-				comment.id === activeId && "ring-2 ring-blue-8",
+				comment.id === activeId && "ring-2 ring-[var(--share-accent)]",
 				comment.sending && !isMediaComment(comment) && "opacity-60",
 			)}
 		>
@@ -242,15 +249,12 @@ export const CommentCard = memo(function CommentCard({
 				onDelete={canDeleteRoot ? () => onDelete(comment) : undefined}
 			/>
 			<div className="flex items-center gap-2">
-				{!comment.sending && (
+				{onSelectReply && !comment.sending && (
 					<button
 						type="button"
-						className={quietButton}
+						className="rounded py-1 text-sm font-medium text-[#4F75FE] hover:underline"
 						ref={rootReply}
-						onClick={(event) => {
-							returnTo.current = event.currentTarget;
-							onSelectReply?.(comment, comment);
-						}}
+						onClick={() => onSelectReply(comment, comment)}
 					>
 						Reply
 					</button>
@@ -281,13 +285,13 @@ export const CommentCard = memo(function CommentCard({
 							id={`comment-${reply.id}`}
 							className={clsx(
 								"flex items-start gap-2.5 rounded-2xl",
-								reply.id === activeId && "ring-2 ring-blue-8",
+								reply.id === activeId && "ring-2 ring-[var(--share-accent)]",
 								reply.sending && !isMediaComment(reply) && "opacity-60",
 							)}
 						>
-							<Face comment={reply} />
+							<Face comment={reply} isReply />
 							<div className="min-w-0 flex-1">
-								<div className="rounded-2xl border border-gray-5 bg-gray-2 px-3 pb-2 pt-1.5">
+								<div className="rounded-2xl border border-gray-5 bg-[var(--share-page,white)] px-3 pb-2 pt-1.5">
 									<CommentDetails
 										comment={reply}
 										isReply
@@ -297,18 +301,6 @@ export const CommentCard = memo(function CommentCard({
 										}
 									/>
 								</div>
-								{!reply.sending && (
-									<button
-										type="button"
-										className={quietButton}
-										onClick={(event) => {
-											returnTo.current = event.currentTarget;
-											onSelectReply?.(comment, reply);
-										}}
-									>
-										Reply
-									</button>
-								)}
 							</div>
 						</div>
 					))}

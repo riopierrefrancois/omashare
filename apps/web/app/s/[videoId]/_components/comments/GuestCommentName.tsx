@@ -62,10 +62,16 @@ export function GuestCommentNameFields({
 		<div ref={fieldsRef} className="space-y-2">
 			{name ? (
 				<div className="flex flex-wrap items-center gap-1 text-sm text-gray-11">
-					<span>Commenting as {name} ·</span>
+					<span>
+						Commenting as{" "}
+						<strong className="font-medium text-[var(--share-ink)]">
+							{name}
+						</strong>{" "}
+						·
+					</span>
 					<button
 						type="button"
-						className="text-gray-10 underline"
+						className="font-medium text-[var(--share-accent-text,#2959C4)] hover:underline"
 						onClick={() => {
 							setDraft(name);
 							remember("");

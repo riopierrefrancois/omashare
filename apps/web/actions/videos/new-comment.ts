@@ -16,7 +16,7 @@ import {
 	COMMENT_RATE_LIMITED_MESSAGE,
 	isCommentRateLimited,
 } from "@/lib/comment-rate-limit";
-import { isReplyParentOnVideo } from "@/lib/comment-reply-parent";
+import { replyParentError } from "@/lib/comment-reply-parent";
 import { createNotification } from "@/lib/Notification";
 import { isRateLimited, RATE_LIMIT_IDS } from "@/lib/rate-limit";
 import * as EffectRuntime from "@/lib/server";
@@ -113,11 +113,10 @@ export async function newComment(data: {
 	)
 		throw new CommentSubmissionError("Feedback is disabled on this video");
 
-	if (
-		parentCommentId &&
-		!(await isReplyParentOnVideo(parentCommentId, videoId))
-	)
-		throw new CommentSubmissionError("Comment not found");
+	if (parentCommentId) {
+		const error = await replyParentError(parentCommentId, videoId);
+		if (error) throw new CommentSubmissionError(error);
+	}
 
 	const id = Comment.CommentId.make(nanoId());
 

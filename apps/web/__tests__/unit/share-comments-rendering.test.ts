@@ -290,7 +290,7 @@ describe("share comments rendering", () => {
 		expect(row("root-21").querySelector("textarea")).not.toBeNull();
 		expect(mocks.rowRenders).toBeLessThanOrEqual(3);
 		mocks.rowRenders = 0;
-		await reply("nested-41");
+		await reply("root-41");
 		expect(row("root-21").querySelector("textarea")).toBeNull();
 		expect(row("root-41").querySelector("textarea")).not.toBeNull();
 		expect(mocks.rowRenders).toBeLessThanOrEqual(6);
@@ -299,7 +299,7 @@ describe("share comments rendering", () => {
 
 	it("keeps typing and playback updates out of the comment rows", async () => {
 		await render();
-		await reply("reply-21");
+		await reply("root-21");
 		mocks.rowRenders = 0;
 		await type(row("root-21").querySelector("textarea"), "A reply draft");
 		await type(
@@ -384,19 +384,19 @@ describe("share comments rendering", () => {
 		await type(row("root-1").querySelector("textarea"), "Discarded");
 		await click(button("Cancel"));
 		expect(mocks.post).not.toHaveBeenCalled();
-		await reply("nested-1");
-		await type(row("root-1").querySelector("textarea"), "Nested response");
+		await reply("root-1");
+		await type(row("root-1").querySelector("textarea"), "Reply to the root");
 		await click(button("Send"));
 		expect(mocks.post).toHaveBeenCalledWith(
 			expect.objectContaining({
-				content: "Nested response",
+				content: "Reply to the root",
 				parentCommentId: "root-1",
 				timestamp: 42,
 			}),
 		);
 		expect(optimistic).toHaveBeenCalledWith(
 			expect.objectContaining({
-				content: "Nested response",
+				content: "Reply to the root",
 				parentCommentId: "root-1",
 				sending: true,
 			}),
@@ -409,7 +409,7 @@ describe("share comments rendering", () => {
 		await render(updatedSeek);
 		await click(
 			Array.from(row("root-1").querySelectorAll("button")).find(
-				(item) => item.textContent === "at 0:12",
+				(item) => item.getAttribute("aria-label") === "Seek to 0:12",
 			) ?? null,
 		);
 		expect(updatedSeek).toHaveBeenCalledWith(12);
@@ -457,10 +457,10 @@ describe("share comments rendering", () => {
 		];
 		await render();
 
-		await click(button("at 0:42"));
+		await click(button("▶ 0:42"));
 		expect(seek).toHaveBeenCalledWith(42);
-		expect(button("at 0:00")).toBeNull();
-		expect(button("at 0:18")).toBeNull();
+		expect(button("▶ 0:00")).toBeNull();
+		expect(button("▶ 0:18")).toBeNull();
 		expect(row("first-reply").querySelector("time")).not.toBeNull();
 	});
 
@@ -598,23 +598,21 @@ describe("share comments rendering", () => {
 		expect(input.readOnly).toBe(false);
 	});
 
-	it.each(["root", "existing-reply"])(
-		"returns focus to the Reply button on %s after sending",
-		async (target) => {
-			comments = [comment("root"), comment("existing-reply", "root")];
-			mocks.post.mockResolvedValue({ comment: comment("saved", "root") });
-			await render();
-			const trigger = Array.from(row(target).querySelectorAll("button")).find(
-				(item) => item.textContent === "Reply",
-			);
-			await click(trigger ?? null);
-			const input = row("root").querySelector("textarea");
-			await type(input, "Thanks!");
-			await click(button("Send"));
-			expect(input?.isConnected).toBe(false);
-			expect(document.activeElement).toBe(trigger);
-		},
-	);
+	it("offers Reply only on the root and restores focus after sending", async () => {
+		comments = [comment("root"), comment("existing-reply", "root")];
+		mocks.post.mockResolvedValue({ comment: comment("saved", "root") });
+		await render();
+		expect(row("existing-reply").textContent).not.toMatch(/\bReply\b/);
+		const trigger = Array.from(row("root").querySelectorAll("button")).find(
+			(item) => item.textContent === "Reply",
+		);
+		await click(trigger ?? null);
+		const input = row("root").querySelector("textarea");
+		await type(input, "Thanks!");
+		await click(button("Send"));
+		expect(input?.isConnected).toBe(false);
+		expect(document.activeElement).toBe(trigger);
+	});
 
 	it.each(["success", "failure"])(
 		"keeps the optimistic comment visible until save %s",
@@ -710,7 +708,7 @@ describe("share comments rendering", () => {
 			},
 		});
 		await render();
-		await reply("existing-reply");
+		await reply("root");
 		const card = row("root");
 		const text = card.querySelector("textarea");
 		const name = card.querySelector<HTMLInputElement>(
@@ -760,7 +758,7 @@ describe("share comments rendering", () => {
 			video.dispatchEvent(new Event("timeupdate"));
 		});
 		expect(field?.placeholder).toBe("Write a comment at 1:13…");
-		await click(button("at 1:13 ×"));
+		await click(button("at 1:13 ✕"));
 		await type(field, "Untimed");
 		mocks.post.mockResolvedValueOnce({
 			error: "Feedback is disabled on this video",
@@ -787,7 +785,7 @@ describe("share comments rendering", () => {
 				durations = [];
 				mocks.rowRenders = 0;
 				const start = performance.now();
-				await reply(i % 2 ? "root-21" : "nested-41");
+				await reply(i % 2 ? "root-21" : "root-41");
 				if (i >= 10) {
 					switching.push(
 						durations.reduce((sum, duration) => sum + duration, 0),

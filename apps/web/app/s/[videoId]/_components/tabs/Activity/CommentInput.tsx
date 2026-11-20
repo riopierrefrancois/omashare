@@ -89,7 +89,7 @@ const CommentInput: React.FC<CommentInputProps> = ({
 	return (
 		<div className="flex items-start space-x-3">
 			<div className="flex-1">
-				<div className="flex items-start gap-2 p-2 rounded-lg border bg-gray-1 border-gray-5 focus-within:border-gray-6">
+				<div className="flex items-start gap-2">
 					{avatar && <div className="shrink-0">{avatar}</div>}
 					<div className="flex-1 min-w-0">
 						{/* Two rows even at idle: a one-line sliver reads as a search box,
@@ -111,13 +111,14 @@ const CommentInput: React.FC<CommentInputProps> = ({
 							onFocus={() => setFocused(true)}
 							onBlur={() => setFocused(false)}
 							placeholder={placeholder || "Leave a comment..."}
-							className="w-full resize-none placeholder:text-gray-8 text-sm leading-[22px] text-gray-12 bg-transparent focus:outline-none"
+							className="w-full resize-none border-0 bg-transparent p-0 text-sm leading-[22px] placeholder:text-gray-10 focus:outline-none"
 						/>
 						{expanded && (
-							<div className="flex items-center mt-2 space-x-2">
+							<div className="flex items-center justify-end gap-2">
 								<Button
 									size="xs"
 									variant="primary"
+									className="h-9 rounded-lg !bg-[var(--share-accent,#2959C4)] px-4 !text-white enabled:hover:brightness-95"
 									onClick={() => handleSubmit()}
 									disabled={!content.trim() || disabled || isSubmitting}
 								>

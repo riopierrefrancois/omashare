@@ -8,7 +8,7 @@ const COMMENT_LIMIT = 3;
 const mocks = vi.hoisted(() => ({
 	notify: vi.fn(async () => undefined),
 	userId: "viewer" as string | null,
-	parentOnVideo: true,
+	parentRows: [{ parentCommentId: "" }],
 	requestHeaders: new Headers(),
 	selects: 0,
 	inserted: [] as Row[],
@@ -18,11 +18,14 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@cap/database", () => ({
 	db: () => ({
-		select: () => {
+		select: (fields: Record<string, unknown>) => {
 			mocks.selects += 1;
 			return {
 				from: () => {
-					const rows = [{ id: "public-video", videoSettings: null }];
+					const rows =
+						"parentCommentId" in fields
+							? mocks.parentRows
+							: [{ id: "public-video", videoSettings: null }];
 					const query = {
 						leftJoin: () => query,
 						innerJoin: () => query,
@@ -57,9 +60,6 @@ vi.mock("@cap/web-backend", () => ({
 vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/headers", () => ({ headers: async () => mocks.requestHeaders }));
-vi.mock("@/lib/comment-reply-parent", () => ({
-	isReplyParentOnVideo: async () => mocks.parentOnVideo,
-}));
 vi.mock("@/lib/video-feedback-rules", () => ({
 	isVideoFeedbackDisabled: async () => false,
 }));
@@ -95,7 +95,7 @@ const post = (
 
 beforeEach(() => {
 	mocks.userId = "viewer";
-	mocks.parentOnVideo = true;
+	mocks.parentRows = [{ parentCommentId: "" }];
 	mocks.requestHeaders = new Headers();
 	mocks.selects = 0;
 	mocks.inserted = [];
@@ -152,6 +152,19 @@ describe("comment creation limits", () => {
 	});
 });
 
+it.each(["viewer", null])(
+	"refuses a reply to a reply for author %s",
+	async (userId) => {
+		mocks.userId = userId;
+		mocks.parentRows = [{ parentCommentId: "root-comment" }];
+		await expect(
+			post("text", "existing-reply", { guestName: "Guest" }),
+		).rejects.toThrow("You can only reply to a comment.");
+		expect(mocks.inserted).toEqual([]);
+		expect(mocks.notify).not.toHaveBeenCalled();
+	},
+);
+
 describe("guest comments", () => {
 	beforeEach(() => {
 		mocks.userId = null;
@@ -200,7 +213,7 @@ describe("guest comments", () => {
 	);
 
 	it("refuses a reply to a different video", async () => {
-		mocks.parentOnVideo = false;
+		mocks.parentRows = [];
 		await expect(
 			post("text", "other-video-parent", { guestName: "Sam" }),
 		).rejects.toThrow("Comment not found");

@@ -153,6 +153,13 @@ describe.each([
 		},
 	);
 
+	it("rejects a parent that is itself a reply", async () => {
+		mocks.state.parents = [{ id: "parent", videoId, parentCommentId: "root" }];
+		await expect(post()).rejects.toThrow("You can only reply to a comment.");
+		expect(mocks.state.inserted).toEqual([]);
+		expect(mocks.notify).not.toHaveBeenCalled();
+	});
+
 	it.each(["text", "emoji", "video", "audio"])(
 		"preserves replies to a %s comment on the same video",
 		async (type) => {

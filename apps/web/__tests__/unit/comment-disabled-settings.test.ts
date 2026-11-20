@@ -70,7 +70,7 @@ vi.mock("@cap/web-backend", async () => {
 vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/comment-reply-parent", () => ({
-	isReplyParentOnVideo: async () => true,
+	replyParentError: async () => undefined,
 }));
 vi.mock("@/lib/org-pro", () => ({ isVideoOwnerPro: async () => true }));
 vi.mock("@/lib/Notification", () => ({ createNotification: mocks.notify }));

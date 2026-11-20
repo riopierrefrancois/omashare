@@ -211,7 +211,7 @@ export function ShareComments(props: {
 								isVideoOwner={props.isVideoOwner}
 								flashId={contains(flashId) ? flashId : null}
 								renderReply={
-									replyTarget?.rootId === comment.id
+									!commentsDisabled && replyTarget?.rootId === comment.id
 										? (root, cancel) => (
 												<CommentComposer
 													key={replyTarget.recipient.id}
@@ -228,11 +228,11 @@ export function ShareComments(props: {
 								}
 								viewerId={user?.id}
 								recipient={
-									replyTarget?.rootId === comment.id
+									!commentsDisabled && replyTarget?.rootId === comment.id
 										? replyTarget.recipient
 										: undefined
 								}
-								onSelectReply={selectReply}
+								onSelectReply={commentsDisabled ? undefined : selectReply}
 								onDelete={handleDeleteComment}
 								onSeek={onSeek}
 								focusedId={contains(focusedId) ? focusedId : null}
@@ -242,7 +242,7 @@ export function ShareComments(props: {
 				</div>
 			)}
 			{!commentsDisabled && (
-				<div className="rounded-xl border border-gray-5 bg-gray-2 p-2">
+				<div>
 					<CommentComposer
 						videoId={videoId}
 						isScreenshot={props.isScreenshot}

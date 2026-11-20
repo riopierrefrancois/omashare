@@ -2,7 +2,6 @@ import type { Video } from "@cap/web-domain";
 import dynamic from "next/dynamic";
 import { useRef, useState, useSyncExternalStore } from "react";
 import { useCurrentUser } from "@/app/Layout/AuthContext";
-import { SignedImageUrl } from "@/components/SignedImageUrl";
 import { formatClock } from "@/lib/player-time";
 import type { CommentType } from "../../Share";
 import { RecordActionButtons } from "../media-comment/record-actions";
@@ -65,18 +64,29 @@ export function CommentComposer({
 	const hasTimestamp = !isScreenshot && includeTime;
 
 	return (
-		<div className="space-y-2">
-			{!user && <GuestCommentNameFields fieldsRef={guestFields} />}
-			{!isScreenshot && (
-				<button
-					type="button"
-					aria-label={hasTimestamp ? "Remove time" : "Add current time"}
-					className="rounded-full bg-gray-3 px-2 py-0.5 text-xs text-gray-11 hover:bg-gray-4"
-					onClick={() => setIncludeTime(!includeTime)}
-				>
-					{hasTimestamp ? `at ${time} ×` : "Add time"}
-				</button>
-			)}
+		<div className="relative space-y-2 rounded-2xl border-[1.5px] border-solid border-[var(--share-accent,#2959C4)] bg-white px-3 py-2">
+			<div className="flex flex-wrap items-center justify-between gap-2">
+				{user ? (
+					<p className="text-sm text-gray-11">
+						Commenting as{" "}
+						<strong className="font-medium text-[var(--share-ink)]">
+							{user.name ?? "You"}
+						</strong>
+					</p>
+				) : (
+					<GuestCommentNameFields fieldsRef={guestFields} />
+				)}
+				{!isScreenshot && (
+					<button
+						type="button"
+						aria-label={hasTimestamp ? "Remove time" : "Add current time"}
+						className="min-h-7 rounded-md bg-[var(--share-accent-soft)] px-2 font-mono text-xs font-medium text-[var(--share-accent-text)] hover:brightness-95"
+						onClick={() => setIncludeTime(!includeTime)}
+					>
+						{hasTimestamp ? `at ${time} ✕` : "Add time"}
+					</button>
+				)}
+			</div>
 			<CommentInput
 				inputId={onCancel ? undefined : SHARE_COMMENT_FIELD_ID}
 				placeholder={
@@ -98,16 +108,6 @@ export function CommentComposer({
 				showCancelButton={Boolean(onCancel)}
 				showErrorMessage
 				autoFocus={Boolean(onCancel)}
-				avatar={
-					user && (
-						<SignedImageUrl
-							image={user.imageUrl}
-							name={user.name ?? "You"}
-							className="size-7 shrink-0 rounded-full"
-							letterClass="text-xs"
-						/>
-					)
-				}
 				actions={
 					user &&
 					canRecordMedia && (
