@@ -1,23 +1,19 @@
-import { buildEnv } from "@cap/env";
 import "./tailwind-base.css";
+import Link from "next/link";
 import type { PropsWithChildren } from "react";
-import { DubAnalytics } from "@/components/referrals/DubAnalytics";
-import { formatStarCount, getGitHubStars } from "@/utils/github";
-import { DeferredMessengerWidget } from "../Layout/DeferredMessengerWidget";
-import { Footer } from "./Footer";
-import { Navbar } from "./Navbar";
+import { OmaShareMark } from "@/components/OmaShareMark";
+import { SourceCredit } from "@/components/SourceCredit";
 
-export default async function Layout(props: PropsWithChildren) {
-	const starCount = await getGitHubStars();
-	const stars = formatStarCount(starCount);
-
+export default function Layout({ children }: PropsWithChildren) {
 	return (
-		<>
-			<Navbar stars={stars} />
-			{props.children}
-			<Footer />
-			{buildEnv.NEXT_PUBLIC_IS_CAP === "true" && <DeferredMessengerWidget />}
-			{buildEnv.NEXT_PUBLIC_IS_CAP === "true" && <DubAnalytics />}
-		</>
+		<div className="flex min-h-dvh flex-col">
+			<header className="border-b border-gray-5 px-6 py-4">
+				<Link href="/dashboard">
+					<OmaShareMark />
+				</Link>
+			</header>
+			<div className="flex-1">{children}</div>
+			<SourceCredit workspace />
+		</div>
 	);
 }

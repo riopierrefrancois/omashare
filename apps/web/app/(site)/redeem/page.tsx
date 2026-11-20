@@ -6,9 +6,9 @@ import {
 } from "@/lib/license-redeem";
 
 export const metadata: Metadata = {
-	title: "Redeem | Cap",
+	title: "Redeem",
 	description:
-		"Claim a gifted Cap Desktop License, or pick up the license you just bought.",
+		"Claim a gifted desktop license, or pick up the license you just bought.",
 	alternates: { canonical: "https://cap.so/redeem" },
 	robots: { index: false, follow: false },
 };

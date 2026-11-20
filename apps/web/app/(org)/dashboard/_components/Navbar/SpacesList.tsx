@@ -114,7 +114,9 @@ const SpacesList = ({ toggleMobileNav }: { toggleMobileNav?: () => void }) => {
 
 		const toastId =
 			payload.ids.length > 1
-				? toast.loading(`Sharing ${payload.ids.length} Caps to ${spaceName}...`)
+				? toast.loading(
+						`Sharing ${payload.ids.length} videos to ${spaceName}...`,
+					)
 				: undefined;
 
 		try {
@@ -150,7 +152,7 @@ const SpacesList = ({ toggleMobileNav }: { toggleMobileNav?: () => void }) => {
 				);
 			} else if (shared > 0) {
 				toast.warning(
-					`Shared ${shared} of ${payload.ids.length} Caps to ${spaceName}`,
+					`Shared ${shared} of ${payload.ids.length} videos to ${spaceName}`,
 					{ id: toastId },
 				);
 			} else {

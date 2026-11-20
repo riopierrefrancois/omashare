@@ -205,7 +205,7 @@ export const Settings = () => {
 						/>
 						<SettingsRow
 							title={<label htmlFor={firstNameId}>Your name</label>}
-							description="Changing your name will update how it appears when sharing a Cap, and in your profile."
+							description="Changing your name will update how it appears when sharing a video, and in your profile."
 							control={
 								<div className="flex gap-2 w-full sm:w-auto">
 									<Input
@@ -234,7 +234,7 @@ export const Settings = () => {
 							title={
 								<label htmlFor={contactEmailId}>Contact email address</label>
 							}
-							description="This is the email address you used to sign up to Cap with."
+							description="This is the email address you used to create your account."
 							control={
 								<Input
 									type="email"
@@ -299,7 +299,7 @@ export const Settings = () => {
 				<SettingsCard>
 					<SettingsRow
 						title="Sign out of all devices"
-						description="Invalidate every Cap web session, desktop app authentication token, and CLI API key connected to your account."
+						description="Invalidate every web session, desktop app authentication token, and CLI API key connected to your account."
 						control={
 							<Button
 								type="button"
@@ -322,7 +322,7 @@ export const Settings = () => {
 				<DialogContent>
 					<DialogHeader
 						icon={<LogOut className="size-4" />}
-						description="This will immediately invalidate existing Cap web sessions, desktop session tokens, desktop API keys, and CLI API keys for your account."
+						description="This will immediately invalidate existing web sessions, desktop session tokens, desktop API keys, and CLI API keys for your account."
 					>
 						<DialogTitle>Sign out of all devices?</DialogTitle>
 					</DialogHeader>
@@ -331,8 +331,8 @@ export const Settings = () => {
 							You will be signed out of this browser after the reset completes.
 						</p>
 						<p>
-							The Cap desktop app may need you to click Sign out, then sign in
-							again before uploads and settings sync work.
+							The desktop app may need you to click Sign out, then sign in again
+							before uploads and settings sync work.
 						</p>
 					</div>
 					<DialogFooter>

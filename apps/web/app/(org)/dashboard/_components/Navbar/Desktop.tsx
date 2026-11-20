@@ -1,11 +1,12 @@
 "use client";
-import { Button, Logo } from "@cap/ui";
+import { Button } from "@cap/ui";
 import clsx from "clsx";
 import { motion } from "framer-motion";
 import { useDetectPlatform } from "hooks/useDetectPlatform";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
+import { OmaShareMark } from "@/components/OmaShareMark";
 import { Tooltip } from "@/components/Tooltip";
 import { useDashboardContext } from "../../Contexts";
 import AdminNavItems from "./Items";
@@ -48,14 +49,7 @@ export const DesktopNav = () => {
 			<div className="flex flex-col mx-auto w-full h-full">
 				<div className="flex justify-between items-center px-4 pt-4 mb-3 w-full truncate shrink-0 min-h-8">
 					<Link href="/dashboard">
-						<Logo
-							hideLogoName={sidebarCollapsed}
-							viewBoxDimensions={sidebarCollapsed ? "0 0 40 40" : "0 0 120 40"}
-							className={clsx(
-								"w-[96px] h-8",
-								sidebarCollapsed ? "mx-auto" : "",
-							)}
-						/>
+						<OmaShareMark compact={sidebarCollapsed} />
 					</Link>
 					<Tooltip
 						kbd={[cmdSymbol, "Shift", "S"]}

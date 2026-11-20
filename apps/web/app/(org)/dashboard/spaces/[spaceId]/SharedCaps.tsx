@@ -333,7 +333,7 @@ export const SharedCaps = ({
 		if (!payload) return;
 		if (payload.ids.length === 0 || payload.ids.includes(id)) return;
 		if (payload.ids.length > MAX_REORDER_ITEMS) {
-			toast.error(`You can reorder up to ${MAX_REORDER_ITEMS} Caps at once`);
+			toast.error(`You can reorder up to ${MAX_REORDER_ITEMS} videos at once`);
 			return;
 		}
 		void reorderTo(payload.ids, { type: side, targetId: id });
@@ -497,7 +497,7 @@ export const SharedCaps = ({
 			<DragHint
 				caps={
 					canReorder
-						? "Drop between Caps to reorder, or on a folder to move"
+						? "Drop between videos to reorder, or on a folder to move"
 						: "Drop on a folder to move"
 				}
 			/>

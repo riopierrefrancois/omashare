@@ -202,15 +202,14 @@ describe.each(["login", "signup"] as const)(
 			expect(markup).toContain("Continue with SSO");
 		});
 
-		it("tells blocked sign-ups that Cap is open source", async () => {
+		it("explains that sign-up is restricted", async () => {
 			mocks.searchParams.set("error", "SignupBlocked");
 
 			const markup = await renderForm();
 
 			expect(markup).toContain('role="alert"');
-			expect(markup).toContain("open source");
-			expect(markup).toContain("https://github.com/CapSoftware/Cap");
-			expect(markup).toContain("mailto:richie@cap.so");
+			expect(markup).toContain("Sign-up is restricted");
+			expect(markup).toContain("organization administrator");
 			expect(markup).not.toContain("SSO profile details are missing");
 		});
 

@@ -1,8 +1,7 @@
 "use client";
 
-import { Button, Input, LogoBadge } from "@cap/ui";
+import { Button, Input } from "@cap/ui";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons/faArrowLeft";
-import { faEnvelope } from "@fortawesome/free-solid-svg-icons/faEnvelope";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons/faExclamationCircle";
 import { captureException } from "@sentry/nextjs";
 import { AnimatePresence, motion } from "framer-motion";
@@ -25,17 +24,20 @@ import { toast } from "sonner";
 import { getOrganizationSSOData } from "@/actions/organization/get-organization-sso-data";
 import { trackEvent } from "@/app/utils/analytics";
 import { FontAwesomeIcon } from "@/components/FontAwesomeIcon";
+import { OmaShareMark } from "@/components/OmaShareMark";
 import { usePublicEnv } from "@/utils/public-env";
 import { getEmailCodeCooldownSeconds, requestEmailCode } from "../auth-email";
 import { getSafeNextPath } from "../safe-next";
 import { SsoErrorNotice } from "../sso-error-notice";
 
 const MotionInput = motion(Input);
-const MotionLogoBadge = motion(LogoBadge);
-const MotionLink = motion(Link);
 const MotionButton = motion(Button);
 
-export function LoginForm() {
+export function LoginForm({
+	allowedDomains = [],
+}: {
+	allowedDomains?: string[];
+}) {
 	const searchParams = useSearchParams();
 	const router = useRouter();
 	const next = searchParams?.get("next");
@@ -92,7 +94,7 @@ export function LoginForm() {
 			if (error === "OAuthAccountNotLinked") {
 				setOauthError(true);
 				return toast.error(
-					"This email already has a Cap account. Sign in using your original sign-in method.",
+					"This email already has a account. Sign in using your original sign-in method.",
 				);
 			} else if (error === "SsoMissingProfileAttributes") {
 				setShowOrgInput(true);
@@ -101,7 +103,7 @@ export function LoginForm() {
 				return;
 			} else if (error === "DisposableEmail") {
 				return toast.error(
-					"Temporary email addresses can't be used with Cap. Please use your work or personal email.",
+					"Temporary email addresses cannot be used. Please use your work or personal email.",
 				);
 			} else if (error === "SsoSessionExpired") {
 				setShowOrgInput(true);
@@ -306,7 +308,7 @@ export function LoginForm() {
 				layout: { duration: 0.3, ease: "easeInOut" },
 				height: { duration: 0.3, ease: "easeInOut" },
 			}}
-			className="overflow-hidden relative w-[calc(100%-5%)] p-[28px] max-w-[432px] bg-gray-3 border border-gray-5 rounded-2xl"
+			className="relative w-full max-w-[380px]"
 		>
 			<motion.button
 				type="button"
@@ -320,35 +322,23 @@ export function LoginForm() {
 				}}
 				onClick={() => setShowOrgInput(false)}
 				disabled={ssoLoading}
-				className="absolute overflow-hidden top-5 rounded-full left-5 z-20 hover:bg-gray-1 gap-2 items-center py-1.5 px-3 text-gray-12 bg-transparent border border-gray-4 transition-colors duration-300 cursor-pointer"
+				className="absolute overflow-hidden -top-9 rounded-full left-0 z-20 hover:bg-gray-1 gap-2 items-center py-1.5 px-3 text-gray-12 bg-transparent border border-gray-4 transition-colors duration-300 cursor-pointer"
 			>
 				<FontAwesomeIcon className="w-2" icon={faArrowLeft} />
 				<motion.p layout="position" className="text-xs text-inherit">
 					Back
 				</motion.p>
 			</motion.button>
-			<MotionLink layout="position" className="flex mx-auto size-fit" href="/">
-				<MotionLogoBadge layout="position" className="size-12" />
-			</MotionLink>
-			<motion.div
-				layout="position"
-				className="flex flex-col justify-center items-center my-7 text-left"
-			>
-				<motion.h1
-					key="title"
-					layout="position"
-					className="text-2xl font-semibold text-gray-12"
-				>
-					Sign in to Cap
-				</motion.h1>
-				<motion.p
-					key="subtitle"
-					layout="position"
-					className="text-[16px] text-gray-10"
-				>
-					Beautiful screen recordings, owned by you.
-				</motion.p>
-			</motion.div>
+			<div className="mb-[22px] flex flex-col gap-3.5">
+				<OmaShareMark className="text-[17px]" />
+				<h1 className="text-[28px] font-semibold tracking-[-0.02em]">
+					Sign in
+				</h1>
+				<p className="text-[15px] leading-[1.55] text-[#5C6280]">
+					We'll email you a 6-digit code. Watching and commenting never need an
+					account.
+				</p>
+			</div>
 			<motion.div layout="position" className="flex flex-col space-y-3">
 				<SsoErrorNotice error={searchParams?.get("error")} />
 				<Suspense
@@ -373,7 +363,7 @@ export function LoginForm() {
 									ease: "easeInOut",
 									opacity: { delay: 0.05 },
 								}}
-								className="px-1"
+								className="min-w-0"
 							>
 								{showOrgInput ? (
 									<motion.div
@@ -459,6 +449,7 @@ export function LoginForm() {
 									>
 										<NormalLogin
 											setShowOrgInput={setShowOrgInput}
+											allowedDomains={allowedDomains}
 											email={email}
 											emailSent={emailSent}
 											setEmail={setEmail}
@@ -476,7 +467,7 @@ export function LoginForm() {
 							className="pt-3 text-xs text-center text-gray-9"
 						>
 							By typing your email and clicking continue, you acknowledge that
-							you have both read and agree to Cap's{" "}
+							you have both read and agree to the{" "}
 							<Link
 								href="/terms"
 								target="_blank"
@@ -559,6 +550,7 @@ const LoginWithSSO = ({
 };
 
 const NormalLogin = ({
+	allowedDomains,
 	setShowOrgInput,
 	email,
 	emailSent,
@@ -568,6 +560,7 @@ const NormalLogin = ({
 	handleGoogleSignIn,
 	handleOidcSignIn,
 }: {
+	allowedDomains: string[];
 	setShowOrgInput: (show: boolean) => void;
 	email: string;
 	emailSent: boolean;
@@ -583,12 +576,19 @@ const NormalLogin = ({
 	return (
 		<motion.div>
 			<motion.div layout className="flex flex-col space-y-3">
+				<label
+					className="text-[13px] font-semibold text-[#2E3350]"
+					htmlFor={emailInputId}
+				>
+					Email
+				</label>
 				<MotionInput
 					id={emailInputId}
 					name="email"
 					autoFocus
 					type="email"
-					placeholder={emailSent ? "" : "tim@apple.com"}
+					placeholder="you@example.org"
+					className="min-h-[46px] rounded-[10px] border-[1.5px] border-[#2959C4] bg-white px-3.5 text-[15px] text-[#1F2335]"
 					autoComplete="email"
 					required
 					value={email}
@@ -602,24 +602,21 @@ const NormalLogin = ({
 					type="submit"
 					disabled={loading || emailSent}
 					spinner={loading}
-					icon={
-						loading ? undefined : (
-							<FontAwesomeIcon className="mr-1 size-4" icon={faEnvelope} />
-						)
-					}
+					className="min-h-[46px] rounded-[10px] bg-[#2959C4] text-[15px] font-semibold text-white hover:bg-[#244EAB]"
 				>
-					{loading ? "Sending code..." : "Login with email"}
+					{loading ? "Sending code…" : "Send me a code"}
+					{!loading && (
+						<kbd className="ml-2 rounded bg-white/15 px-1.5 py-0.5 font-mono text-xs">
+							⏎
+						</kbd>
+					)}
 				</MotionButton>
-				{/* {NODE_ENV === "development" && (
-                  <div className="flex justify-center items-center px-6 py-3 mt-3 bg-red-600 rounded-xl">
-                    <p className="text-lg text-white">
-                      <span className="font-medium text-white">
-                        Development mode:
-                      </span>{" "}
-                      Auth URL will be logged to your dev console.
-                    </p>
-                  </div>
-                )} */}
+				{allowedDomains.length > 0 && (
+					<p className="font-mono text-xs text-[#6B7089]">
+						only {allowedDomains.map((domain) => `@${domain}`).join(", ")}{" "}
+						addresses
+					</p>
+				)}
 			</motion.div>
 			<motion.p
 				layout="position"

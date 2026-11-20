@@ -62,6 +62,7 @@ const Top = () => {
 	const queryClient = useQueryClient();
 
 	const pathname = usePathname();
+	const isLibrary = pathname === "/dashboard/caps";
 
 	const crumbs = dashboardTitle(pathname);
 	const { width: slotTitleWidth } = useTopBarTitleWidth();
@@ -150,62 +151,64 @@ const Top = () => {
 						id={TOP_BAR_TITLE_SLOT_ID}
 						className="flex flex-1 items-center min-w-0 peer empty:hidden"
 					/>
-					<h1 className="flex items-center min-w-0 text-lg font-medium tracking-tight leading-6 lg:text-[15px] peer-[:not(:empty)]:hidden">
-						{activeSpace ? (
-							<>
-								<Link
-									href="/dashboard/spaces/browse"
-									className="hidden transition-colors text-gray-10 shrink-0 hover:text-gray-12 lg:inline"
-								>
-									Spaces
-								</Link>
-								<span className="hidden lg:contents">
-									<TopBarCrumbSeparator />
-								</span>
-								<SignedImageUrl
-									image={activeSpace.iconUrl}
-									name={activeSpace.name}
-									letterClass="text-xs"
-									className="relative flex-shrink-0 self-start mt-0.5 mr-2 size-5 lg:self-auto lg:mt-0"
-								/>
-								<span className="min-w-0 text-gray-12 [overflow-wrap:anywhere] lg:truncate">
-									{activeSpace.name}
-								</span>
-							</>
-						) : (
-							crumbs.map((crumb, index) => {
-								const isLast = index === crumbs.length - 1;
-								return (
-									<span
-										key={crumb.label}
-										className={clsx(
-											"flex items-center",
-											isLast ? "min-w-0" : "shrink-0",
-										)}
+					{!isLibrary && (
+						<h1 className="flex items-center min-w-0 text-lg font-medium tracking-tight leading-6 lg:text-[15px] peer-[:not(:empty)]:hidden">
+							{activeSpace ? (
+								<>
+									<Link
+										href="/dashboard/spaces/browse"
+										className="hidden transition-colors text-gray-10 shrink-0 hover:text-gray-12 lg:inline"
 									>
-										{index > 0 && <TopBarCrumbSeparator />}
-										{isLast || !crumb.href ? (
-											<span
-												className={clsx(
-													"[overflow-wrap:anywhere] lg:truncate",
-													isLast ? "text-gray-12" : "text-gray-10",
-												)}
-											>
-												{crumb.label}
-											</span>
-										) : (
-											<Link
-												href={crumb.href}
-												className="transition-colors text-gray-10 hover:text-gray-12"
-											>
-												{crumb.label}
-											</Link>
-										)}
+										Spaces
+									</Link>
+									<span className="hidden lg:contents">
+										<TopBarCrumbSeparator />
 									</span>
-								);
-							})
-						)}
-					</h1>
+									<SignedImageUrl
+										image={activeSpace.iconUrl}
+										name={activeSpace.name}
+										letterClass="text-xs"
+										className="relative flex-shrink-0 self-start mt-0.5 mr-2 size-5 lg:self-auto lg:mt-0"
+									/>
+									<span className="min-w-0 text-gray-12 [overflow-wrap:anywhere] lg:truncate">
+										{activeSpace.name}
+									</span>
+								</>
+							) : (
+								crumbs.map((crumb, index) => {
+									const isLast = index === crumbs.length - 1;
+									return (
+										<span
+											key={crumb.label}
+											className={clsx(
+												"flex items-center",
+												isLast ? "min-w-0" : "shrink-0",
+											)}
+										>
+											{index > 0 && <TopBarCrumbSeparator />}
+											{isLast || !crumb.href ? (
+												<span
+													className={clsx(
+														"[overflow-wrap:anywhere] lg:truncate",
+														isLast ? "text-gray-12" : "text-gray-10",
+													)}
+												>
+													{crumb.label}
+												</span>
+											) : (
+												<Link
+													href={crumb.href}
+													className="transition-colors text-gray-10 hover:text-gray-12"
+												>
+													{crumb.label}
+												</Link>
+											)}
+										</span>
+									);
+								})
+							)}
+						</h1>
+					)}
 				</div>
 			</div>
 			<div

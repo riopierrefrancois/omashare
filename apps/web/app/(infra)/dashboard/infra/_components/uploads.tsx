@@ -253,7 +253,7 @@ function readVideo(file: File) {
 							new UploadError(
 								notVideo
 									? NOT_A_VIDEO
-									: `This browser cannot open that file. Cap Infra accepts ${INFRA_SUPPORTED_VIDEO_FORMATS}. If it is one of those, upload it through the API.`,
+									: `This browser cannot open that file. Infra accepts ${INFRA_SUPPORTED_VIDEO_FORMATS}. If it is one of those, upload it through the API.`,
 							),
 						),
 					);

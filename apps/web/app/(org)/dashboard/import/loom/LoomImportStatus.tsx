@@ -28,7 +28,7 @@ const STATE_TONES: Record<LoomImportState, string> = {
 };
 
 const FAILURE_REASONS: Record<LoomImportFailureReason, string> = {
-	retrying: "Cap was busy and will try again on its own",
+	retrying: "video was busy and will try again on its own",
 	source: "Loom's copy was missing or incomplete",
 	stopped: "Stopped before it finished",
 };

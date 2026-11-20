@@ -141,7 +141,7 @@ export default function FolderVideosSection({
 	const { mutate: deleteCap, isPending: isDeletingCap } = useEffectMutation({
 		mutationFn: (id: Video.VideoId) => rpc.VideoDelete(id),
 		onSuccess: () => {
-			toast.success("Cap deleted successfully");
+			toast.success("video deleted successfully");
 			router.refresh();
 		},
 		onError: () => {
@@ -183,8 +183,8 @@ export default function FolderVideosSection({
 							</p>
 							<p className="max-w-sm text-sm text-gray-10 text-pretty">
 								{canMove
-									? "Drag Caps onto this folder from My Caps, use Move on any Cap, or upload one here."
-									: "Caps added to this folder will show up here."}
+									? "Drag videos onto this folder from My videos, use Move on any video, or upload one here."
+									: "videos added to this folder will show up here."}
 							</p>
 						</div>
 					</div>

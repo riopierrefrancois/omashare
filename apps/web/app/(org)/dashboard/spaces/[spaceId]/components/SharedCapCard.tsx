@@ -96,7 +96,7 @@ export const SharedCapCard: React.FC<SharedCapCardProps> = ({
 	const deleteCap = useEffectMutation({
 		mutationFn: (id: Video.VideoId) => rpc.VideoDelete(id),
 		onSuccess: () => {
-			toast.success("Cap deleted successfully");
+			toast.success("video deleted successfully");
 			router.refresh();
 		},
 		onError: () => {

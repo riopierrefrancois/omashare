@@ -18,7 +18,7 @@ import { SignedBaaCard } from "../components/SignedBaaCard";
 import { SsoCard } from "../components/SsoCard";
 
 export const metadata: Metadata = {
-	title: "Security & Compliance — Cap",
+	title: "Security & Compliance",
 };
 
 export default async function OrganizationSecurityPage({
@@ -43,7 +43,7 @@ export default async function OrganizationSecurityPage({
 						<SettingsRow
 							icon={<KeyDoodle />}
 							title="Switch organizations to continue SSO setup"
-							description="Choose the organization you were setting up from the organization switcher, then reload this page to refresh its payment and SSO status. If you are already in the correct organization, contact Cap support."
+							description="Choose the organization you were setting up from the organization switcher, then reload this page to refresh its payment and SSO status. If you are already in the correct organization, contact video support."
 						/>
 					</SettingsCard>
 				</SettingsSection>

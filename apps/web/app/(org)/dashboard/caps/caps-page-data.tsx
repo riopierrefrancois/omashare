@@ -25,6 +25,7 @@ import {
 	inArray,
 	isNotNull,
 	isNull,
+	like,
 	or,
 	sql,
 } from "drizzle-orm";
@@ -151,6 +152,14 @@ export async function CapsPageView({
 	});
 	const isArchivedView = view === "archived";
 
+	const search =
+		!isArchivedView && typeof searchParams.q === "string"
+			? searchParams.q.trim().slice(0, 120)
+			: "";
+	const matchName = search
+		? like(videos.name, `%${search.replace(/[\\%_]/g, "\\$&")}%`)
+		: undefined;
+
 	const userId = user.id;
 	const offset = (page - 1) * limit;
 
@@ -160,7 +169,7 @@ export async function CapsPageView({
 	const totalCountPromise = db()
 		.select({
 			count:
-				sql<number>`count(case when ${videos.archivedAt} is null then 1 end)`.mapWith(
+				sql<number>`count(case when ${videos.archivedAt} is null and ${matchName ?? sql`true`} then 1 end)`.mapWith(
 					Number,
 				),
 			archivedCount:
@@ -192,6 +201,7 @@ export async function CapsPageView({
 					? isNotNull(videos.archivedAt)
 					: and(isNull(videos.folderId), isNull(videos.archivedAt)),
 				isNull(organizations.tombstoneAt),
+				matchName,
 			),
 		)
 		.orderBy(
@@ -396,6 +406,7 @@ export async function CapsPageView({
 			pageSize={limit}
 			archivedCount={archivedCount}
 			view={view}
+			search={search}
 			analyticsEnabled={Boolean(
 				serverEnv().TINYBIRD_TOKEN && serverEnv().TINYBIRD_HOST,
 			)}

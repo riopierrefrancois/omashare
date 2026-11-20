@@ -541,8 +541,8 @@ export const SharingDialog: React.FC<SharingDialogProps> = ({
 									</Button>
 								</div>
 								<p className="mt-1 mb-2 text-xs text-gray-10">
-									Invite someone by email. They can view with a Cap account
-									using that address.
+									Invite someone by email. They can view with a account using
+									that address.
 								</p>
 								<div className="flex gap-2">
 									<Input
@@ -689,7 +689,7 @@ export const SharingDialog: React.FC<SharingDialogProps> = ({
 										<p className="text-sm font-medium text-gray-12">Spaces</p>
 										<p className="text-xs text-gray-10 text-pretty">
 											Members of a space can watch it there. It also stays in My
-											Caps. To file it in a folder, use Move.
+											videos. To file it in a folder, use Move.
 										</p>
 									</div>
 								</div>

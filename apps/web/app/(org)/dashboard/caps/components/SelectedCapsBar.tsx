@@ -42,7 +42,7 @@ interface SelectedCapsBarProps {
 	};
 }
 
-const capsNoun = (count: number) => (count === 1 ? "Cap" : "Caps");
+const capsNoun = (count: number) => (count === 1 ? "video" : "videos");
 
 const secondaryMotion = {
 	initial: { opacity: 0, y: 3 },
@@ -133,7 +133,7 @@ export const SelectedCapsBar = ({
 									>
 										{selection.matchingTruncated
 											? `The first ${selection.selectAllLimit.toLocaleString("en-US")} are selected`
-											: "Every Cap here is selected"}
+											: "Every video here is selected"}
 									</motion.p>
 								) : (
 									moveLocation &&
@@ -203,7 +203,7 @@ export const SelectedCapsBar = ({
 									<ConfirmationDialog
 										open={confirmOpen}
 										icon={<FontAwesomeIcon icon={faFilm} />}
-										title="Delete selected Caps"
+										title="Delete selected videos"
 										description={`Are you sure you want to delete ${
 											selectedCaps.length
 										} ${capsNoun(selectedCaps.length)}? This action cannot be undone.`}

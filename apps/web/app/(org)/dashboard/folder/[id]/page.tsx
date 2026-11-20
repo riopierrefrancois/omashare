@@ -99,14 +99,14 @@ const FolderPage = async (props: PageProps<"/dashboard/folder/[id]">) => {
 						createdAt: folder.createdAt,
 					}))}
 					canMove={share.canManage}
-					moveRootLabel="My Caps"
+					moveRootLabel="My videos"
 				/>
 
 				{/* Display Videos */}
 				<FolderVideosSection
 					initialVideos={videosData}
 					location={{ type: "personal" }}
-					rootLabel="My Caps"
+					rootLabel="My videos"
 					currentFolderId={folderId}
 					canMove={share.canManage}
 					allowBulkDelete

@@ -67,13 +67,13 @@ The brand preview computes chip colors by mixing 12% accent with 88% page color,
 
 
 ### Task D3: OmaShare chrome for signed-in pages
-- [ ] Load Geist and Geist Mono with `next/font/google`, and Roboto for share pages that pick it.
-- [ ] Add an `OmaShareMark` component (glyph plus `omashare` wordmark) and use it wherever Cap's logo shows on signed-in pages.
+- [x] Load Geist and Geist Mono with `next/font/google`, and Roboto for share pages that pick it.
+- [x] Add an `OmaShareMark` component (glyph plus `omashare` wordmark) and use it wherever Cap's logo shows on signed-in pages.
   - Favicon and app icons become the glyph.
   - Page titles: `<page> · omashare` on signed-in pages, and `<video title> · <organization name>` on share pages.
-- [ ] Restyle the **sign-in** (and verify-code) pages to `ModernLogin.dc.html`. The "only @domain addresses" line reads `CAP_ALLOWED_SIGNUP_DOMAINS` and is hidden when that's unset.
-- [ ] Restyle the **My videos** grid page to `ModernDashboard.dc.html`: header, search, Upload button, and video cards with copy link. The rest of the dashboard (settings, spaces) only gets the new mark and fonts in this phase, not a full redesign.
-- [ ] Remove every user-visible "Cap" word from kept pages. Use "video" where Cap says "Cap" (e.g. "My Caps" becomes "My videos", "Cap Recording" becomes the organization name). Leave "Cap" only in the AGPL footer and in code identifiers.
+- [x] Restyle the **sign-in** (and verify-code) pages to `ModernLogin.dc.html`. The "only @domain addresses" line reads `CAP_ALLOWED_SIGNUP_DOMAINS` and is hidden when that's unset.
+- [x] Restyle the **My videos** grid page to `ModernDashboard.dc.html`: header, search, Upload button, and video cards with copy link. The rest of the dashboard (settings, spaces) only gets the new mark and fonts in this phase, not a full redesign.
+- [x] Remove every user-visible "Cap" word from kept pages. Use "video" where Cap says "Cap" (e.g. "My Caps" becomes "My videos", "Cap Recording" becomes the organization name). Leave "Cap" only in the AGPL footer and in code identifiers.
 
 ### Phase D gate
 - Biome on the touched files, `bun run typecheck`, and vitest for the touched and new tests.

@@ -8,6 +8,7 @@ import { faBoxArchive } from "@fortawesome/free-solid-svg-icons/faBoxArchive";
 import clsx from "clsx";
 import { Effect, Exit } from "effect";
 import { AnimatePresence } from "framer-motion";
+import { Upload } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -43,7 +44,7 @@ import { DragHint } from "./components/DragHint";
 import { EmptyCapState } from "./components/EmptyCapState";
 import type { FolderDataType } from "./components/Folder";
 import { FoldersSection } from "./components/FoldersSection";
-import { QuickActions } from "./components/QuickActions";
+import { UploadCapButton } from "./components/UploadCapButton";
 import { useArchiveCaps, useLeavingCaps } from "./components/useArchiveCaps";
 import { useCapSelection } from "./components/useCapSelection";
 import { useCapsMoved } from "./components/useCapsMoved";
@@ -94,6 +95,7 @@ export const Caps = ({
 	pageSize = DEFAULT_DASHBOARD_PAGE_SIZE,
 	archivedCount = 0,
 	view = "library",
+	search = "",
 }: {
 	data: VideoData;
 	count: number;
@@ -103,6 +105,7 @@ export const Caps = ({
 	pageSize?: number;
 	archivedCount?: number;
 	view?: "library" | "archived";
+	search?: string;
 }) => {
 	const router = useRouter();
 	const params = useSearchParams();
@@ -136,7 +139,7 @@ export const Caps = ({
 	);
 	const selection = useCapSelection({
 		pageIds,
-		totalCount: count,
+		totalCount: search ? pageIds.length : count,
 		view: selectAllView,
 	});
 	const selectedCaps = selection.selected;
@@ -242,7 +245,7 @@ export const Caps = ({
 			yield* rpc.VideoDelete(id);
 		}),
 		onSuccess: () => {
-			toast.success("Cap deleted successfully");
+			toast.success("video deleted successfully");
 			router.refresh();
 		},
 		onError: (_error: unknown) => toast.error("Failed to delete cap"),
@@ -286,14 +289,6 @@ export const Caps = ({
 		};
 	}, [selectedCaps, deleteCaps, isDeletingCaps, pageIds]);
 
-	if (
-		!isArchivedView &&
-		shownCount === 0 &&
-		folders.length === 0 &&
-		shownArchivedCount === 0
-	)
-		return <EmptyCapState />;
-
 	const archivedLink =
 		!isArchivedView && shownArchivedCount > 0 ? (
 			<Link
@@ -309,12 +304,17 @@ export const Caps = ({
 		) : null;
 
 	return (
-		<div className="flex relative flex-col w-full h-full">
+		<div
+			className={clsx(
+				"flex relative flex-col w-full h-full",
+				!isArchivedView && "mx-auto max-w-[1240px]",
+			)}
+		>
 			{isArchivedView ? (
 				<div className="mb-8">
 					<p className="max-w-xl text-sm text-gray-10 text-pretty">
-						Archived Caps are hidden from My Caps and your folders. Their links,
-						comments and any spaces they are shared with keep working.
+						Archived videos are hidden from My videos and your folders. Their
+						links, comments and any spaces they are shared with keep working.
 					</p>
 				</div>
 			) : (
@@ -323,16 +323,68 @@ export const Caps = ({
 						open={openNewFolderDialog}
 						onOpenChange={setOpenNewFolderDialog}
 					/>
-					<QuickActions onNewFolder={() => setOpenNewFolderDialog(true)} />
+					<div className="mb-5 flex flex-wrap items-center gap-3">
+						<h1 className="text-[28px] font-semibold tracking-[-0.02em]">
+							My videos
+						</h1>
+						<span className="mr-auto font-mono text-sm text-gray-10">
+							{shownCount}
+						</span>
+						<form
+							action="/dashboard/caps"
+							className="flex h-[42px] w-full items-center rounded-[10px] border border-gray-5 px-3 sm:w-[280px]"
+						>
+							<input
+								key={search}
+								name="q"
+								type="search"
+								defaultValue={search}
+								placeholder="Search"
+								aria-label="Search videos"
+								className="min-w-0 flex-1 bg-transparent text-sm outline-none"
+							/>
+							{params.has("limit") && (
+								<input type="hidden" name="limit" value={pageSize} />
+							)}
+						</form>
+						<UploadCapButton
+							renderTrigger={(onClick) => (
+								<button
+									type="button"
+									onClick={onClick}
+									className="inline-flex h-[42px] items-center gap-2 rounded-[10px] bg-[#2959C4] px-4 text-sm font-semibold text-white hover:bg-[#244EAB]"
+								>
+									<Upload className="size-4" aria-hidden="true" /> Upload
+								</button>
+							)}
+						/>
+						<button
+							type="button"
+							onClick={() => setOpenNewFolderDialog(true)}
+							className={clsx(listControlClass, "px-3")}
+						>
+							New folder
+						</button>
+					</div>
 					<FoldersSection
 						title="Folders"
 						scope="personal"
 						folders={folders}
 						canMove
-						moveRootLabel="My Caps"
+						moveRootLabel="My videos"
 					/>
 				</>
 			)}
+			{!isArchivedView &&
+				visibleVideos.length === 0 &&
+				!isUploading &&
+				(search ? (
+					<p className="rounded-xl border border-gray-5 p-6 text-sm text-gray-11">
+						No videos match your search.
+					</p>
+				) : (
+					folders.length === 0 && <EmptyCapState />
+				))}
 			{isArchivedView && visibleVideos.length === 0 && (
 				<div
 					className={clsx(
@@ -346,26 +398,26 @@ export const Caps = ({
 							Nothing archived
 						</p>
 						<p className="max-w-sm text-sm text-gray-10 text-pretty">
-							Archive a Cap from its menu to tidy up My Caps without deleting
-							anything.
+							Archive a video from its menu to tidy up My videos without
+							deleting anything.
 						</p>
 					</div>
 					<Link
 						href="/dashboard/caps"
 						className={clsx(listControlClass, "px-3 mt-1")}
 					>
-						Back to My Caps
+						Back to My videos
 					</Link>
 				</div>
 			)}
 			{visibleVideos.length === 0 && archivedLink && (
 				<div className="flex justify-end mb-5">{archivedLink}</div>
 			)}
-			{visibleVideos.length > 0 && (
+			{(visibleVideos.length > 0 || (!isArchivedView && isUploading)) && (
 				<>
 					<CapListHeader
-						title={isArchivedView ? "Archived" : "Videos and screenshots"}
-						count={shownCount}
+						title={isArchivedView ? "Archived" : undefined}
+						count={isArchivedView ? shownCount : undefined}
 						selectionState={selection.pageState}
 						onToggleSelectAll={selection.togglePage}
 						actions={
@@ -377,7 +429,14 @@ export const Caps = ({
 					/>
 
 					<SeededThumbnailsProvider value={thumbnails}>
-						<div className="grid relative grid-cols-1 gap-x-5 gap-y-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+						<div
+							className={clsx(
+								"grid relative gap-[18px]",
+								isArchivedView
+									? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
+									: "grid-cols-[repeat(auto-fill,minmax(min(100%,270px),1fr))]",
+							)}
+						>
 							{!isArchivedView && isUploading && (
 								<UploadPlaceholderCard key={"upload-placeholder"} />
 							)}
@@ -398,6 +457,7 @@ export const Caps = ({
 											<CapCard
 												key={video.id}
 												cap={video}
+												libraryCard={!isArchivedView}
 												analytics={videoAnalytics ?? 0}
 												onDelete={() => {
 													if (selectedCaps.length > 0) {
@@ -416,7 +476,7 @@ export const Caps = ({
 												selectedIds={selectedCaps}
 												canMove={!isArchivedView}
 												moveLocation={moveLocation}
-												moveRootLabel="My Caps"
+												moveRootLabel="My videos"
 												isArchived={isArchivedView}
 												onArchiveToggle={() =>
 													void archiveCaps.mutate({
@@ -438,11 +498,11 @@ export const Caps = ({
 					<CapPagination
 						currentPage={page}
 						totalPages={totalPages}
-						hrefForPage={
-							isArchivedView
-								? (target) => `/dashboard/caps/archived?page=${target}`
-								: undefined
-						}
+						hrefForPage={(target) => {
+							const query = new URLSearchParams(params.toString());
+							query.set("page", String(target));
+							return `/dashboard/caps${isArchivedView ? "/archived" : ""}?${query}`;
+						}}
 					/>
 				</div>
 			)}
@@ -452,7 +512,7 @@ export const Caps = ({
 				deleteSelectedCaps={() => deleteCaps(selectedCaps)}
 				isDeleting={isDeletingCaps || isDeletingCap}
 				moveLocation={isArchivedView ? undefined : moveLocation}
-				moveRootLabel={isArchivedView ? undefined : "My Caps"}
+				moveRootLabel={isArchivedView ? undefined : "My videos"}
 				selection={selection}
 				archive={{
 					mode: isArchivedView ? "unarchive" : "archive",

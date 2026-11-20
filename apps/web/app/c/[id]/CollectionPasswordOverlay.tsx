@@ -1,12 +1,12 @@
 "use client";
 
-import { Button, Dialog, DialogContent, Input, Logo } from "@cap/ui";
+import { Button, Dialog, DialogContent, Input } from "@cap/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import { toast } from "sonner";
 import { verifyCollectionPassword } from "@/actions/collections/password";
-import type { SharePageBranding } from "@/lib/share-branding";
+import type { ShareBrand } from "@/lib/share-branding";
 
 export function CollectionPasswordOverlay({
 	collectionId,
@@ -18,7 +18,7 @@ export function CollectionPasswordOverlay({
 	collectionId: string;
 	collectionName: string;
 	organizationName: string;
-	branding: SharePageBranding | null;
+	branding: ShareBrand | null;
 	isOpen: boolean;
 }) {
 	const [password, setPassword] = useState("");
@@ -45,15 +45,13 @@ export function CollectionPasswordOverlay({
 			<DialogContent className="w-[95vw] max-w-sm p-4 sm:max-w-md sm:p-6 md:p-8">
 				<div className="flex flex-col items-center space-y-4 sm:space-y-6">
 					<div className="flex flex-col items-center space-y-3 text-center sm:space-y-4">
-						{branding?.type === "custom" ? (
+						{branding?.logo ? (
 							// biome-ignore lint/performance/noImgElement: arbitrary org-uploaded icon
 							<img
-								src={branding.imageUrl}
-								alt={branding.name}
+								src={branding.logo}
+								alt={branding.name ?? ""}
 								className="h-auto max-h-14 w-auto max-w-[160px] object-contain"
 							/>
-						) : branding?.type === "cap" ? (
-							<Logo className="w-16 h-auto sm:w-20 md:w-24" />
 						) : null}
 						<div className="space-y-2">
 							<h2 className="text-lg font-semibold text-gray-12 sm:text-xl">

@@ -22,7 +22,7 @@ import { type CheckoutSession, checkoutStripe } from "@/lib/checkout/stripe";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-	title: "Checkout | Cap",
+	title: "Checkout",
 	robots: { index: false, follow: false },
 };
 
@@ -92,7 +92,7 @@ export default async function CheckoutCompletePage(props: {
 	const yearly = lineItem?.price?.recurring?.interval === "year";
 	const state = paid
 		? {
-				title: "You're on Cap Pro",
+				title: "You're on Pro",
 				subtitle: "Thanks for supporting Cap. Your workspace is ready.",
 			}
 		: session.status === "complete"
@@ -111,7 +111,7 @@ export default async function CheckoutCompletePage(props: {
 			subtitle={state.subtitle}
 			summary={
 				<>
-					<PlanHeading tag={paid ? "Paid" : "Cap Pro"} />
+					<PlanHeading tag={paid ? "Paid" : "Pro"} />
 					<dl className="mt-6 flex flex-col gap-2.5 border-t border-[#E1E7EE] pt-5 text-[14px]">
 						<div className="flex items-baseline justify-between gap-4">
 							<dt className="text-[rgba(17,17,17,0.66)]">Seats</dt>
@@ -167,11 +167,11 @@ export default async function CheckoutCompletePage(props: {
 				) : session.status === "complete" ? (
 					<div>
 						<h2 className="text-[22px] font-normal leading-[1.1] tracking-[-0.02em]">
-							We'll switch Cap Pro on automatically
+							We'll switch Pro on automatically
 						</h2>
 						<p className="mt-2.5 text-[15px] leading-[1.5] text-[rgba(17,17,17,0.66)]">
-							As soon as the payment clears, Cap Pro turns on and Stripe sends
-							the receipt to {email ?? "your email"}.
+							As soon as the payment clears, Pro turns on and Stripe sends the
+							receipt to {email ?? "your email"}.
 						</p>
 					</div>
 				) : (

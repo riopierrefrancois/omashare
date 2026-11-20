@@ -29,10 +29,10 @@ export const EmptyCapState: React.FC<EmptyCapStateProps> = ({ userName }) => {
 				</div>
 				<div className="flex flex-col items-center px-5">
 					<p className="mb-1 text-xl font-semibold tracking-tight text-gray-12">
-						Hey{userName ? ` ${userName}` : ""}! Record your first Cap
+						Hey{userName ? ` ${userName}` : ""}! Record your first video
 					</p>
 					<p className="max-w-md text-sm text-gray-10">
-						Craft your narrative with Cap - get projects done quicker.
+						Share a screen recording or upload a video.
 					</p>
 				</div>
 				<div className="flex flex-wrap gap-2 justify-center items-center mt-4">

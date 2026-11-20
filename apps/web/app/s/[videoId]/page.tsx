@@ -48,6 +48,7 @@ import {
 	type Spaces,
 } from "@/app/(org)/dashboard/dashboard-data";
 import { getUser } from "@/app/utils/auth";
+import { SourceCredit } from "@/components/SourceCredit";
 import { isAiConfigured } from "@/lib/ai/provider";
 import { completeDesktopSegmentsManifestAndQueue } from "@/lib/desktop-segments-recovery";
 import { isEarlyInstantPlaybackEnabled } from "@/lib/early-instant-playback";
@@ -65,12 +66,13 @@ import { getPlayerBrand, playerBrandAttributes } from "@/lib/player-brand";
 import { getPublicShareVideo } from "@/lib/public-share-video";
 import * as EffectRuntime from "@/lib/server";
 import { runPromise } from "@/lib/server";
-import { getShareBrand, getSharePageBranding } from "@/lib/share-branding";
+import { getShareBrand } from "@/lib/share-branding";
 import {
 	resolveShareCallToAction,
 	withoutWorkspaceCallToAction,
 } from "@/lib/share-call-to-action";
 import { getShareDashboardDestination } from "@/lib/share-dashboard-destination";
+import { getShareOrganizationName } from "@/lib/share-organization-name";
 import {
 	canStartPlaybackInHtml,
 	getCustomThumbnailUrl,
@@ -315,42 +317,46 @@ export async function generateMetadata(
 	).toString();
 
 	return Effect.flatMap(Videos, (v) => v.getByIdForViewing(videoId)).pipe(
-		Effect.map(
+		Effect.flatMap(
 			Option.match({
 				onNone: () =>
-					awaitRecording
-						? {
-								title: "Cap: Preparing Video",
-								description: "This recording is being made available.",
-								robots: "noindex, nofollow",
-							}
-						: notFound(),
-				onSome: ([video]) => {
-					return {
-						...buildShareVideoMetadata({
-							videoId,
-							name: video.name,
-							sourceType: video.source.type,
-							width: Option.getOrNull(video.width),
-							height: Option.getOrNull(video.height),
-							webUrl,
-							canonicalWebUrl: buildEnv.NEXT_PUBLIC_WEB_URL,
-							advertiseIframelyPlayer: shouldAdvertiseIframelyPlayer,
-							thumbnailVersion: getCustomThumbnailVersion(
-								Option.getOrNull(video.metadata),
-							),
-						}),
-						robots: canRenderSocialPreview
-							? "index, follow"
-							: "noindex, nofollow",
-					};
-				},
+					Effect.succeed<Metadata>(
+						awaitRecording
+							? {
+									title: { absolute: "Preparing video" },
+									description: "This recording is being made available.",
+									robots: "noindex, nofollow",
+								}
+							: notFound(),
+					),
+				onSome: ([video]) =>
+					Effect.promise<Metadata>(async () => {
+						return {
+							...buildShareVideoMetadata({
+								videoId,
+								name: video.name,
+								organizationName: await getShareOrganizationName(video.orgId),
+								sourceType: video.source.type,
+								width: Option.getOrNull(video.width),
+								height: Option.getOrNull(video.height),
+								webUrl,
+								canonicalWebUrl: buildEnv.NEXT_PUBLIC_WEB_URL,
+								advertiseIframelyPlayer: shouldAdvertiseIframelyPlayer,
+								thumbnailVersion: getCustomThumbnailVersion(
+									Option.getOrNull(video.metadata),
+								),
+							}),
+							robots: canRenderSocialPreview
+								? "index, follow"
+								: "noindex, nofollow",
+						};
+					}),
 			}),
 		),
 		Effect.catchTags({
 			PolicyDenied: () =>
-				Effect.succeed({
-					title: "Cap: This video is restricted",
+				Effect.succeed<Metadata>({
+					title: { absolute: "This video is restricted" },
 					description: "This video has restricted access.",
 					openGraph: {
 						images: [{ url: ogImageUrl, width: 1200, height: 630 }],
@@ -358,15 +364,15 @@ export async function generateMetadata(
 					robots: "noindex, nofollow",
 				}),
 			VerifyVideoPasswordError: () =>
-				Effect.succeed({
-					title: "Cap: Password Protected Video",
+				Effect.succeed<Metadata>({
+					title: { absolute: "Password protected video" },
 					description: "This video is password protected.",
 					openGraph: {
 						images: [{ url: ogImageUrl, width: 1200, height: 630 }],
 					},
 					twitter: {
 						card: "summary_large_image",
-						title: "Cap: Password Protected Video",
+						title: "Password protected video",
 						description: "This video is password protected.",
 						images: [ogImageUrl],
 					},
@@ -1117,6 +1123,15 @@ async function AuthorizedContent({
 			data-share-font={shareBrand.font}
 		>
 			<Share
+				footer={
+					<SourceCredit
+						website={
+							shareBrand.websiteUrl && shareBrand.websiteLabel
+								? { url: shareBrand.websiteUrl, label: shareBrand.websiteLabel }
+								: undefined
+						}
+					/>
+				}
 				header={
 					<ShareHeader
 						canMoveToFolder={
@@ -1142,7 +1157,7 @@ async function AuthorizedContent({
 						viewerCount={viewerCount}
 						userOrganizations={userOrganizations}
 						spacesData={spacesData}
-						branding={getSharePageBranding(videoWithOrganizationInfo)}
+						branding={shareBrand}
 						canManageSharePageBranding={canManageOrganizationSettings(
 							videoOrganizationRole,
 						)}

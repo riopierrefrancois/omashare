@@ -100,7 +100,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
 							className="inline-block h-1.5 w-1.5 rounded-full"
 							style={{ backgroundColor: "var(--msngr-admin-dot)" }}
 						/>
-						Cap Team
+						video Team
 					</span>
 				)}
 				<div
@@ -166,13 +166,13 @@ function PanelHeader({
 				className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
 				style={{ backgroundColor: "var(--msngr-accent-subtle)" }}
 			>
-				<Image src="/favicon.ico" alt="Cap Logo" width={32} height={32} />
+				<Image src="/favicon.ico" alt="omashare" width={32} height={32} />
 			</div>
 			<span
 				className="flex-1 text-[14px] font-semibold"
 				style={{ color: "var(--msngr-on-accent)" }}
 			>
-				Cap Support
+				video Support
 			</span>
 			<button
 				type="button"
@@ -435,7 +435,7 @@ function ChatView({
 
 			if (hasNewReply) {
 				if (document.hidden) {
-					document.title = "New Reply — Cap";
+					document.title = "New Reply";
 				}
 				const inputFocused = document.activeElement === inputRef.current;
 				if (document.hidden || (!inputFocused && !isHoveringRef.current)) {
@@ -535,7 +535,7 @@ function ChatView({
 					<div className="flex h-full flex-col px-4 pt-6">
 						<div className="flex justify-start">
 							<div className="max-w-[85%] rounded-[18px] bg-gray-3 px-4 py-2.5 text-[14px] leading-[1.6] text-gray-12">
-								Hey! I&apos;m Millie from Cap, ask me anything!
+								Hey! I&apos;m Millie from your account, ask me anything!
 							</div>
 						</div>
 						<div className="flex-1" />

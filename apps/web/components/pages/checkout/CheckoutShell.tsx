@@ -19,17 +19,17 @@ const TRUST = ["SOC 2 Type II", "ISO 27001", "HIPAA", "Open source"];
 
 type BackLink = { href: string; label: string };
 
-const PRICING_BACK: BackLink = { href: "/pricing", label: "Pricing" };
+const DASHBOARD_BACK: BackLink = { href: "/dashboard", label: "Dashboard" };
 
 const PURCHASE_COPY = {
-	title: "Get Cap Pro",
+	title: "Get Pro",
 	subtitle:
-		"Unlimited cloud sharing, Cap AI and team workspaces. Cancel anytime, and your recordings stay yours.",
+		"Unlimited cloud sharing, video summaries and team workspaces. Cancel anytime, and your recordings stay yours.",
 };
 
 export const purchaseCopy = (onboarding: boolean) => ({
 	...PURCHASE_COPY,
-	back: onboarding ? { href: "/onboarding", label: "Back" } : PRICING_BACK,
+	back: onboarding ? { href: "/onboarding", label: "Back" } : DASHBOARD_BACK,
 });
 
 export const CARD =
@@ -40,7 +40,7 @@ export function CheckoutShell({
 	subtitle,
 	summary,
 	children,
-	back = PRICING_BACK,
+	back = DASHBOARD_BACK,
 }: {
 	title: string;
 	subtitle: string;

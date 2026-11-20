@@ -78,7 +78,7 @@ function ChromeTile() {
 			<QuickActionTile
 				icon={chromeIcon}
 				title="Record with Chrome"
-				hint="Open the Cap extension"
+				hint="Open the browser extension"
 				onClick={openRecorder}
 			/>
 		);
@@ -129,7 +129,7 @@ export function QuickActions({ onNewFolder }: { onNewFolder: () => void }) {
 			<QuickActionTile
 				icon={<FolderPlus className="size-[18px]" strokeWidth={2} />}
 				title="New folder"
-				hint="Keep related Caps together"
+				hint="Keep related videos together"
 				onClick={onNewFolder}
 			/>
 		</div>

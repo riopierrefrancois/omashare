@@ -21,7 +21,7 @@ export default async function InfraNotFound() {
 						FOCUS,
 					)}
 				>
-					Back to Cap
+					Back to dashboard
 				</Link>
 			</header>
 			<main className="mx-auto w-full max-w-[1184px] flex-1 px-5 pb-24 pt-[9vh] sm:px-8 lg:pt-[14vh]">

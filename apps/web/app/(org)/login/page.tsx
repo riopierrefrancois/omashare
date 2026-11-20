@@ -1,11 +1,11 @@
 import { getCurrentUser } from "@cap/database/auth/session";
 import { serverEnv } from "@cap/env";
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons/faArrowLeft";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { FontAwesomeIcon } from "@/components/FontAwesomeIcon";
+import { SignInShell } from "../SignInShell";
 import { getSafeNextPath } from "../safe-next";
 import { LoginForm } from "./form";
+
+export const metadata = { title: "Sign in" };
 
 export const dynamic = "force-dynamic";
 
@@ -46,18 +46,14 @@ export default async function LoginPage(props: {
 		redirect(getSafeNextPath(searchParams.next, serverEnv().WEB_URL));
 	}
 
+	const allowedDomains =
+		serverEnv()
+			.CAP_ALLOWED_SIGNUP_DOMAINS?.split(",")
+			.map((domain) => domain.trim().replace(/^@/, ""))
+			.filter(Boolean) ?? [];
 	return (
-		<div className="flex relative justify-center items-center w-full h-screen bg-gray-2">
-			<div className="flex absolute top-10 left-10 gap-2 justify-center items-center transition-opacity hover:opacity-75">
-				<FontAwesomeIcon
-					className="opacity-75 size-3 text-gray-12"
-					icon={faArrowLeft}
-				/>
-				<Link className="text-gray-12" href="/">
-					Home
-				</Link>
-			</div>
-			<LoginForm />
-		</div>
+		<SignInShell>
+			<LoginForm allowedDomains={allowedDomains} />
+		</SignInShell>
 	);
 }

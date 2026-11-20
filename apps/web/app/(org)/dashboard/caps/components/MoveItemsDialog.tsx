@@ -201,7 +201,7 @@ export function MoveItemsDialog({
 						if (moved === 0) throw error;
 						router.refresh();
 						throw new Error(
-							`Moved ${moved.toLocaleString("en-US")} of ${item.videoIds.length.toLocaleString("en-US")} Caps. Try again to move the rest.`,
+							`Moved ${moved.toLocaleString("en-US")} of ${item.videoIds.length.toLocaleString("en-US")} videos. Try again to move the rest.`,
 						);
 					}
 					moved += videoIds.length;
@@ -220,7 +220,7 @@ export function MoveItemsDialog({
 			toast.success(
 				item.type === "folder"
 					? "Folder moved"
-					: `${count} Cap${count === 1 ? "" : "s"} ${sameLocation ? "moved" : `added to ${selectedGroup?.name}`}`,
+					: `${count} video${count === 1 ? "" : "s"} ${sameLocation ? "moved" : `added to ${selectedGroup?.name}`}`,
 			);
 			onMoved?.();
 			if (item.type === "folder") {
@@ -307,7 +307,7 @@ export function MoveItemsDialog({
 	const title =
 		item.type === "folder"
 			? "Move folder"
-			: `Move ${itemCount} Cap${plural ? "s" : ""}`;
+			: `Move ${itemCount} video${plural ? "s" : ""}`;
 	const destinationChanged =
 		!sameLocation || selectedFolderId !== currentDestinationId;
 	const sharing = !sameLocation && selectedGroup?.location.type !== "personal";
@@ -440,7 +440,7 @@ export function MoveItemsDialog({
 							<p className="text-[13px] leading-5 text-gray-11 text-pretty">
 								People in {selectedGroup?.name} will be able to watch{" "}
 								{plural ? "them" : "it"}.{" "}
-								{plural ? "They also stay" : "It also stays"} in My Caps, and
+								{plural ? "They also stay" : "It also stays"} in My videos, and
 								existing sharing is kept.
 							</p>
 						</div>

@@ -7,7 +7,6 @@ import { CustomDomain } from "./CustomDomain";
 import { OrganizationIcon } from "./OrganizationIcon";
 import OrgName from "./OrgName";
 import { ShareableLinkBrandColor } from "./ShareableLinkBrandColor";
-import { ShareableLinkIcon } from "./ShareableLinkIcon";
 
 export const OrganizationDetailsCard = () => {
 	const { activeOrganization } = useDashboardContext();
@@ -25,7 +24,6 @@ export const OrganizationDetailsCard = () => {
 			<SettingsSection title="Shareable links">
 				<SettingsCard>
 					<CustomDomain />
-					<ShareableLinkIcon />
 					<ShareableLinkBrandColor />
 				</SettingsCard>
 			</SettingsSection>

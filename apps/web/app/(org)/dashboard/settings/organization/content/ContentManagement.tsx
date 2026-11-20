@@ -60,7 +60,7 @@ function operationStatusClass(
 
 function PreviewSummary({ preview }: { preview: ContentTransferPreview }) {
 	const stats = [
-		{ label: "Caps", value: preview.videoCount },
+		{ label: "videos", value: preview.videoCount },
 		{ label: "Folders", value: preview.folderCount },
 		{ label: "Current owners", value: preview.ownerCount },
 		{ label: "Folders to create", value: preview.foldersToCreate },
@@ -403,7 +403,7 @@ export function ContentManagement({
 											<p className="mt-1 text-xs leading-5 text-gray-10">
 												Ownership and media paths will change. Existing links,
 												metadata, comments, and analytics remain attached to
-												each Cap.
+												each video.
 											</p>
 										</div>
 									</div>
@@ -538,7 +538,7 @@ export function ContentManagement({
 												<div className="min-w-0">
 													<p className="text-sm font-medium text-gray-12">
 														{progress
-															? `${progress.processedVideos.toLocaleString()} of ${progress.totalVideos.toLocaleString()} Caps`
+															? `${progress.processedVideos.toLocaleString()} of ${progress.totalVideos.toLocaleString()} videos`
 															: "Content transfer"}
 													</p>
 													<p className="mt-0.5 text-xs text-gray-9">

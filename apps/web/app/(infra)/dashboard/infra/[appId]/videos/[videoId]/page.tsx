@@ -17,7 +17,7 @@ export async function generateMetadata({
 	const { appId, videoId } = await params;
 	const { app } = await requireInfraApp(appId);
 	const video = await getDeveloperAppVideo(app.id, videoId);
-	return video ? { title: `${video.name} | Cap Infra` } : {};
+	return video ? { title: `${video.name}` } : {};
 }
 
 export default async function InfraVideoPage({

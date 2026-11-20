@@ -140,7 +140,8 @@ describe("CapCardContent title edit", () => {
 		container.remove();
 	});
 
-	const title = () => container.querySelector("p")?.textContent;
+	const title = () =>
+		container.querySelector<HTMLButtonElement>("button[title]")?.textContent;
 	const editor = () => container.querySelector("textarea");
 
 	const mount = () =>
@@ -159,7 +160,7 @@ describe("CapCardContent title edit", () => {
 	const type = async (value: string) => {
 		if (!editor()) {
 			act(() => {
-				container.querySelector("p")?.click();
+				container.querySelector<HTMLButtonElement>("button[title]")?.click();
 			});
 		}
 		const textarea = editor();

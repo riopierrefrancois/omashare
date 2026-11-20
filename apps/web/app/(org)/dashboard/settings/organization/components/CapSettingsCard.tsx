@@ -83,12 +83,7 @@ const options: Array<{
 		description: "Enabling this also allows chapters and summary",
 		pro: true,
 	},
-	{
-		label: "Show Cap logo",
-		value: "hideShareableLinkCapLogo",
-		description: "Show Cap branding at the top of shareable links",
-		pro: true,
-	},
+
 	{
 		label: "Enable downloads",
 		value: "disableDownloads",
@@ -211,20 +206,13 @@ const OrganizationCapSettings = ({
 						}
 
 						const option = options.find((opt) => opt.value === changedKey);
-						if (changedKey === "hideShareableLinkCapLogo") {
-							toast.success(
-								debouncedUpdateSettings[changedKey]
-									? "Cap logo hidden"
-									: "Cap logo shown",
-							);
-						} else {
-							const isDisabled = Boolean(debouncedUpdateSettings[changedKey]);
-							const action = isDisabled ? "disabled" : "enabled";
-							const label = option?.label.split(" ")[1] || changedKey;
-							toast.success(
-								`${label.charAt(0).toUpperCase()}${label.slice(1)} ${action}`,
-							);
-						}
+
+						const isDisabled = Boolean(debouncedUpdateSettings[changedKey]);
+						const action = isDisabled ? "disabled" : "enabled";
+						const label = option?.label.split(" ")[1] || changedKey;
+						toast.success(
+							`${label.charAt(0).toUpperCase()}${label.slice(1)} ${action}`,
+						);
 					});
 
 					lastSavedSettings.current = debouncedUpdateSettings;

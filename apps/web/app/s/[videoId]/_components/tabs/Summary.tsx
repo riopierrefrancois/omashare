@@ -179,12 +179,11 @@ export const Summary: React.FC<SummaryProps> = ({
 							</svg>
 						</div>
 						<h3 className="mb-2 text-lg font-semibold text-gray-900">
-							Unlock Cap AI
+							Unlock Video summaries
 						</h3>
 						<p className="mb-4 text-sm leading-relaxed text-gray-600">
-							Upgrade to Cap Pro to access AI-powered features including
-							automatic titles, video summaries, and intelligent chapter
-							generation.
+							Upgrade to Pro to access AI-powered features including automatic
+							titles, video summaries, and intelligent chapter generation.
 						</p>
 					</div>
 				</div>

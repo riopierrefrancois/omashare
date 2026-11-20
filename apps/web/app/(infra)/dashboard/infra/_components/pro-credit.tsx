@@ -46,12 +46,12 @@ export function ProCredit({
 	if (credit.status === "not_pro") {
 		return (
 			<p className={NOTE}>
-				Cap Pro includes $5 of Infra credit every month.{" "}
+				Pro includes $5 of Infra credit every month.{" "}
 				<Link
 					href="/dashboard/settings/organization/billing"
 					className={TEXT_LINK}
 				>
-					See Cap Pro
+					See Pro
 				</Link>
 			</p>
 		);
@@ -65,8 +65,8 @@ export function ProCredit({
 		return (
 			<p className={NOTE}>
 				{claimedHere
-					? "This month's $5 Cap Pro credit is in this app's balance."
-					: "This month's $5 Cap Pro credit is already claimed."}{" "}
+					? "This month's $5 Pro credit is in this app's balance."
+					: "This month's $5 Pro credit is already claimed."}{" "}
 				It is one per account each month, not one per app. The next one is ready
 				on {dateFormat.format(new Date(credit.nextDate))}.
 			</p>
@@ -79,9 +79,9 @@ export function ProCredit({
 				Claim $5 credit
 			</Button>
 			<p className={NOTE}>
-				Cap Pro includes one $5 Infra credit a month for your whole account, not
-				one per app. Claiming it here adds it to this app, and it cannot be
-				moved afterwards.
+				Pro includes one $5 Infra credit a month for your whole account, not one
+				per app. Claiming it here adds it to this app, and it cannot be moved
+				afterwards.
 			</p>
 		</div>
 	);

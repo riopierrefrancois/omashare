@@ -72,7 +72,7 @@ export async function requestEmailCode({
 
 	if (response?.error === "DisposableEmail") {
 		toast.error(
-			"Temporary email addresses can't be used with Cap. Please use your work or personal email.",
+			"Temporary email addresses can't be used with video. Please use your work or personal email.",
 		);
 		return null;
 	}

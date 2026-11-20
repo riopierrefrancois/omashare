@@ -1,0 +1,15 @@
+body {
+	font-family: var(--omashare-geist), system-ui, sans-serif;
+}
+
+.font-mono {
+	font-family: var(--omashare-mono), monospace;
+}
+
+[data-share-font="roboto"] {
+	font-family: var(--omashare-roboto), Roboto, system-ui, sans-serif;
+}
+
+[data-share-font="geist"] {
+	font-family: var(--omashare-geist), system-ui, sans-serif;
+}

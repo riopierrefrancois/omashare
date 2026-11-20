@@ -85,7 +85,7 @@ export function PageSizeSelect({ pageSize }: { pageSize: number }) {
 			<DropdownMenuTrigger asChild>
 				<button
 					type="button"
-					aria-label={`Caps per page: ${pageSize}`}
+					aria-label={`videos per page: ${pageSize}`}
 					disabled={isPending}
 					className={clsx(listControlClass, "gap-2 px-3 tabular-nums")}
 				>
@@ -124,7 +124,7 @@ export function CapListHeader({
 	onToggleSelectAll,
 	actions,
 }: {
-	title: string;
+	title?: string;
 	count?: number;
 	selectionState?: PageSelectionState;
 	onToggleSelectAll?: () => void;
@@ -139,9 +139,11 @@ export function CapListHeader({
 						onToggle={onToggleSelectAll}
 					/>
 				)}
-				<h2 className="text-lg font-semibold tracking-tight truncate text-gray-12">
-					{title}
-				</h2>
+				{title && (
+					<h2 className="text-lg font-semibold tracking-tight truncate text-gray-12">
+						{title}
+					</h2>
+				)}
 				{typeof count === "number" && (
 					<span className="text-sm tabular-nums text-gray-10">
 						{count.toLocaleString("en-US")}

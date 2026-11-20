@@ -12,7 +12,6 @@ import {
 } from "@cap/database/schema";
 import type { VideoMetadata } from "@cap/database/types";
 import { buildEnv } from "@cap/env";
-import { Logo } from "@cap/ui";
 import { userIsPro } from "@cap/utils";
 import {
 	ImageUploads,
@@ -40,8 +39,9 @@ import {
 import { resolveDefaultPlaybackSpeed } from "@/lib/playback-speed";
 import { getPlayerBrand } from "@/lib/player-brand";
 import * as EffectRuntime from "@/lib/server";
-import { getShareBrand, getSharePageBranding } from "@/lib/share-branding";
+import { getShareBrand } from "@/lib/share-branding";
 import { resolveShareCallToAction } from "@/lib/share-call-to-action";
+import { getShareOrganizationName } from "@/lib/share-organization-name";
 import { getCustomThumbnailUrl } from "@/lib/share-playback";
 import { buildShareVideoMetadata } from "@/lib/share-video-metadata";
 import { isVideoOverShareableLinkLimit } from "@/lib/shareable-link-quota";
@@ -57,35 +57,37 @@ export async function generateMetadata(
 	const videoId = params.videoId as Video.VideoId;
 
 	return Effect.flatMap(Videos, (v) => v.getByIdForViewing(videoId)).pipe(
-		Effect.map(
+		Effect.flatMap(
 			Option.match({
 				onNone: () => notFound(),
-				onSome: ([video]) => ({
-					...buildShareVideoMetadata({
-						videoId,
-						name: video.name,
-						sourceType: video.source.type,
-						width: Option.getOrNull(video.width),
-						height: Option.getOrNull(video.height),
-						webUrl: buildEnv.NEXT_PUBLIC_WEB_URL,
-						thumbnailVersion: getCustomThumbnailVersion(
-							Option.getOrNull(video.metadata),
-						),
-					}),
-					robots: "index, follow",
-				}),
+				onSome: ([video]) =>
+					Effect.promise(async () => ({
+						...buildShareVideoMetadata({
+							videoId,
+							name: video.name,
+							organizationName: await getShareOrganizationName(video.orgId),
+							sourceType: video.source.type,
+							width: Option.getOrNull(video.width),
+							height: Option.getOrNull(video.height),
+							webUrl: buildEnv.NEXT_PUBLIC_WEB_URL,
+							thumbnailVersion: getCustomThumbnailVersion(
+								Option.getOrNull(video.metadata),
+							),
+						}),
+						robots: "index, follow",
+					})),
 			}),
 		),
 		Effect.catchTags({
 			PolicyDenied: () =>
 				Effect.succeed({
-					title: "Cap: This video is private",
+					title: { absolute: "This video is private" },
 					description: "This video is private and cannot be shared.",
 					robots: "noindex, nofollow",
 				}),
 			VerifyVideoPasswordError: () =>
 				Effect.succeed({
-					title: "Cap: Password Protected Video",
+					title: { absolute: "Password protected video" },
 					description: "This video is password protected.",
 					robots: "noindex, nofollow",
 				}),
@@ -342,12 +344,11 @@ async function EmbedContent({
 	if (overShareLimit) {
 		return (
 			<div className="flex flex-col gap-3 justify-center items-center px-6 min-h-screen text-center bg-black">
-				<Logo className="w-auto h-7" white />
 				<h1 className="text-lg font-semibold text-white">
 					This video is over its free limit
 				</h1>
 				<p className="max-w-sm text-sm leading-relaxed text-white/60">
-					{`The owner of this video has used all ${Video.FREE_PLAN_SHAREABLE_LINKS_PER_MONTH} shareable links included with Cap's free plan this month. As soon as they upgrade to Cap Pro, this video will be instantly viewable.`}
+					{`The owner of this video has used all ${Video.FREE_PLAN_SHAREABLE_LINKS_PER_MONTH} shareable links included with the service’s free plan this month. As soon as they upgrade to Pro, this video will be instantly viewable.`}
 				</p>
 				<a
 					href={`${buildEnv.NEXT_PUBLIC_WEB_URL}/s/${video.id}`}
@@ -355,15 +356,15 @@ async function EmbedContent({
 					rel="noreferrer"
 					className="mt-2 rounded-full border border-gray-5 bg-gray-3 px-5 py-2 text-sm font-medium text-gray-12 transition-colors hover:bg-gray-6"
 				>
-					Open on Cap
+					Open video
 				</a>
 			</div>
 		);
 	}
 
 	const customThumbnailKey = getCustomThumbnailKey(video);
-	const [commentsQuery, ownerImageUrl, branding, posterUrl] = await Promise.all(
-		[
+	const [commentsQuery, ownerImageUrl, organizationLogo, posterUrl] =
+		await Promise.all([
 			db()
 				.select({
 					id: comments.id,
@@ -393,27 +394,10 @@ async function EmbedContent({
 				);
 			}).pipe(EffectRuntime.runPromise),
 			Effect.gen(function* () {
-				const brandingInput = {
-					owner: { isPro: ownerIsProUser },
-					orgSettings: video.orgSettings,
-					organizationName: video.organizationName,
-				};
-				const icon = video.orgSettings?.shareableLinkUseOrganizationIcon
-					? video.organizationIconUrl
-					: video.shareableLinkIconUrl;
-
-				if (!ownerIsProUser || !icon || minimal || !options.showBranding) {
-					return getSharePageBranding(brandingInput);
-				}
-
+				if (!video.organizationIconUrl || minimal || !options.showBranding)
+					return null;
 				const imageUploads = yield* ImageUploads;
-				const imageUrl = yield* imageUploads.resolveImageUrl(icon);
-
-				return getSharePageBranding({
-					...brandingInput,
-					organizationIconUrl: imageUrl,
-					shareableLinkIconUrl: imageUrl,
-				});
+				return yield* imageUploads.resolveImageUrl(video.organizationIconUrl);
 			}).pipe(EffectRuntime.runPromise),
 			customThumbnailKey
 				? getCustomThumbnailUrl(
@@ -421,8 +405,7 @@ async function EmbedContent({
 						customThumbnailKey,
 					)
 				: Promise.resolve(null),
-		],
-	);
+		]);
 
 	const playerBrand = getPlayerBrand({
 		ownerIsPro: ownerIsProUser,
@@ -431,7 +414,7 @@ async function EmbedContent({
 
 	const shareBrand = getShareBrand(video.orgSettings?.brand, {
 		name: video.organizationName,
-		logo: branding?.type === "custom" ? branding.imageUrl : null,
+		logo: organizationLogo,
 	});
 
 	const { orgSettings: _orgSettings, ...embedData } = video;
@@ -440,7 +423,7 @@ async function EmbedContent({
 		<EmbedVideo
 			data={embedData}
 			shareFont={shareBrand.font}
-			branding={ownerIsProUser && !options.showBranding ? null : branding}
+			branding={options.showBranding ? shareBrand : null}
 			posterUrl={posterUrl}
 			playerBrand={playerBrand}
 			user={user}

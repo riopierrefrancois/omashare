@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, LogoBadge } from "@cap/ui";
+import { Button } from "@cap/ui";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons/faArrowLeft";
 import { useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -10,6 +10,7 @@ import { signIn } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { FontAwesomeIcon } from "@/components/FontAwesomeIcon";
+import { OmaShareMark } from "@/components/OmaShareMark";
 import { getSafeNextPath } from "../safe-next";
 
 export function VerifyOTPForm({
@@ -159,30 +160,28 @@ export function VerifyOTPForm({
 		<motion.div
 			initial={{ opacity: 0, y: 20 }}
 			animate={{ opacity: 1, y: 0 }}
-			className="relative w-[calc(100%-5%)] p-[28px] max-w-[432px] bg-gray-3 border border-gray-5 rounded-2xl"
+			className="relative w-full max-w-[380px]"
 		>
 			<Link
 				href="/login"
-				className="absolute top-5 left-5 z-20 flex gap-2 items-center py-1.5 px-3 text-gray-12 bg-transparent border border-gray-4 rounded-full hover:bg-gray-1 transition-colors duration-300"
+				className="absolute -top-9 left-0 z-20 flex gap-2 items-center py-1.5 px-3 text-gray-12 bg-transparent border border-gray-4 rounded-full hover:bg-gray-1 transition-colors duration-300"
 			>
 				<FontAwesomeIcon className="w-2" icon={faArrowLeft} />
 				<p className="text-xs">Back</p>
 			</Link>
 
-			<Link className="flex mx-auto size-fit" href="/">
-				<LogoBadge className="size-12" />
-			</Link>
+			<OmaShareMark className="text-[17px]" />
 
-			<div className="flex flex-col justify-center items-center my-7 text-center">
-				<h1 className="text-xl font-semibold text-gray-12">
+			<div className="my-[22px] flex flex-col gap-3.5">
+				<h1 className="text-[28px] font-semibold tracking-[-0.02em]">
 					Enter verification code
 				</h1>
 				{emailDeliveryConfigured ? (
-					<p className="text-sm text-gray-10">
+					<p className="text-[15px] text-[#5C6280]">
 						We sent a 6-digit code to {normalizedEmail}
 					</p>
 				) : (
-					<p className="text-sm text-gray-10">
+					<p className="text-[15px] text-[#5C6280]">
 						Email (Resend) is not configured on this server. The 6-digit code
 						for {normalizedEmail} was printed to the server logs. Ask your
 						administrator, or set RESEND_API_KEY and RESEND_FROM_DOMAIN.
@@ -221,7 +220,7 @@ export function VerifyOTPForm({
 
 			<Button
 				variant="primary"
-				className="w-full"
+				className="min-h-[46px] w-full rounded-[10px] bg-[#2959C4] text-white hover:bg-[#244EAB]"
 				spinner={isVerifying}
 				onClick={() => handleVerify.mutate(code.join(""))}
 				disabled={code.some((digit) => !digit) || isVerifying}
@@ -244,7 +243,7 @@ export function VerifyOTPForm({
 
 			<p className="mt-6 text-xs text-center text-gray-9">
 				By entering your email, you acknowledge that you have both read and
-				agree to Cap's{" "}
+				agree to the{" "}
 				<Link
 					href="/terms"
 					target="_blank"

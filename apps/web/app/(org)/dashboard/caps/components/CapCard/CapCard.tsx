@@ -144,6 +144,7 @@ export interface CapCardProps extends PropsWithChildren {
 		} | null;
 	};
 	analytics: number;
+	libraryCard?: boolean;
 	isLoadingAnalytics: boolean;
 	onDelete?: () => void;
 	userId?: string;
@@ -175,6 +176,7 @@ export type CapCardReorderActions = {
 export const CapCard = ({
 	cap,
 	analytics,
+	libraryCard = false,
 	children,
 	onDelete,
 	userId,
@@ -317,7 +319,7 @@ export const CapCard = ({
 		try {
 			const dragPreview = document.createElement("div");
 			dragPreview.textContent =
-				draggedIds.length > 1 ? `${draggedIds.length} Caps` : cap.name;
+				draggedIds.length > 1 ? `${draggedIds.length} videos` : cap.name;
 			dragPreview.className =
 				"px-2 py-1.5 text-sm font-medium rounded-lg shadow-md text-gray-1 bg-gray-12";
 			dragPreview.style.position = "absolute";
@@ -341,7 +343,7 @@ export const CapCard = ({
 		try {
 			await copyRichVideoLink({
 				url: text,
-				title: cap.name || "Cap Recording",
+				title: cap.name || "Video recording",
 				previewImageUrl: videoPreviewImageUrl(webUrl, cap.id),
 			});
 		} catch (error) {
@@ -453,7 +455,10 @@ export const CapCard = ({
 				onDragStart={handleDragStart}
 				onDragEnd={handleDragEnd}
 				className={clsx(
-					"flex relative overflow-hidden flex-col w-full h-full rounded-xl cursor-default bg-gray-1 border border-gray-3 group z-10 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-[border-color,box-shadow] duration-200",
+					"relative flex h-full w-full flex-col cursor-default group z-10",
+					libraryCard
+						? "gap-2.5"
+						: "overflow-hidden rounded-xl border border-gray-3 bg-gray-1 shadow-sm transition-[border-color,box-shadow]",
 					isSelected
 						? "!border-blue-9 ring-1 ring-blue-9"
 						: anyCapSelected
@@ -484,38 +489,40 @@ export const CapCard = ({
 						"top-2.5 right-2.5 flex-row gap-1.5 z-[51]",
 					)}
 				>
-					<CapCardButton
-						tooltipContent="Copy link"
-						onClick={(e) => {
-							e.stopPropagation();
-							copyLinkHandler();
-						}}
-						className="delay-0"
-						icon={
-							!copyPressed ? (
-								<FontAwesomeIcon
-									className="text-gray-12 size-4"
-									icon={faLink}
-								/>
-							) : (
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									width="24"
-									height="24"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									aria-hidden="true"
-									className="text-gray-12 size-5 svgpathanimation"
-								>
-									<path d="M20 6 9 17l-5-5" />
-								</svg>
-							)
-						}
-					/>
+					{!libraryCard && (
+						<CapCardButton
+							tooltipContent="Copy link"
+							onClick={(e) => {
+								e.stopPropagation();
+								copyLinkHandler();
+							}}
+							className="delay-0"
+							icon={
+								!copyPressed ? (
+									<FontAwesomeIcon
+										className="text-gray-12 size-4"
+										icon={faLink}
+									/>
+								) : (
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										width="24"
+										height="24"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										aria-hidden="true"
+										className="text-gray-12 size-5 svgpathanimation"
+									>
+										<path d="M20 6 9 17l-5-5" />
+									</svg>
+								)
+							}
+						/>
+					)}
 					{isOwner && (
 						<CapCardButton
 							tooltipContent="Share"
@@ -649,7 +656,7 @@ export const CapCard = ({
 												duplicateMutation.mutateAsync().then(rejectOnFailure),
 												{
 													loading: "Duplicating cap...",
-													success: "Cap duplicated successfully",
+													success: "video duplicated successfully",
 													error: "Failed to duplicate cap",
 												},
 											);
@@ -728,7 +735,7 @@ export const CapCard = ({
 											className="flex gap-2 items-center rounded-lg"
 										>
 											<FontAwesomeIcon className="size-3" icon={faTrash} />
-											<p className="text-sm text-gray-12">Delete Cap</p>
+											<p className="text-sm text-gray-12">Delete video</p>
 										</DropdownMenuItem>
 									)}
 								</>
@@ -753,7 +760,7 @@ export const CapCard = ({
 					<ConfirmationDialog
 						open={confirmOpen}
 						icon={<FontAwesomeIcon icon={faVideo} />}
-						title="Delete Cap"
+						title="Delete video"
 						description={`Are you sure you want to delete the cap "${cap.name}"? This action cannot be undone.`}
 						confirmLabel={deleteMutation.isPending ? "Deleting..." : "Delete"}
 						cancelLabel="Cancel"
@@ -799,7 +806,12 @@ export const CapCard = ({
 					</button>
 				)}
 
-				<div className="overflow-hidden relative w-full aspect-video">
+				<div
+					className={clsx(
+						"overflow-hidden relative w-full aspect-video",
+						libraryCard && "rounded-xl border border-gray-5 bg-[#E9ECF3]",
+					)}
+				>
 					<Link
 						className={clsx(
 							"relative block w-full h-full",
@@ -959,29 +971,66 @@ export const CapCard = ({
 						)}
 					</Link>
 				</div>
-				<div
-					className={clsx(
-						"flex flex-col flex-grow gap-3 px-3.5 pt-3 pb-3.5 w-full",
-						!sharedCapCard ? "cursor-pointer" : "cursor-default",
-					)}
-				>
-					<CapCardContent
-						cap={cap}
-						userId={userId}
-						sharedCapCard={sharedCapCard}
-						hideSharedStatus={hideSharedStatus}
-						isOwner={isOwner}
-						setIsSharingDialogOpen={setIsSharingDialogOpen}
-					/>
-					{children}
-					<CapCardAnalytics
-						capId={cap.id}
-						displayCount={analytics}
-						isLoadingAnalytics={isLoadingAnalytics}
-						totalComments={cap.totalComments}
-						totalReactions={cap.totalReactions}
-					/>
-				</div>
+				{libraryCard ? (
+					<div className="flex items-start gap-2.5">
+						<div className="min-w-0 flex-1">
+							<CapCardContent
+								cap={cap}
+								userId={userId}
+								isOwner={isOwner}
+								hideSharedStatus
+								setIsSharingDialogOpen={setIsSharingDialogOpen}
+								libraryMeta={
+									<span>
+										{" · "}
+										{isLoadingAnalytics
+											? "Loading views…"
+											: `${analytics} ${analytics === 1 ? "view" : "views"}`}
+										{" · "}
+										{cap.totalComments}{" "}
+										{cap.totalComments === 1 ? "comment" : "comments"}
+									</span>
+								}
+							/>
+							{children}
+						</div>
+						<button
+							type="button"
+							aria-label={copyPressed ? "Link copied" : "Copy link"}
+							onClick={copyLinkHandler}
+							className="grid size-9 shrink-0 place-items-center rounded-[9px] border border-gray-5 hover:bg-gray-3"
+						>
+							<FontAwesomeIcon
+								icon={copyPressed ? faCheck : faLink}
+								className="size-3.5"
+							/>
+						</button>
+					</div>
+				) : (
+					<div
+						className={clsx(
+							"flex flex-col flex-grow gap-3 px-3.5 pt-3 pb-3.5 w-full",
+							!sharedCapCard ? "cursor-pointer" : "cursor-default",
+						)}
+					>
+						<CapCardContent
+							cap={cap}
+							userId={userId}
+							sharedCapCard={sharedCapCard}
+							hideSharedStatus={hideSharedStatus}
+							isOwner={isOwner}
+							setIsSharingDialogOpen={setIsSharingDialogOpen}
+						/>
+						{children}
+						<CapCardAnalytics
+							capId={cap.id}
+							displayCount={analytics}
+							isLoadingAnalytics={isLoadingAnalytics}
+							totalComments={cap.totalComments}
+							totalReactions={cap.totalReactions}
+						/>
+					</div>
+				)}
 			</fieldset>
 		</>
 	);

@@ -219,6 +219,7 @@ interface ShareProps {
 	 * view is active.
 	 */
 	header?: React.ReactNode;
+	footer?: React.ReactNode;
 	dashboardDestination?: ShareDashboardDestination | null;
 }
 
@@ -341,6 +342,7 @@ export const Share = ({
 	canRecordMedia = false,
 	viewerSignedIn = false,
 	header,
+	footer,
 	dashboardDestination = null,
 	upNext = null,
 }: ShareProps) => {
@@ -1047,6 +1049,7 @@ export const Share = ({
 								</div>
 							</div>
 						</div>
+						{footer}
 					</div>
 
 					{showRail && (

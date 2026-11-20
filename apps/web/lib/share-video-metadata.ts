@@ -13,6 +13,7 @@ export type ShareVideoSourceType =
 export type ShareVideoMetadataInput = {
 	videoId: string;
 	name: string;
+	organizationName?: string | null;
 	sourceType: ShareVideoSourceType;
 	webUrl: string;
 	width: number | null;
@@ -97,6 +98,7 @@ export const getShareVideoUrls = ({
 export const buildShareVideoMetadata = ({
 	videoId,
 	name,
+	organizationName,
 	sourceType,
 	webUrl,
 	canonicalWebUrl,
@@ -118,15 +120,15 @@ export const buildShareVideoMetadata = ({
 		height: 630,
 		type: "image/png",
 	};
-	const title = `${name} | Cap Recording`;
-	const description = "Watch this video on Cap";
+	const title = organizationName ? `${name} · ${organizationName}` : name;
+	const description = "Watch this video";
 	const hasDimensions =
 		width != null && height != null && width > 0 && height > 0;
 	const playerWidth = hasDimensions ? width : PLAYER_WIDTH;
 	const playerHeight = hasDimensions ? height : PLAYER_HEIGHT;
 
 	return {
-		title,
+		title: { absolute: title },
 		description,
 		...(advertiseIframelyPlayer
 			? {
@@ -156,7 +158,7 @@ export const buildShareVideoMetadata = ({
 		openGraph: {
 			type: "video.other",
 			url: urls.shareUrl,
-			siteName: "Cap",
+			siteName: organizationName ?? undefined,
 			title,
 			description,
 			ttl: 300,

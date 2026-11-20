@@ -144,7 +144,7 @@ function CheckoutSession(
 		<CheckoutShell {...copy} summary={<SummarySkeleton />}>
 			{failure === "already_pro" ? (
 				<Notice
-					title="You're already on Cap Pro"
+					title="You're already on Pro"
 					body="Your subscription is active, so there's nothing to pay."
 					action={
 						<Link

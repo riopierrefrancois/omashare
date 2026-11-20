@@ -1,4 +1,5 @@
 "use client";
+import { SourceCredit } from "@/components/SourceCredit";
 import { LibraryDoodleFilters } from "./library-doodles";
 import Top from "./Navbar/Top";
 import { TopBarTitleProvider } from "./TopBarTitle";
@@ -18,6 +19,7 @@ export default function DashboardInner({
 						<div className="flex flex-col flex-1 gap-4 min-h-fit">
 							{children}
 						</div>
+						<SourceCredit workspace />
 					</div>
 				</main>
 			</div>

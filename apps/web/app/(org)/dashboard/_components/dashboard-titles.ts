@@ -1,12 +1,12 @@
 export type DashboardCrumb = { label: string; href?: string };
 
 const exact: Record<string, DashboardCrumb[]> = {
-	"/dashboard/caps": [{ label: "My Caps" }],
+	"/dashboard/caps": [{ label: "My videos" }],
 	"/dashboard/caps/archived": [
-		{ label: "My Caps", href: "/dashboard/caps" },
+		{ label: "My videos", href: "/dashboard/caps" },
 		{ label: "Archived" },
 	],
-	"/dashboard/caps/record": [{ label: "Record a Cap" }],
+	"/dashboard/caps/record": [{ label: "Record a video" }],
 	"/dashboard/analytics": [{ label: "Analytics" }],
 	"/dashboard/import": [{ label: "Import Media" }],
 	"/dashboard/import/file": [
@@ -26,7 +26,7 @@ const exact: Record<string, DashboardCrumb[]> = {
 
 const prefixes: [string, DashboardCrumb[]][] = [
 	["/dashboard/settings/organization", [{ label: "Organization Settings" }]],
-	["/dashboard/folder/", [{ label: "My Caps", href: "/dashboard/caps" }]],
+	["/dashboard/folder/", [{ label: "My videos", href: "/dashboard/caps" }]],
 ];
 
 export function dashboardTitle(pathname: string | null): DashboardCrumb[] {

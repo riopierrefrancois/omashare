@@ -15,7 +15,7 @@ import { getInfraProCredit, requireInfraApp } from "../../infra-data";
 import { BillingView } from "./billing-view";
 
 export const metadata: Metadata = {
-	title: "Billing | Cap Infra",
+	title: "Billing",
 };
 
 const EMPTY_LEDGER: LedgerPage = { rows: [], newer: null, older: null };

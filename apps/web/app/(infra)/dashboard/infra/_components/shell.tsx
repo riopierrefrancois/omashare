@@ -45,7 +45,7 @@ export function Brand({
 		<Link
 			href={href}
 			onNavigate={onNavigate}
-			aria-label="Cap Infra"
+			aria-label="Infra"
 			className={clsx("flex shrink-0 items-center rounded-[6px]", FOCUS)}
 		>
 			<Lockup height={22} />
@@ -271,7 +271,7 @@ export function Shell({
 							className={QUIET_LINK}
 						>
 							<ArrowLeft size={14} strokeWidth={1.75} aria-hidden="true" />
-							Back to Cap
+							Back to dashboard
 						</Link>
 					</div>
 				</div>

@@ -3,11 +3,12 @@ import { isEmailDeliveryConfigured } from "@cap/database/emails/config";
 import { serverEnv } from "@cap/env";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { SignInShell } from "../SignInShell";
 import { getSafeNextPath } from "../safe-next";
 import { VerifyOTPForm } from "./form";
 
 export const metadata = {
-	title: "Verify Code | Cap",
+	title: "Verify code",
 };
 
 export default async function VerifyOTPPage(props: {
@@ -25,7 +26,7 @@ export default async function VerifyOTPPage(props: {
 	}
 
 	return (
-		<div className="flex h-screen w-full items-center justify-center">
+		<SignInShell>
 			<Suspense fallback={null}>
 				<VerifyOTPForm
 					email={searchParams.email?.toLowerCase() ?? ""}
@@ -34,6 +35,6 @@ export default async function VerifyOTPPage(props: {
 					emailDeliveryConfigured={isEmailDeliveryConfigured()}
 				/>
 			</Suspense>
-		</div>
+		</SignInShell>
 	);
 }

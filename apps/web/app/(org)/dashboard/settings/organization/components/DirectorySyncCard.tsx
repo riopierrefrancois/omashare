@@ -154,8 +154,8 @@ export function DirectorySyncCard({
 						People assigned in your directory join{" "}
 						<span className="font-medium text-gray-12">{organizationName}</span>{" "}
 						as members. When someone is removed or deactivated there, they leave{" "}
-						{organizationName} and are signed out of Cap. Members who aren't in
-						your directory aren't affected.
+						{organizationName} and are signed out of video. Members who aren't
+						in your directory aren't affected.
 					</p>
 				)}
 
@@ -194,7 +194,7 @@ export function DirectorySyncCard({
 						)}
 						{status.syncFailed && (
 							<output className="text-[13px] text-gray-11">
-								The last sync didn't finish. Cap retries automatically.
+								The last sync didn't finish. It will retry automatically.
 							</output>
 						)}
 						{status.heldRemovals > 0 && (

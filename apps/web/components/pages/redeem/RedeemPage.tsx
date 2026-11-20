@@ -1,8 +1,7 @@
 "use client";
 
 import { classNames } from "@cap/utils/helpers";
-import { Check, Copy, Download, FileDown } from "lucide-react";
-import Link from "next/link";
+import { Check, Copy, FileDown } from "lucide-react";
 import {
 	type FormEvent,
 	type ReactNode,
@@ -189,7 +188,7 @@ const Panel = ({
 );
 
 const ACTIVATE_STEPS = [
-	"Download Cap and open it.",
+	"Open the desktop app.",
 	"Go to Settings, then Plan & license.",
 	"Paste your key and choose Activate License.",
 ];
@@ -211,13 +210,6 @@ const ActivateSteps = () => (
 				</li>
 			))}
 		</ol>
-		<Link
-			href="/download"
-			className={classNames(BTN_PRIMARY, "mt-6 w-full gap-2")}
-		>
-			<Download className="relative size-4" strokeWidth={2} />
-			<span className="relative">Download Cap</span>
-		</Link>
 	</div>
 );
 
@@ -710,18 +702,18 @@ export const RedeemPage = ({ licenseApiUrl }: { licenseApiUrl: string }) => {
 		switch (view.kind) {
 			case "enter":
 				return {
-					title: "Redeem your Cap license",
-					body: "Got a gift link or a license key? Enter it here and Cap is yours.",
+					title: "Redeem your license",
+					body: "Got a gift link or a license key? Enter it here to claim it.",
 				};
 			case "opening":
 				return { title: "Opening your gift", body: "One moment." };
 			case "claimable":
 				return {
-					title: "Someone gave you Cap",
+					title: "Someone gave you a license",
 					body:
 						view.duration === "lifetime"
-							? "A Desktop License for the Cap desktop app, yours for life. Tell us where to send it."
-							: "A Desktop License for the Cap desktop app. Tell us where to send it.",
+							? "A Desktop License for the desktop app, yours for life. Tell us where to send it."
+							: "A Desktop License for the desktop app. Tell us where to send it.",
 				};
 			case "claimed":
 				return {
@@ -733,7 +725,7 @@ export const RedeemPage = ({ licenseApiUrl }: { licenseApiUrl: string }) => {
 			case "redeemed":
 				return {
 					title: "This gift has been claimed",
-					body: "A gift link works once. If you claimed it, your key is in your inbox, sent by Cap Licenses.",
+					body: "A gift link works once. If you claimed it, your key is in your inbox, from the licensing service.",
 				};
 			case "ordering":
 				return {
@@ -775,7 +767,7 @@ export const RedeemPage = ({ licenseApiUrl }: { licenseApiUrl: string }) => {
 				if (view.licenses.length > 1) {
 					return {
 						title: `${view.licenses.length} gifts, ready to send`,
-						body: "Each link is one Cap license. Download them all as a CSV and send one link per person.",
+						body: "Each link is one license. Download them all as a CSV and send one link per person.",
 					};
 				}
 				return {
@@ -844,8 +836,8 @@ export const RedeemPage = ({ licenseApiUrl }: { licenseApiUrl: string }) => {
 							</button>
 						</form>
 						<p className={classNames(NOTE, "mt-5")}>
-							Bought Cap for yourself? There is nothing to redeem. Paste your
-							key into the app under Settings, then Plan &amp; license.
+							Bought a license for yourself? There is nothing to redeem. Paste
+							your key into the app under Settings, then Plan &amp; license.
 						</p>
 					</Panel>
 				);
@@ -900,7 +892,7 @@ export const RedeemPage = ({ licenseApiUrl }: { licenseApiUrl: string }) => {
 						</form>
 						<p className={classNames(NOTE, "mt-5")}>
 							The license is registered to this address and the key is emailed
-							there. You will use it if you ever move Cap to another device.
+							there. You will use it if you ever move the app to another device.
 						</p>
 					</Panel>
 				);

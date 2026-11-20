@@ -3,7 +3,7 @@
 import type { userSelectProps } from "@cap/database/auth/session";
 import type { comments as commentsSchema, videos } from "@cap/database/schema";
 import { NODE_ENV } from "@cap/env";
-import { Avatar, Logo } from "@cap/ui";
+import { Avatar } from "@cap/ui";
 import type { ViewerSettings } from "@cap/web-backend";
 import { useTranscript } from "hooks/use-transcript";
 import { AnimatePresence, motion } from "motion/react";
@@ -23,9 +23,10 @@ import {
 } from "@/app/s/[videoId]/_components/RecordingInProgress";
 import type { UploadProgress } from "@/app/s/[videoId]/_components/upload-progress";
 import { formatChaptersAsVTT } from "@/app/s/[videoId]/_components/utils/transcript-utils";
+import { SourceCredit } from "@/components/SourceCredit";
 import { type PlayerBrand, playerBrandAttributes } from "@/lib/player-brand";
 import { formatPlayerTime } from "@/lib/player-time";
-import type { SharePageBranding } from "@/lib/share-branding";
+import type { ShareBrand } from "@/lib/share-branding";
 import type { ShareCallToAction } from "@/lib/share-call-to-action";
 import { usePlayerJsReceiver } from "./use-player-js-receiver";
 
@@ -60,7 +61,7 @@ export const EmbedVideo = forwardRef<
 		data: Omit<typeof videos.$inferSelect, "password" | "archivedAt"> & {
 			hasActiveUpload: boolean | undefined;
 		};
-		branding: SharePageBranding | null;
+		branding: ShareBrand | null;
 		shareFont?: "geist" | "roboto";
 		posterUrl?: string | null;
 		playerBrand?: PlayerBrand | null;
@@ -280,7 +281,11 @@ export const EmbedVideo = forwardRef<
 					ref={playerContainerRef}
 					data-share-font={shareFont}
 					{...playerBrandAttributes(playerBrand)}
-					className="relative w-screen h-screen rounded-xl"
+					className={
+						minimal
+							? "relative w-screen h-screen rounded-xl"
+							: "relative h-[calc(100dvh-49px)] w-screen rounded-xl"
+					}
 					onPlayCapture={() => setIsPlaying(true)}
 					onPauseCapture={() => setIsPlaying(false)}
 					onEndedCapture={() => setIsPlaying(false)}
@@ -403,46 +408,35 @@ export const EmbedVideo = forwardRef<
 										</div>
 									</motion.div>
 								)}
-								{branding?.type === "custom" ? (
-									<motion.div
-										initial={{ opacity: 0, y: 10 }}
-										animate={{ opacity: 1, y: 0 }}
-										exit={{ opacity: 0, y: 10 }}
-										transition={{ duration: 0.3, delay: 0.1 }}
-										className="w-fit rounded-lg border border-white/10 bg-black/50 px-3 py-2 backdrop-blur-sm"
-									>
-										<Image
-											src={branding.imageUrl}
-											alt={`${branding.name} logo`}
-											width={160}
-											height={32}
-											unoptimized
-											className="h-8 w-auto max-w-40 object-contain"
-										/>
-									</motion.div>
-								) : branding?.type === "cap" ? (
-									<motion.button
-										initial={{ opacity: 0, y: 10 }}
-										animate={{ opacity: 1, y: 0 }}
-										exit={{ opacity: 0, y: 10 }}
-										transition={{ duration: 0.3, delay: 0.1 }}
-										onClick={(e) => {
-											e.stopPropagation();
-											window.open("https://cap.so", "_blank");
-										}}
-										className="hidden z-10 gap-2 items-center px-3 py-2 text-sm rounded-full border backdrop-blur-sm transition-colors duration-200 sm:flex border-white/10 w-fit text-white/80 hover:text-white bg-black/50"
-										aria-label="Powered by Cap"
-									>
-										<span className="text-xs md:text-sm text-white/80">
-											Powered by
-										</span>
-										<Logo className="w-auto h-4" white={true} />
-									</motion.button>
-								) : null}
+								{branding?.name && (
+									<div className="flex w-fit items-center gap-2 rounded-lg border border-white/10 bg-black/50 px-3 py-2 text-sm font-semibold text-white backdrop-blur-sm">
+										{branding.logo && (
+											<Image
+												src={branding.logo}
+												alt=""
+												width={32}
+												height={32}
+												unoptimized
+												className="size-8 object-contain"
+											/>
+										)}
+										{branding.name}
+									</div>
+								)}
 							</div>
 						)}
 					</AnimatePresence>
 				)}
+				{!minimal && (
+					<SourceCredit
+						website={
+							branding?.websiteUrl && branding.websiteLabel
+								? { url: branding.websiteUrl, label: branding.websiteLabel }
+								: undefined
+						}
+					/>
+				)}
+
 				{trackUploadProgress && (
 					<UploadProgressTracker
 						videoId={data.id}

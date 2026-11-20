@@ -46,6 +46,7 @@ describe("share video metadata", () => {
 		const metadata = buildShareVideoMetadata({
 			videoId: "video123",
 			name: "Product demo",
+			organizationName: "Example",
 			sourceType: "desktopMP4",
 			webUrl: "https://cap.so",
 			width: null,
@@ -53,10 +54,11 @@ describe("share video metadata", () => {
 			advertiseIframelyPlayer: true,
 		});
 
+		expect(metadata.title).toEqual({ absolute: "Product demo · Example" });
 		expect(metadata.openGraph).toMatchObject({
 			type: "video.other",
 			url: "https://cap.so/s/video123",
-			siteName: "Cap",
+			siteName: "Example",
 		});
 		const videos =
 			metadata.openGraph && "videos" in metadata.openGraph
@@ -76,7 +78,7 @@ describe("share video metadata", () => {
 		});
 		expect(metadata.alternates?.types?.["application/json+oembed"]).toEqual([
 			{
-				title: "Product demo | Cap Recording",
+				title: "Product demo · Example",
 				url: expect.any(String),
 			},
 		]);

@@ -52,11 +52,7 @@ export function BillingSummaryCard() {
 
 	if (isLoading) {
 		return (
-			<SettingsRow
-				icon={icon}
-				title="Cap Pro"
-				description="Loading your plan..."
-			/>
+			<SettingsRow icon={icon} title="Pro" description="Loading your plan..." />
 		);
 	}
 

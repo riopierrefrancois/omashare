@@ -274,9 +274,9 @@ function QueueItem({ request }: { request: OperatorLoomMigrationView }) {
 			<div className="mt-5 border-t border-gray-4 pt-5">
 				<h3 className="font-medium text-gray-12">Import a mapped Loom CSV</h3>
 				<p className="mt-1 text-xs text-gray-10">
-					Use loom_video_url,user_email,space_name. The destination is this Cap
-					organization; imports run in batches of 10. Started jobs still need
-					terminal processing checks.
+					Use loom_video_url,user_email,space_name. The destination is this
+					video organization; imports run in batches of 10. Started jobs still
+					need terminal processing checks.
 				</p>
 				<label
 					className="mt-3 block text-sm text-gray-11"
@@ -361,7 +361,7 @@ function QueueItem({ request }: { request: OperatorLoomMigrationView }) {
 				<p className="text-xs text-gray-10">
 					Use this when the CSV import cannot download a video. Download an MP4
 					from Loom with an account that has permission, then map it to its Loom
-					link and Cap owner. Restricted Library videos may need explicit
+					link and video owner. Restricted Library videos may need explicit
 					access.
 				</p>
 				<div className="grid gap-3 sm:grid-cols-2">
@@ -386,7 +386,7 @@ function QueueItem({ request }: { request: OperatorLoomMigrationView }) {
 						className="text-sm text-gray-11"
 						htmlFor={`loom-file-owner-${request.id}`}
 					>
-						Cap owner email
+						video owner email
 						<input
 							className="mt-1 w-full rounded-lg border border-gray-6 bg-gray-1 px-3 py-2 text-gray-12"
 							id={`loom-file-owner-${request.id}`}
@@ -402,7 +402,7 @@ function QueueItem({ request }: { request: OperatorLoomMigrationView }) {
 						className="text-sm text-gray-11"
 						htmlFor={`loom-file-space-${request.id}`}
 					>
-						Cap space (optional)
+						video space (optional)
 						<input
 							className="mt-1 w-full rounded-lg border border-gray-6 bg-gray-1 px-3 py-2 text-gray-12"
 							id={`loom-file-space-${request.id}`}
@@ -477,7 +477,7 @@ function QueueItem({ request }: { request: OperatorLoomMigrationView }) {
 				</Button>
 				<p className="text-xs text-gray-10">
 					Process an existing recording after its MP4 has finished uploading to
-					Cap storage. Review its Loom URL and owner first.
+					storage. Review its Loom URL and owner first.
 				</p>
 			</form>
 
@@ -640,7 +640,7 @@ export function LoomMigrationQueue() {
 		<div className="flex w-full max-w-5xl flex-col gap-5">
 			<div>
 				<p className="text-sm text-gray-10">
-					Process Cap Pro concierge requests, reconcile every import, and update
+					Process Pro concierge requests, reconcile every import, and update
 					customers here.
 				</p>
 			</div>

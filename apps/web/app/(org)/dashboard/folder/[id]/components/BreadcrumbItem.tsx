@@ -47,7 +47,7 @@ export function BreadcrumbItem({
 	// created, joined or can see publicly.
 	const linkSpaceId = spaceId ?? activeSpace?.id;
 
-	const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+	const handleDragOver = (e: React.DragEvent<HTMLFieldSetElement>) => {
 		e.preventDefault();
 		e.stopPropagation();
 
@@ -61,13 +61,13 @@ export function BreadcrumbItem({
 		}
 	};
 
-	const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+	const handleDragLeave = (e: React.DragEvent<HTMLFieldSetElement>) => {
 		e.preventDefault();
 		e.stopPropagation();
 		setIsDragOver(false);
 	};
 
-	const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+	const handleDrop = async (e: React.DragEvent<HTMLFieldSetElement>) => {
 		e.preventDefault();
 		e.stopPropagation();
 		setIsDragOver(false);
@@ -115,7 +115,7 @@ export function BreadcrumbItem({
 			console.error("Error moving video to folder:", error);
 			toast.error(
 				capPayload.ids.length > 1
-					? "Failed to move Caps to folder"
+					? "Failed to move videos to folder"
 					: "Failed to move video to folder",
 			);
 		} finally {
@@ -125,7 +125,8 @@ export function BreadcrumbItem({
 
 	if (isLast) {
 		return (
-			<div
+			<fieldset
+				aria-label={name}
 				className={clsx(
 					"flex gap-1.5 items-center px-1 min-w-0 rounded-md",
 					isDragOver && "bg-gray-4",
@@ -143,12 +144,13 @@ export function BreadcrumbItem({
 				>
 					{name}
 				</p>
-			</div>
+			</fieldset>
 		);
 	}
 
 	return (
-		<div
+		<fieldset
+			aria-label={name}
 			onDragOver={handleDragOver}
 			onDragLeave={handleDragLeave}
 			onDrop={handleDrop}
@@ -182,6 +184,6 @@ export function BreadcrumbItem({
 					{name}
 				</p>
 			</Link>
-		</div>
+		</fieldset>
 	);
 }

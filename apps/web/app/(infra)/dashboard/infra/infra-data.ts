@@ -345,7 +345,7 @@ export const infraPageMetadata =
 		if ((await getInfraAccess()) === "signed_out") return {};
 		const { appId } = await params;
 		await requireInfraApp(appId);
-		return { title: `${title} | Cap Infra` };
+		return { title: `${title}` };
 	};
 
 export function toInfraAppSummary(app: InfraApp): InfraAppSummary {

@@ -107,7 +107,7 @@ export function useCapSelection({
 			setMatchingCount(ids.length);
 			setMatchingTruncated(truncated);
 		} catch {
-			toast.error("Couldn't select every Cap. Please try again.");
+			toast.error("Couldn't select every video. Please try again.");
 		} finally {
 			setIsSelectingAll(false);
 		}

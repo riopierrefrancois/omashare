@@ -92,7 +92,7 @@ export function EarlyUploadOverlay({
 			<div className={styles.tint} aria-hidden />
 			<div className={styles.grain} aria-hidden />
 			<div className={styles.sheen} aria-hidden />
-			<div className={styles.content} role="status" aria-live="polite">
+			<output className={styles.content} aria-live="polite">
 				<p className={styles.title}>{title}</p>
 				<p className={styles.detail}>
 					{total === null
@@ -111,11 +111,11 @@ export function EarlyUploadOverlay({
 				)}
 				{stalled && (
 					<p className={styles.hint}>
-						Keep Cap open on the computer that recorded this so the rest can
-						upload.
+						Keep the recording app open on the computer that recorded this so
+						the rest can upload.
 					</p>
 				)}
-			</div>
+			</output>
 		</div>
 	);
 }

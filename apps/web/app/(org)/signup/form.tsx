@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Input, LogoBadge } from "@cap/ui";
+import { Button, Input } from "@cap/ui";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons/faArrowLeft";
 import { faEnvelope } from "@fortawesome/free-solid-svg-icons/faEnvelope";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons/faExclamationCircle";
@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { getOrganizationSSOData } from "@/actions/organization/get-organization-sso-data";
 import { trackEvent } from "@/app/utils/analytics";
 import { FontAwesomeIcon } from "@/components/FontAwesomeIcon";
+import { OmaShareMark } from "@/components/OmaShareMark";
 import { usePublicEnv } from "@/utils/public-env";
 import { getEmailCodeCooldownSeconds, requestEmailCode } from "../auth-email";
 import {
@@ -35,7 +36,6 @@ import { getSafeNextPath } from "../safe-next";
 import { SsoErrorNotice } from "../sso-error-notice";
 
 const MotionInput = motion(Input);
-const MotionLogoBadge = motion(LogoBadge);
 const MotionLink = motion(Link);
 const MotionButton = motion(Button);
 
@@ -97,7 +97,7 @@ export function SignupForm() {
 			if (error === "OAuthAccountNotLinked") {
 				setOauthError(true);
 				return toast.error(
-					"This email already has a Cap account. Sign in using your original sign-in method.",
+					"This email already has a account. Sign in using your original sign-in method.",
 				);
 			} else if (error === "SsoMissingProfileAttributes") {
 				setShowOrgInput(true);
@@ -106,7 +106,7 @@ export function SignupForm() {
 				return;
 			} else if (error === "DisposableEmail") {
 				return toast.error(
-					"Temporary email addresses can't be used with Cap. Please use your work or personal email.",
+					"Temporary email addresses cannot be used. Please use your work or personal email.",
 				);
 			} else if (error === "SsoSessionExpired") {
 				setShowOrgInput(true);
@@ -276,7 +276,7 @@ export function SignupForm() {
 				</motion.p>
 			</motion.button>
 			<MotionLink layout="position" className="flex mx-auto size-fit" href="/">
-				<MotionLogoBadge layout="position" className="w-[72px] h-[72px]" />
+				<OmaShareMark className="text-xl" />
 			</MotionLink>
 			<motion.div
 				layout="position"
@@ -287,7 +287,7 @@ export function SignupForm() {
 					layout="position"
 					className="text-2xl font-semibold text-gray-12"
 				>
-					Sign up to Cap
+					Create an account
 				</motion.h1>
 				<motion.p
 					key="subtitle"
@@ -435,7 +435,7 @@ export function SignupForm() {
 							className="text-xs text-center text-gray-9"
 						>
 							By typing your email and clicking continue, you acknowledge that
-							you have both read and agree to Cap's{" "}
+							you have both read and agree to the{" "}
 							<Link
 								href="/terms"
 								target="_blank"

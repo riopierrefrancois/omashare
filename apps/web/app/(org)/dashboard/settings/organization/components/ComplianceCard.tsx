@@ -24,7 +24,7 @@ const certifications: {
 	{
 		label: "HIPAA",
 		description:
-			"HIPAA compliance verified through Comp AI, with every vendor in Cap's production infrastructure covered by a BAA.",
+			"HIPAA compliance verified through Comp AI, with every vendor here's production infrastructure covered by a BAA.",
 		seal: ["HIPAA"],
 	},
 ];
@@ -65,9 +65,9 @@ export function ComplianceCard() {
 					))}
 				</div>
 				<p className="px-4 py-3.5 text-[13px] leading-5 text-gray-10 sm:px-5">
-					Cap's compliance program is completed and continuously monitored
-					through Comp AI. Request our SOC 2 report, view certifications, and
-					see the full subprocessor list at{" "}
+					the service’s compliance program is completed and continuously
+					monitored through Comp AI. Request our SOC 2 report, view
+					certifications, and see the full subprocessor list at{" "}
 					<a
 						href={TRUST_PORTAL_URL}
 						target="_blank"

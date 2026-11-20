@@ -1,11 +1,11 @@
 "use client";
 
-import { LogoBadge } from "@cap/ui";
 import { useClickAway } from "@uidotdev/usehooks";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import Link from "next/link";
 import { type MutableRefObject, useState } from "react";
+import { OmaShareMark } from "@/components/OmaShareMark";
 
 import { DashboardSearch } from "./DashboardSearch";
 import NavItems from "./Items";
@@ -54,7 +54,7 @@ export const AdminMobileNav = () => {
 			<div className="flex fixed z-[51] w-full h-16 border-b border-gray-3 bg-gray-1 lg:border-none lg:hidden">
 				<div className="flex gap-3 items-center px-4 w-full h-full">
 					<Link className="block flex-shrink-0" href="/dashboard">
-						<LogoBadge className="block w-auto h-8" />
+						<OmaShareMark />
 					</Link>
 					<div className="flex-1 min-w-0">
 						<DashboardSearch shortcutEnabled={false} />

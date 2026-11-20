@@ -151,8 +151,8 @@ export function WebhooksClient({
 				title="Webhooks"
 				description={
 					<>
-						Cap sends a signed POST to your server when a video is ready or
-						fails.{" "}
+						The service sends a signed POST to your server when a video is ready
+						or fails.{" "}
 						<Link href="/openapi.json" className={TEXT_LINK}>
 							Verify the signature
 						</Link>
@@ -183,7 +183,7 @@ export function WebhooksClient({
 					{adding && (
 						<Split
 							title="Add endpoint"
-							description="A public https URL. Cap posts the events you choose to it."
+							description="A public https URL. video posts the events you choose to it."
 						>
 							<AddEndpointForm
 								appId={appId}
@@ -555,8 +555,8 @@ function EndpointRow({
 			</p>
 			{endpoint.disabledByFailures && !endpoint.enabled && (
 				<p className="m-0 mt-2 text-pretty text-[13.5px] leading-[1.5] text-[#F2A199]">
-					Turned off by Cap after repeated failed deliveries. Fix the endpoint,
-					send a test, then turn it on.
+					Turned off after repeated failed deliveries. Fix the endpoint, send a
+					test, then turn it on.
 				</p>
 			)}
 			<p className={clsx(MUTED, "m-0 mt-2 text-[13.5px] leading-[1.5]")}>
@@ -625,7 +625,7 @@ function EndpointRow({
 				title="Delete endpoint"
 				description={
 					<>
-						Cap stops sending events to{" "}
+						Event delivery stops to{" "}
 						<span className={clsx(MONO, "break-all")}>{endpoint.url}</span>{" "}
 						straight away. This cannot be undone.
 					</>

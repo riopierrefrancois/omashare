@@ -8,7 +8,6 @@ import {
 	DropdownMenuItem,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
-	Logo,
 } from "@cap/ui";
 import type { ViewerSettingKey } from "@cap/web-backend";
 import { getCustomThumbnailMetadata } from "@cap/web-backend/src/Storage/custom-thumbnail";
@@ -35,17 +34,13 @@ import {
 	Pencil,
 	Scissors,
 	Users,
-	X,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Suspense, use, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import {
-	hideShareableLinkCapLogo,
-	selectShareableLinkBrandingOrganization,
-} from "@/actions/organization/shareable-link-icon";
+import { selectShareableLinkBrandingOrganization } from "@/actions/organization/shareable-link-icon";
 import { editTitle } from "@/actions/videos/edit-title";
 import type { VideoStatusResult } from "@/actions/videos/get-status";
 import { useDashboardContext } from "@/app/(org)/dashboard/DashboardContext";
@@ -61,7 +56,7 @@ import {
 } from "@/lib/video-share-clipboard";
 import { usePublicEnv } from "@/utils/public-env";
 import { navigateWithTransition } from "@/utils/view-transition";
-import type { SharePageBranding, VideoData } from "../types";
+import type { ShareBrand, VideoData } from "../types";
 import { DashboardBackLink } from "./DashboardBackLink";
 import { RelativeTime } from "./RelativeTime";
 import { describeShareAudience } from "./share-audience";
@@ -141,7 +136,7 @@ const DuplicateCapMenuItem = dynamic(() => import("./DuplicateCapMenuItem"), {
 const TITLE_TEXT_CLASS =
 	"text-xl leading-7 font-normal sm:text-2xl sm:leading-8";
 
-const TITLE_PLACEHOLDER = "Cap title";
+const TITLE_PLACEHOLDER = "video title";
 
 const ACTION_BAR_BUTTON_CLASS =
 	"h-10 min-w-0 gap-1.5 rounded-full px-3 text-[13px] sm:h-8 sm:px-2.5 sm:text-xs";
@@ -192,7 +187,7 @@ export const ShareHeader = ({
 		hasPassword?: boolean;
 	}[];
 	spacesData?: Spaces[] | null;
-	branding?: SharePageBranding | null;
+	branding?: ShareBrand | null;
 	canManageSharePageBranding?: boolean;
 	brandColor?: string | null;
 	canDownload?: boolean;
@@ -271,7 +266,6 @@ export const ShareHeader = ({
 	const [linkCopied, setLinkCopied] = useState(false);
 	const [showCopyOptions, setShowCopyOptions] = useState(false);
 	const [capturedTime, setCapturedTime] = useState(0);
-	const [isHidingBranding, setIsHidingBranding] = useState(false);
 	const [isOpeningBrandingSettings, setIsOpeningBrandingSettings] =
 		useState(false);
 	const titleInputRef = useRef<HTMLInputElement>(null);
@@ -481,7 +475,7 @@ export const ShareHeader = ({
 	const copyShareLink = (url: string) =>
 		copyRichVideoLink({
 			url,
-			title: displayTitle || "Cap Recording",
+			title: displayTitle || "Video recording",
 			previewImageUrl: videoPreviewImageUrl(webUrl, data.id),
 		});
 
@@ -592,7 +586,7 @@ export const ShareHeader = ({
 			className={clsx("gap-1.5 px-3", className)}
 			size="xs"
 			variant="blue"
-			aria-label="Share this Cap"
+			aria-label="Share this video"
 			onClick={openShareLinkDialog}
 			onPointerEnter={() => {
 				void importShareLinkDialog();
@@ -689,33 +683,7 @@ export const ShareHeader = ({
 		navigateWithTransition("edit-enter", () => push(`/s/${data.id}/edit`));
 	};
 
-	const handleHideBranding = async () => {
-		if (!user?.isPro) {
-			setUpgradeModalOpen(true);
-			return;
-		}
-
-		setIsHidingBranding(true);
-
-		try {
-			await hideShareableLinkCapLogo(data.orgId);
-			toast.success("Cap logo hidden");
-			refresh();
-		} catch (error) {
-			toast.error(
-				error instanceof Error ? error.message : "Failed to hide Cap logo",
-			);
-		} finally {
-			setIsHidingBranding(false);
-		}
-	};
-
 	const handleEditBranding = async () => {
-		if (!user?.isPro) {
-			setUpgradeModalOpen(true);
-			return;
-		}
-
 		setIsOpeningBrandingSettings(true);
 
 		try {
@@ -732,7 +700,7 @@ export const ShareHeader = ({
 	};
 
 	const renderBranding = () => {
-		if (!branding) return null;
+		if (!branding?.name) return null;
 
 		return (
 			<div className="group relative inline-flex shrink-0 items-center">
@@ -750,43 +718,22 @@ export const ShareHeader = ({
 								<Pencil className="size-3.5 text-gray-12" />
 								Change logo
 							</Button>
-							{branding.type === "cap" && (
-								<Button
-									variant="gray"
-									size="xs"
-									aria-label="Hide Cap logo"
-									className="h-7 gap-1 whitespace-nowrap rounded-full px-2 text-[11px]"
-									disabled={isHidingBranding}
-									onClick={handleHideBranding}
-								>
-									<X className="size-3.5 text-gray-12" />
-									Remove
-								</Button>
-							)}
 						</div>
 					</div>
 				)}
-				{branding.type === "custom" ? (
-					<div className="inline-flex h-11 max-w-56 items-center justify-center">
+				<div className="inline-flex h-11 max-w-56 items-center gap-2">
+					{branding.logo && (
 						<Image
-							src={branding.imageUrl}
-							alt={`${branding.name} logo`}
-							width={176}
+							src={branding.logo}
+							alt=""
+							width={32}
 							height={32}
 							unoptimized
-							className="max-h-8 w-auto max-w-44 object-contain"
+							className="size-8 object-contain"
 						/>
-					</div>
-				) : (
-					<a
-						target="_blank"
-						rel="noreferrer"
-						href={`/?ref=video_${data.id}`}
-						className="inline-flex h-11 items-center"
-					>
-						<Logo className="h-7 w-auto" />
-					</a>
-				)}
+					)}
+					<span className="truncate font-semibold">{branding.name}</span>
+				</div>
 			</div>
 		);
 	};
@@ -804,7 +751,7 @@ export const ShareHeader = ({
 						size="sm"
 						variant="blue"
 					>
-						Upgrade to Cap Pro
+						Upgrade to Pro
 					</Button>
 				</div>
 			)}
@@ -852,7 +799,7 @@ export const ShareHeader = ({
 							open={moveDialogOpen}
 							onOpenChange={setMoveDialogOpen}
 							location={{ type: "personal" }}
-							rootLabel="My Caps"
+							rootLabel="My videos"
 							organizationId={data.orgId ?? undefined}
 							item={{
 								type: "videos",
@@ -1003,7 +950,7 @@ export const ShareHeader = ({
 											maxLength={255}
 											spellCheck={false}
 											autoComplete="off"
-											aria-label="Cap title"
+											aria-label="video title"
 											placeholder={TITLE_PLACEHOLDER}
 											onChange={(e) => setEditValue(e.target.value)}
 											onBlur={handleTitleBlur}
@@ -1162,7 +1109,7 @@ export const ShareHeader = ({
 													<Button
 														variant="dark"
 														size="xs"
-														aria-label="Manage Cap"
+														aria-label="Manage video"
 														className={clsx(ACTION_BAR_BUTTON_CLASS, "sm:px-3")}
 													>
 														<FontAwesomeIcon
@@ -1170,7 +1117,9 @@ export const ShareHeader = ({
 															icon={faEllipsis}
 														/>
 														<span className="truncate sm:hidden">Manage</span>
-														<span className="hidden sm:inline">Manage Cap</span>
+														<span className="hidden sm:inline">
+															Manage video
+														</span>
 													</Button>
 												</DropdownMenuTrigger>
 												<DropdownMenuContent
@@ -1350,7 +1299,7 @@ export const ShareHeader = ({
 															className="size-3"
 															icon={faTrash}
 														/>
-														<p className="text-sm text-inherit">Delete Cap</p>
+														<p className="text-sm text-inherit">Delete video</p>
 													</DropdownMenuItem>
 												</DropdownMenuContent>
 											</DropdownMenu>

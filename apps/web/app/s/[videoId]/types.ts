@@ -39,4 +39,4 @@ export type VideoOwner = {
 	image?: ImageUpload.ImageUrl | null;
 };
 
-export type { SharePageBranding } from "@/lib/share-branding";
+export type { ShareBrand } from "@/lib/share-branding";

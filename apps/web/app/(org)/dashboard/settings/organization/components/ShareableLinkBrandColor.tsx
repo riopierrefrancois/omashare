@@ -64,7 +64,9 @@ export const ShareableLinkBrandColor = () => {
 		},
 		onSuccess: (result) => {
 			toast.success(
-				result.color ? "Brand color saved" : "Share pages use Cap blue again",
+				result.color
+					? "Brand color saved"
+					: "Share pages use default blue again",
 			);
 			router.refresh();
 		},
@@ -102,7 +104,7 @@ export const ShareableLinkBrandColor = () => {
 						<fieldset className="flex flex-wrap gap-2 items-center">
 							<legend className="sr-only">Brand color</legend>
 							<Swatch
-								label="Cap blue"
+								label="default blue"
 								color={CAP_PLAY_BLUE}
 								selected={draft === null}
 								disabled={save.isPending}
@@ -204,7 +206,7 @@ export const ShareableLinkBrandColor = () => {
 									? "This color is too dark to see on video, so the progress bar and focus rings stay white. The play button uses it."
 									: brand
 										? `The play icon is ${brand.foreground === "#FFFFFF" ? "white" : "dark"} on this color so it stays readable.`
-										: "Share pages and embeds use Cap blue."}
+										: "Share pages and embeds use default blue."}
 						</p>
 
 						{dirty && (

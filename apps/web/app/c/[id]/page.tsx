@@ -1,4 +1,4 @@
-import { buttonVariants, Logo } from "@cap/ui";
+import { buttonVariants } from "@cap/ui";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons/faArrowLeft";
 import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons/faArrowUpRightFromSquare";
 import { faFolder } from "@fortawesome/free-solid-svg-icons/faFolder";
@@ -10,6 +10,7 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { FontAwesomeIcon } from "@/components/FontAwesomeIcon";
 import { PublicCapCard } from "@/components/PublicCapCard";
+import { SourceCredit } from "@/components/SourceCredit";
 import {
 	GRID_COLUMN_CLASS,
 	sanitizeCtaUrl,
@@ -25,7 +26,7 @@ import {
 	getPublicCollectionLoginHref,
 	parsePublicCollectionPage,
 } from "@/lib/public-collections-policy";
-import type { SharePageBranding } from "@/lib/share-branding";
+import { getShareBrand, type ShareBrand } from "@/lib/share-branding";
 import { CapPagination } from "../../(org)/dashboard/caps/components/CapPagination";
 import { CollectionCopyLinkButton } from "./CollectionCopyLinkButton";
 import { CollectionPasswordOverlay } from "./CollectionPasswordOverlay";
@@ -42,59 +43,46 @@ export async function generateMetadata(
 	const description =
 		collection.publicPage.subtitle.trim() ||
 		collection.description?.trim() ||
-		`View public videos in ${title} on Cap.`;
+		`View public videos in ${title}.`;
 
 	return {
-		title: `${title} | Cap Collection`,
+		title: { absolute: `${title} · ${collection.organizationName}` },
 		description,
 		robots: "noindex, nofollow",
 	};
 }
 
-function resolveBranding(
-	collection: PublicCollection,
-): SharePageBranding | null {
+function resolveBranding(collection: PublicCollection): ShareBrand | null {
 	const { logoMode } = collection.publicPage;
 
 	if (logoMode === "none") return null;
 
-	if (logoMode === "custom" && collection.collectionLogoUrl) {
-		return {
-			type: "custom",
-			imageUrl: collection.collectionLogoUrl,
-			name: collection.organizationName,
-		};
-	}
-
-	if (logoMode === "organization" && collection.organizationIconUrl) {
-		return {
-			type: "custom",
-			imageUrl: collection.organizationIconUrl,
-			name: collection.organizationName,
-		};
-	}
-
-	return { type: "cap" };
+	return getShareBrand(null, {
+		name: collection.organizationName,
+		logo:
+			logoMode === "custom"
+				? collection.collectionLogoUrl
+				: collection.organizationIconUrl,
+	});
 }
 
 function BrandingMark({
 	branding,
 	className,
 }: {
-	branding: SharePageBranding;
+	branding: ShareBrand;
 	className?: string;
 }) {
-	if (branding.type === "custom") {
-		return (
-			// biome-ignore lint/performance/noImgElement: arbitrary org-uploaded icon
-			<img
-				src={branding.imageUrl}
-				alt={branding.name}
-				className={className ?? "h-7 w-auto max-w-[160px] object-contain"}
-			/>
-		);
-	}
-	return <Logo className={className ?? "h-7 w-auto"} />;
+	return branding.logo ? (
+		// biome-ignore lint/performance/noImgElement: arbitrary org-uploaded icon
+		<img
+			src={branding.logo}
+			alt={branding.name ?? ""}
+			className={className ?? "h-7 w-auto max-w-[160px] object-contain"}
+		/>
+	) : (
+		<span className={className}>{branding.name}</span>
+	);
 }
 
 export default async function PublicCollectionPage(
@@ -170,17 +158,7 @@ export default async function PublicCollectionPage(
 			{showHeader && (
 				<header className="sticky top-0 z-30 border-b backdrop-blur-md border-gray-4 bg-gray-1/85">
 					<div className="flex justify-between items-center px-4 mx-auto max-w-7xl h-16 sm:px-6 lg:px-8">
-						{branding ? (
-							branding.type === "cap" ? (
-								<Link href="/?ref=collection" aria-label="Cap home">
-									<BrandingMark branding={branding} />
-								</Link>
-							) : (
-								<BrandingMark branding={branding} />
-							)
-						) : (
-							<span />
-						)}
+						{branding ? <BrandingMark branding={branding} /> : <span />}
 						{showCopyLink && <CollectionCopyLinkButton />}
 					</div>
 				</header>
@@ -204,9 +182,7 @@ export default async function PublicCollectionPage(
 				)}
 			</main>
 
-			<CollectionFooter
-				showPoweredBy={data.collection.publicPage.logoMode !== "none"}
-			/>
+			<SourceCredit />
 		</div>
 	);
 }
@@ -419,32 +395,12 @@ function PublicFolderCard({
 	);
 }
 
-function CollectionFooter({ showPoweredBy }: { showPoweredBy: boolean }) {
-	if (!showPoweredBy) return null;
-
-	return (
-		<footer className="mt-16 border-t border-gray-4">
-			<div className="flex justify-center items-center px-4 mx-auto max-w-7xl h-16 sm:px-6 lg:px-8">
-				<a
-					href="https://cap.so/?ref=collection"
-					target="_blank"
-					rel="noreferrer"
-					className="inline-flex gap-1.5 items-center text-xs transition-colors text-gray-9 hover:text-gray-11"
-				>
-					Powered by
-					<Logo className="w-auto h-3.5" />
-				</a>
-			</div>
-		</footer>
-	);
-}
-
 function CollectionAccessView({
 	branding,
 	title,
 	description,
 }: {
-	branding: SharePageBranding | null;
+	branding: ShareBrand | null;
 	title: string;
 	description: ReactNode;
 }) {
@@ -455,9 +411,7 @@ function CollectionAccessView({
 					branding={branding}
 					className="mb-6 h-12 w-auto max-w-[200px] object-contain"
 				/>
-			) : (
-				<Logo className="mb-6 size-24" />
-			)}
+			) : null}
 			<h1 className="mb-2 text-2xl font-semibold">{title}</h1>
 			<p className="max-w-md text-gray-10">{description}</p>
 		</div>

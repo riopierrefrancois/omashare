@@ -22,10 +22,7 @@ import {
 	vi,
 } from "vitest";
 import { EmbedVideo } from "@/app/embed/[videoId]/_components/EmbedVideo";
-import {
-	getSharePageBranding,
-	type SharePageBrandingInput,
-} from "@/lib/share-branding";
+import { getShareBrand, type ShareBrand } from "@/lib/share-branding";
 
 const dynamicImports = vi.hoisted(() => [] as Promise<unknown>[]);
 const dynamicControl = vi.hoisted(() => ({
@@ -195,7 +192,7 @@ const createProps = (
 	source: EmbedVideoProps["data"]["source"],
 ): EmbedVideoProps => ({
 	comments: [],
-	branding: { type: "cap" },
+	branding: getShareBrand({}, { name: "Example" }),
 	data: {
 		id: "video-id" as EmbedVideoProps["data"]["id"],
 		ownerId: "owner-id" as EmbedVideoProps["data"]["ownerId"],
@@ -234,14 +231,12 @@ const createProps = (
 
 const expectChromeVisible = (container: HTMLElement) => {
 	expect(container.textContent).toContain("Test video");
-	expect(
-		container.querySelector('[aria-label="Powered by Cap"]'),
-	).not.toBeNull();
+	expect(container.textContent).toContain("Example");
 };
 
 const expectChromeHidden = (container: HTMLElement) => {
 	expect(container.textContent).not.toContain("Test video");
-	expect(container.querySelector('[aria-label="Powered by Cap"]')).toBeNull();
+	expect(container.textContent).not.toContain("Example");
 };
 
 beforeAll(async () => {
@@ -479,86 +474,17 @@ describe("EmbedVideo captions", () => {
 	});
 });
 
-const organizationIconUrl =
-	"https://example.com/organization.png" as NonNullable<
-		SharePageBrandingInput["organizationIconUrl"]
-	>;
-const shareableLinkIconUrl =
-	"https://example.com/shareable-link.png" as NonNullable<
-		SharePageBrandingInput["shareableLinkIconUrl"]
-	>;
-
-const brandingCases: {
-	name: string;
-	input: SharePageBrandingInput;
-	expected: "cap" | "custom" | null;
-	imageUrl?: string;
-}[] = [
+const organizationLogo = "https://example.org/logo.png" as NonNullable<
+	ShareBrand["logo"]
+>;
+const brandingCases = [
+	{ name: "neutral fallback", brand: getShareBrand() },
+	{ name: "organization name", brand: getShareBrand({}, { name: "Example" }) },
 	{
-		name: "hidden Pro branding",
-		input: {
-			owner: { isPro: true },
-			orgSettings: { hideShareableLinkCapLogo: true },
-		},
-		expected: null,
-	},
-	{
-		name: "custom organization logo with Cap branding hidden",
-		input: {
-			owner: { isPro: true },
-			orgSettings: {
-				hideShareableLinkCapLogo: true,
-				shareableLinkUseOrganizationIcon: true,
-			},
-			organizationIconUrl,
-			shareableLinkIconUrl,
-			organizationName: "Acme",
-		},
-		expected: "custom",
-		imageUrl: organizationIconUrl,
-	},
-	{
-		name: "custom shareable link logo",
-		input: {
-			owner: { isPro: true },
-			organizationIconUrl,
-			shareableLinkIconUrl,
-			organizationName: "Acme",
-		},
-		expected: "custom",
-		imageUrl: shareableLinkIconUrl,
-	},
-	{
-		name: "free owner with saved Pro branding preferences",
-		input: {
-			owner: { isPro: false },
-			orgSettings: {
-				hideShareableLinkCapLogo: true,
-				shareableLinkUseOrganizationIcon: true,
-			},
-			organizationIconUrl,
-		},
-		expected: "cap",
-	},
-	{
-		name: "default Pro branding",
-		input: { owner: { isPro: true } },
-		expected: "cap",
-	},
-	{
-		name: "hidden branding with a missing organization logo",
-		input: {
-			owner: { isPro: true },
-			orgSettings: {
-				hideShareableLinkCapLogo: true,
-				shareableLinkUseOrganizationIcon: true,
-			},
-			shareableLinkIconUrl,
-		},
-		expected: null,
+		name: "organization logo",
+		brand: getShareBrand({}, { name: "Example", logo: organizationLogo }),
 	},
 ];
-
 describe.each([
 	{ type: "desktopMP4" } as const,
 	{ type: "MediaConvert" } as const,
@@ -572,12 +498,12 @@ describe.each([
 
 	it.each(brandingCases)(
 		"honors $name before and after playback",
-		async ({ input, expected, imageUrl }) => {
+		async ({ brand }) => {
 			const container = document.createElement("div");
 			const root = createRoot(container);
 			const props = {
 				...createProps(source),
-				branding: getSharePageBranding(input),
+				branding: brand,
 			};
 			await act(async () => {
 				root.render(createElement(EmbedVideo, props));
@@ -586,19 +512,12 @@ describe.each([
 			const expectBranding = () => {
 				expect(container.textContent).toContain("Test video");
 				expect(
-					Boolean(container.querySelector('[aria-label="Powered by Cap"]')),
-				).toBe(expected === "cap");
-				expect(Boolean(container.querySelector("[data-cap-logo]"))).toBe(
-					expected === "cap",
-				);
-				const logo = container.querySelector("img");
-				if (expected === "custom") {
-					expect(logo?.getAttribute("src")).toBe(imageUrl);
-					expect(logo?.getAttribute("alt")).toBe("Acme logo");
-					expect(logo?.closest("a, button")).toBeNull();
-				} else {
-					expect(logo).toBeNull();
-				}
+					container.querySelector('[aria-label="Powered by Cap"]'),
+				).toBeNull();
+				expect(
+					container.querySelector("img")?.getAttribute("src") ?? null,
+				).toBe(brand.logo);
+				if (brand.name) expect(container.textContent).toContain(brand.name);
 			};
 			expectBranding();
 			const video = container.querySelector("video");

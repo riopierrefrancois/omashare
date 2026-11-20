@@ -291,9 +291,9 @@ export function VideoClient({
 				<div className="min-w-0">
 					{video.state === "taken_down" ? (
 						<Notice title="Taken down">
-							Cap took this video down after a report, so it does not play here,
-							on its page or anywhere it is embedded. It is still stored and
-							billed like your other videos. If you think this is a mistake,
+							This video was taken down after a report, so it does not play
+							here, on its page or anywhere it is embedded. It is still stored
+							and billed like your other videos. If you think this is a mistake,
 							email {DEVELOPER_VIDEO_REPORT_EMAIL}.
 						</Notice>
 					) : video.state === "ready" && playable && playbackPaused ? (
@@ -313,13 +313,13 @@ export function VideoClient({
 						<Player video={video} />
 					) : video.state === "ready" ? (
 						<Notice title="Nothing to play yet">
-							This video was uploaded before Cap Infra encoded video, so it has
-							no playback links. Upload the file again to get them.
+							This video was uploaded before Infra encoded video, so it has no
+							playback links. Upload the file again to get them.
 						</Notice>
 					) : state === "processing" ? (
 						<Notice title="Processing">
-							Cap is encoding this video. The player appears here on its own as
-							soon as it is ready.
+							This video is being processed. The player appears here on its own
+							as soon as it is ready.
 						</Notice>
 					) : video.state === "failed" ? (
 						<Notice title="Processing failed" action={removeButton}>
@@ -328,7 +328,7 @@ export function VideoClient({
 					) : uploadingHere ? (
 						<Notice title="Uploading">
 							The upload carries on while you move around this app. Closing the
-							tab or leaving Cap Infra cancels it.
+							tab or leaving Infra cancels it.
 						</Notice>
 					) : (
 						<Notice title="Upload not finished" action={removeButton}>

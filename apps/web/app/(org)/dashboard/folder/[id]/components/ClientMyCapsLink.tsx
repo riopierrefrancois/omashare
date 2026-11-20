@@ -38,7 +38,7 @@ export function ClientMyCapsLink({
 	const router = useRouter();
 	const { activeSpace } = useDashboardContext();
 
-	const rootName = activeSpace ? `"${activeSpace.name}"` : "My Caps";
+	const rootName = activeSpace ? `"${activeSpace.name}"` : "My videos";
 
 	const processDrop = useCallback(
 		async (capData: CapDragPayload) => {
@@ -59,7 +59,7 @@ export function ClientMyCapsLink({
 				console.error("Error moving video:", error);
 				toast.error(
 					capData.ids.length > 1
-						? "Failed to move Caps"
+						? "Failed to move videos"
 						: "Failed to move video",
 				);
 			} finally {
@@ -156,7 +156,7 @@ export function ClientMyCapsLink({
 					compact ? "min-w-0 [overflow-wrap:anywhere]" : "min-w-0 truncate"
 				}
 			>
-				{activeSpace ? activeSpace.name : "My Caps"}
+				{activeSpace ? activeSpace.name : "My videos"}
 			</span>
 		</Link>
 	);

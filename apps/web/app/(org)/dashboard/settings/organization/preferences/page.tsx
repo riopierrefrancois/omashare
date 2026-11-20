@@ -4,7 +4,7 @@ import { DefaultCallToAction } from "../components/DefaultCallToAction";
 import { DefaultVideoVisibility } from "../components/DefaultVideoVisibility";
 
 export const metadata: Metadata = {
-	title: "Organization Preferences — Cap",
+	title: "Organization Preferences",
 };
 
 export default function PreferencesPage() {

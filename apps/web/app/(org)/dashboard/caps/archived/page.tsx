@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CapsPageView } from "../caps-page-data";
 
 export const metadata: Metadata = {
-	title: "Archived — Cap",
+	title: "Archived",
 };
 
 export default async function ArchivedCapsPage(

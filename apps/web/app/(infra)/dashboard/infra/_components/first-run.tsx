@@ -45,32 +45,32 @@ export function FirstRun({
 		<div className="flex min-h-dvh flex-col">
 			<header className="mx-auto flex h-14 w-full max-w-[1184px] items-center justify-between px-5 sm:px-8">
 				<Brand />
-				<nav aria-label="Cap Infra" className="flex items-center">
+				<nav aria-label="Infra" className="flex items-center">
 					<Link href="/openapi.json" className={QUIET_LINK}>
 						Docs
 					</Link>
 					<Link href="/dashboard/caps" className={QUIET_LINK}>
-						Back to Cap
+						Back to dashboard
 					</Link>
 				</nav>
 			</header>
 			<main className="mx-auto grid w-full max-w-[1184px] flex-1 content-start gap-x-20 gap-y-12 px-5 pb-24 pt-[9vh] sm:px-8 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:pt-[14vh]">
 				<div>
 					<h1 className="m-0 text-balance text-[clamp(30px,3.4vw,42px)] font-medium leading-[1.06] tracking-[-0.035em] text-[#E8ECF4]">
-						Set up Cap Infra.
+						Set up Infra.
 					</h1>
 					<p className={clsx(LEAD, "mt-5")}>
-						Name an app, drop in a video, and Cap stores it and plays it
-						wherever you put it. Usage is billed from prepaid credits, with no
-						plans or seats.
+						Name an app, drop in a video, and it is stored and played wherever
+						you put it. Usage is billed from prepaid credits, with no plans or
+						seats.
 					</p>
 					<p className={clsx(LEAD, "mt-4")}>
-						Infra is separate from Cap. Your recordings, plan and team stay
-						exactly as they are.
+						Infra is separate from your account. Your recordings, plan and team
+						stay exactly as they are.
 						{proCredit.status === "trial"
 							? ` ${PRO_CREDIT_TRIAL_MESSAGE}`
 							: proCredit.status !== "not_pro" &&
-								" Your Cap Pro plan adds $5 of Infra credit every month."}
+								" Your Pro plan adds $5 of Infra credit every month."}
 					</p>
 				</div>
 				<div className="min-w-0 max-w-[620px]">
@@ -106,8 +106,8 @@ export function FirstRun({
 												))}
 											</div>
 											<p className="m-0 mt-3 text-[13px] leading-[1.5] text-[rgba(232,236,244,0.46)]">
-												Starts an Infra app named after your Cap organization,
-												or name a new one below.
+												Starts an Infra app named after your organization, or
+												name a new one below.
 											</p>
 										</div>
 									)}
@@ -127,7 +127,7 @@ export function FirstRun({
 									{proCredit.status === "not_pro" ||
 									proCredit.status === "trial"
 										? "."
-										: ", and your Cap Pro plan covers the first $5 each month."}
+										: ", and your Pro plan covers the first $5 each month."}
 								</StepNote>
 							) : (
 								<FirstCredit

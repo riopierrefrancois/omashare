@@ -6,8 +6,8 @@ const labels = (pathname: string | null) =>
 
 describe("dashboard top bar titles", () => {
 	it("uses the sidebar wording for top-level pages", () => {
-		expect(labels("/dashboard/caps")).toEqual(["My Caps"]);
-		expect(labels("/dashboard/caps/record")).toEqual(["Record a Cap"]);
+		expect(labels("/dashboard/caps")).toEqual(["My videos"]);
+		expect(labels("/dashboard/caps/record")).toEqual(["Record a video"]);
 		expect(labels("/dashboard/analytics")).toEqual(["Analytics"]);
 		expect(labels("/dashboard/import")).toEqual(["Import Media"]);
 		expect(labels("/dashboard/admin/loom-migrations")).toEqual([
@@ -44,11 +44,11 @@ describe("dashboard top bar titles", () => {
 				"Organization Settings",
 			]);
 		}
-		expect(labels("/dashboard/caps/")).toEqual(["My Caps"]);
+		expect(labels("/dashboard/caps/")).toEqual(["My videos"]);
 	});
 
-	it("falls back to My Caps on folder pages until the folder path mounts", () => {
-		expect(labels("/dashboard/folder/abc123")).toEqual(["My Caps"]);
+	it("falls back to My videos on folder pages until the folder path mounts", () => {
+		expect(labels("/dashboard/folder/abc123")).toEqual(["My videos"]);
 	});
 
 	it("returns nothing for unknown routes", () => {

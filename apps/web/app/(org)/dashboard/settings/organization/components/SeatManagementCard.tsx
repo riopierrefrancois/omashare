@@ -107,7 +107,7 @@ export function SeatManagementCard() {
 		onSuccess: (result, quantity) => {
 			setCancelDialogOpen(false);
 			if (quantity === 0) {
-				toast.success("Cap Pro will cancel at the end of the billing period");
+				toast.success("Pro will cancel at the end of the billing period");
 				setDesiredQuantity(proSeatsTotal);
 				setDebouncedQuantity(proSeatsTotal);
 			} else {
@@ -155,7 +155,7 @@ export function SeatManagementCard() {
 						</span>{" "}
 						in use
 						{activeOrganization?.ownerIsPro &&
-							". The organization owner is always on Cap Pro and uses one of your seats."}
+							". The organization owner is always on Pro and uses one of your seats."}
 					</>
 				}
 				control={
@@ -204,7 +204,7 @@ export function SeatManagementCard() {
 							<span className="text-[13px] text-gray-10">Calculating...</span>
 						) : isCancelRequest ? (
 							<span className="text-[13px] text-amber-700">
-								Cancels Cap Pro at the end of the billing period
+								Cancels Pro at the end of the billing period
 							</span>
 						) : previewLoading ? (
 							<span className="text-[13px] text-gray-10">Calculating...</span>
@@ -262,14 +262,14 @@ export function SeatManagementCard() {
 			</SettingsRow>
 			<ConfirmationDialog
 				open={cancelDialogOpen}
-				title="Cancel Cap Pro?"
+				title="Cancel Pro?"
 				description={`You'll lose your Pro seat and your organization's Pro features at the end of the current billing period.${
 					baaActive
 						? " Your Signed BAA will also be canceled when the subscription ends."
 						: ""
 				} You can resume anytime before then by adding seats back.`}
 				confirmLabel="Cancel subscription"
-				cancelLabel="Keep Cap Pro"
+				cancelLabel="Keep Pro"
 				confirmVariant="destructive"
 				loading={updateMutation.isPending}
 				onConfirm={() => updateMutation.mutate(desiredQuantity)}

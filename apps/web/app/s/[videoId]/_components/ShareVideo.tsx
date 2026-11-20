@@ -1,6 +1,5 @@
 import type { comments as commentsSchema } from "@cap/database/schema";
 import { NODE_ENV } from "@cap/env";
-import { Logo } from "@cap/ui";
 import type { ImageUpload } from "@cap/web-domain";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import clsx from "clsx";
@@ -721,33 +720,6 @@ export const ShareVideo = forwardRef<
 					)}
 				</div>
 
-				{!data.owner.isPro && !isOverShareLimit && (
-					<div className="absolute top-4 left-4 z-30">
-						<button
-							type="button"
-							className="block"
-							onClick={(e) => {
-								e.stopPropagation();
-								openUpgradeModal();
-							}}
-							onPointerEnter={() => {
-								void importUpgradeModal();
-							}}
-						>
-							<div className="relative">
-								<div className="opacity-50 transition-opacity hover:opacity-100 peer">
-									<Logo className="w-auto h-4 sm:h-8" white={true} />
-								</div>
-
-								<div className="absolute left-0 top-8 transition-transform duration-300 ease-in-out origin-top scale-y-0 peer-hover:scale-y-100">
-									<p className="text-white text-xs font-medium whitespace-nowrap bg-black bg-opacity-50 px-2 py-0.5 rounded">
-										Remove watermark
-									</p>
-								</div>
-							</div>
-						</button>
-					</div>
-				)}
 				{trackUploadProgress && (
 					<UploadProgressTracker
 						videoId={data.id}

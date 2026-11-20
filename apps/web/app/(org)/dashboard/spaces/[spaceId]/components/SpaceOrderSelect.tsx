@@ -53,7 +53,7 @@ export function SpaceOrderSelect({
 			}
 			router.refresh();
 			if (next === "custom")
-				toast.success("Custom order is on. Drag Caps to arrange them.");
+				toast.success("Custom order is on. Drag videos to arrange them.");
 		});
 	};
 

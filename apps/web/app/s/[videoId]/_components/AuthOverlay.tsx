@@ -1,5 +1,5 @@
 import { NODE_ENV } from "@cap/env";
-import { Button, Dialog, DialogContent, Input, LogoBadge } from "@cap/ui";
+import { Button, Dialog, DialogContent, Input } from "@cap/ui";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons/faArrowLeft";
 import { faEnvelope } from "@fortawesome/free-solid-svg-icons/faEnvelope";
 import Image from "next/image";
@@ -35,7 +35,8 @@ export const AuthOverlay: React.FC<AuthOverlayProps> = ({
 		<Dialog open={isOpen} onOpenChange={onClose}>
 			<DialogContent className="w-[90vw] bg-gray-3 relative sm:max-w-md p-6 rounded-xl">
 				{emailSent && (
-					<div
+					<button
+						type="button"
 						onClick={() => {
 							setEmailSent(false);
 							setEmail("");
@@ -47,12 +48,10 @@ export const AuthOverlay: React.FC<AuthOverlayProps> = ({
 						className="absolute top-5 left-5 cursor-pointer z-20 flex gap-2 items-center py-1.5 px-3 text-gray-12 bg-transparent border border-gray-4 rounded-full hover:bg-gray-1 transition-colors duration-300"
 					>
 						<FontAwesomeIcon className="w-2" icon={faArrowLeft} />
-						<p className="text-xs">Back</p>
-					</div>
+						<span className="text-xs">Back</span>
+					</button>
 				)}
 				<div className="space-y-6">
-					<LogoBadge className="mx-auto w-auto h-12" />
-
 					<div className="text-center">
 						<h1 className="text-xl font-semibold">
 							{step === 1 ? "Sign in to comment" : "Email sent"}
@@ -90,7 +89,7 @@ export const AuthOverlay: React.FC<AuthOverlayProps> = ({
 						)}
 						<p className="mt-6 text-xs text-center text-gray-9">
 							By entering your email, you acknowledge that you have both read
-							and agree to Cap's{" "}
+							and agree to the{" "}
 							<Link
 								href="/terms"
 								target="_blank"

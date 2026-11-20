@@ -158,7 +158,7 @@ export function DashboardSearch({
 		() => [
 			{
 				id: "my-caps",
-				title: "My Caps",
+				title: "My videos",
 				subtitle: "Open your video library",
 				href: "/dashboard/caps",
 				value: "my caps videos recordings library",
@@ -166,7 +166,7 @@ export function DashboardSearch({
 			},
 			{
 				id: "record-cap",
-				title: "Record a Cap",
+				title: "Record a video",
 				subtitle: "Start a new browser recording",
 				href: "/dashboard/caps/record",
 				value: "record cap screen video browser recorder",
@@ -175,7 +175,7 @@ export function DashboardSearch({
 			{
 				id: "import-video",
 				title: "Import Media",
-				subtitle: "Bring an existing video or image into Cap",
+				subtitle: "Bring an existing video or image into your library",
 				href: loomImportPageHref(loomImportDestinationFromPathname(pathname)),
 				value: "import upload loom video image media file",
 				icon: Upload,
@@ -246,7 +246,7 @@ export function DashboardSearch({
 						},
 						{
 							id: "organization-preferences",
-							title: "Cap Settings",
+							title: "video Settings",
 							subtitle: "Default summaries, captions, and viewer options",
 							href: "/dashboard/settings/organization/preferences",
 							value:

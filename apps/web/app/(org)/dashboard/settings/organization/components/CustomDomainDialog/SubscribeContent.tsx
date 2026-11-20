@@ -12,7 +12,7 @@ const SubscribeContent = () => {
 					transition={{ duration: 0.3, ease: "easeOut" }}
 					className="text-lg text-center text-gray-12"
 				>
-					This feature requires Cap Pro
+					This feature requires Pro
 				</motion.p>
 				<motion.p
 					initial={{ y: -10, filter: "blur(5px)", opacity: 0 }}
@@ -57,21 +57,14 @@ const SubscribeContent = () => {
 				/>
 
 				<div className="flex relative z-10">
-					{capsDomainText.split("").map((letter, idx) => (
-						<motion.span
-							key={idx}
-							className="text-[13px] font-medium relative z-0 text-black/50 mix-blend-screen"
-							initial={{ opacity: 0, y: -5 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{
-								delay: 0.9 + idx * 0.075,
-								duration: 0.2,
-								ease: "easeOut",
-							}}
-						>
-							{letter === " " ? "\u00A0" : letter}
-						</motion.span>
-					))}
+					<motion.span
+						className="text-[13px] font-medium text-black/50 mix-blend-screen"
+						initial={{ opacity: 0, y: -5 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ delay: 0.9, duration: 0.2 }}
+					>
+						{capsDomainText}
+					</motion.span>
 				</div>
 			</motion.div>
 		</div>

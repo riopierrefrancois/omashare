@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@cap/database/auth/session";
-import { Logo } from "@cap/ui";
 import { redirect } from "next/navigation";
+import { OmaShareMark } from "@/components/OmaShareMark";
 import { validateMcpAuthorizationRequest } from "@/lib/mcp-auth";
 import { authorizeMcpClient } from "./actions";
 
@@ -21,12 +21,12 @@ export default async function McpAuthorizePage(props: {
 		return (
 			<main className="flex min-h-screen items-center justify-center bg-gray-2 px-6">
 				<section className="w-full max-w-md rounded-2xl border border-gray-4 bg-white p-8 shadow-sm">
-					<Logo className="mb-8 h-8 w-auto" />
+					<OmaShareMark className="mb-8 text-xl" />
 					<h1 className="text-xl font-semibold text-gray-12">
 						Invalid connection request
 					</h1>
 					<p className="mt-3 text-sm leading-6 text-gray-10">
-						Return to your agent and try connecting Cap again.
+						Return to your agent and try connecting video again.
 					</p>
 				</section>
 			</main>
@@ -40,9 +40,9 @@ export default async function McpAuthorizePage(props: {
 	return (
 		<main className="flex min-h-screen items-center justify-center bg-gray-2 px-6">
 			<section className="w-full max-w-md rounded-2xl border border-gray-4 bg-white p-8 shadow-sm">
-				<Logo className="mb-8 h-8 w-auto" />
+				<OmaShareMark className="mb-8 text-xl" />
 				<h1 className="text-xl font-semibold text-gray-12">
-					Connect {request.clientName} to Cap
+					Connect {request.clientName} to your account
 				</h1>
 				<p className="mt-3 text-sm leading-6 text-gray-10">
 					This app will be able to read your recordings, summaries, and

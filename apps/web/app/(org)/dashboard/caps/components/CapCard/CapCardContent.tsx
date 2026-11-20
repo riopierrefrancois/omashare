@@ -1,7 +1,7 @@
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { toast } from "sonner";
 import { editDate } from "@/actions/videos/edit-date";
 import { editTitle } from "@/actions/videos/edit-title";
@@ -20,6 +20,7 @@ interface CapContentProps {
 	sharedCapCard?: boolean;
 	hideSharedStatus?: boolean;
 	isOwner: boolean;
+	libraryMeta?: ReactNode;
 	setIsSharingDialogOpen: (isSharingDialogOpen: boolean) => void;
 }
 
@@ -29,6 +30,7 @@ export const CapCardContent: React.FC<CapContentProps> = ({
 	sharedCapCard = false,
 	hideSharedStatus,
 	isOwner,
+	libraryMeta,
 	setIsSharingDialogOpen,
 }) => {
 	const router = useRouter();
@@ -175,7 +177,8 @@ export const CapCardContent: React.FC<CapContentProps> = ({
 
 			if (!hasSpaceSharing && !isPublic) {
 				return (
-					<p
+					<button
+						type="button"
 						className={baseClassName}
 						onClick={() => setIsSharingDialogOpen(true)}
 					>
@@ -184,11 +187,12 @@ export const CapCardContent: React.FC<CapContentProps> = ({
 							className="size-2 text-gray-9"
 							icon={faChevronDown}
 						/>
-					</p>
+					</button>
 				);
 			} else {
 				return (
-					<p
+					<button
+						type="button"
 						className={baseClassName}
 						onClick={() => setIsSharingDialogOpen(true)}
 					>
@@ -197,7 +201,7 @@ export const CapCardContent: React.FC<CapContentProps> = ({
 							className="size-2 text-gray-9"
 							icon={faChevronDown}
 						/>
-					</p>
+					</button>
 				);
 			}
 		}
@@ -219,9 +223,15 @@ export const CapCardContent: React.FC<CapContentProps> = ({
 						className="overflow-hidden p-0 m-0 w-full text-sm font-medium tracking-normal leading-5 bg-transparent border-0 resize-none outline-0 text-gray-12 font-[inherit] [field-sizing:content] max-h-10"
 					/>
 				) : (
-					<p
+					<button
+						type="button"
 						title={title}
-						className="p-0 m-0 text-sm font-medium tracking-normal leading-5 line-clamp-2 text-gray-12 [overflow-wrap:anywhere]"
+						className={clsx(
+							"m-0 line-clamp-2 p-0 text-left text-gray-12 [overflow-wrap:anywhere]",
+							libraryMeta
+								? "text-[15px] font-semibold leading-[1.35]"
+								: "text-sm font-medium leading-5",
+						)}
 						onClick={() => {
 							if (!sharedCapCard) {
 								if (userId === cap.ownerId) {
@@ -231,11 +241,16 @@ export const CapCardContent: React.FC<CapContentProps> = ({
 						}}
 					>
 						{title}
-					</p>
+					</button>
 				)}
 			</div>
 
-			<div className="flex gap-1.5 items-center min-w-0 h-5">
+			<div
+				className={clsx(
+					"flex min-w-0 items-center gap-1.5",
+					libraryMeta ? "flex-wrap font-mono text-xs text-gray-10" : "h-5",
+				)}
+			>
 				{sharedStatus}
 				{sharedStatus && (
 					<span aria-hidden className="text-[13px] text-gray-7">
@@ -253,17 +268,28 @@ export const CapCardContent: React.FC<CapContentProps> = ({
 						placeholder="YYYY-MM-DD HH:mm:ss"
 					/>
 				) : (
-					<Tooltip content={`Cap created at ${effectiveDate}`}>
-						<p
-							className="min-w-0 text-[13px] leading-5 truncate transition-colors cursor-pointer text-gray-10 hover:text-gray-12"
+					<Tooltip content={`Video created at ${effectiveDate}`}>
+						<button
+							type="button"
+							className={clsx(
+								"min-w-0 truncate text-gray-10 transition-colors hover:text-gray-12",
+								libraryMeta ? "text-xs" : "text-[13px] leading-5",
+							)}
 							onClick={handleDateClick}
 						>
 							{showFullDate
 								? formatDateTime(effectiveDate)
-								: formatFromNow(effectiveDate)}
-						</p>
+								: libraryMeta
+									? new Date(effectiveDate).toLocaleDateString("en-US", {
+											month: "short",
+											day: "numeric",
+											timeZone: "UTC",
+										})
+									: formatFromNow(effectiveDate)}
+						</button>
 					</Tooltip>
 				)}
+				{libraryMeta}
 			</div>
 		</div>
 	);

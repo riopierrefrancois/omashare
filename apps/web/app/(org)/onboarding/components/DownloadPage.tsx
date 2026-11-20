@@ -1,8 +1,9 @@
 "use client";
 
-import { Button, LogoBadge } from "@cap/ui";
+import { Button } from "@cap/ui";
 import { Clapperboard, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { OmaShareMark } from "@/components/OmaShareMark";
 import { consumeOnboardingNextPath } from "../../onboarding-next";
 
 const recordingModes = [
@@ -33,7 +34,7 @@ export function DownloadPage() {
 		<div className="flex flex-col gap-12 justify-center items-center min-h-fit lg:gap-20">
 			<div className="space-y-10">
 				<div className="flex flex-col gap-6 justify-center items-center">
-					<LogoBadge className="mx-auto w-auto h-12" />
+					<OmaShareMark className="mx-auto text-xl" />
 					<div className="space-y-1 text-center">
 						<h1 className="text-3xl font-medium text-gray-12">
 							Ready to record
