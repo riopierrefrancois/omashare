@@ -46,11 +46,6 @@ import type { VideoData } from "./types";
 const importTimelineView = () => import("./_components/timeline/TimelineView");
 const TimelineView = dynamic(importTimelineView, { ssr: false });
 
-// Carries react-markdown; split out and only rendered once AI data actually
-// exists, so videos without a summary never download it. SSR still renders
-// the summary into the initial HTML when the data is already there.
-const SummaryChapters = dynamic(() => import("./_components/SummaryChapters"));
-
 /**
  * The interactive walkthrough behind the header's "How does this work?".
  * Relative, so a custom domain or a self-hosted deployment links at its own
@@ -333,7 +328,6 @@ export const Share = ({
 	serverPlaybackUrl = null,
 	posterUrl = null,
 	comments,
-	views,
 	screenshotImageUrl,
 	initialAiData,
 	videoSettings,
@@ -363,7 +357,6 @@ export const Share = ({
 
 	const playerRef = useRef<HTMLVideoElement | null>(null);
 	const stageRef = useRef<HTMLDivElement | null>(null);
-	const activityRef = useRef<{ scrollToBottom: () => void }>(null);
 	const initialComments: CommentType[] =
 		comments instanceof Promise ? use(comments) : comments;
 	const [commentsData, setCommentsData] =
@@ -400,11 +393,11 @@ export const Share = ({
 	const aiData = useMemo(
 		() => ({
 			title: videoStatus?.aiTitle || null,
-			summary: videoStatus?.summary || null,
-			chapters: videoStatus?.chapters || null,
+			summary: videoStatus?.summary ?? initialAiData?.summary ?? null,
+			chapters: videoStatus?.chapters ?? initialAiData?.chapters ?? null,
 			aiGenerationStatus: videoStatus?.aiGenerationStatus || null,
 		}),
-		[videoStatus],
+		[videoStatus, initialAiData],
 	);
 
 	useEffect(() => {
@@ -427,59 +420,13 @@ export const Share = ({
 	const areCaptionsDisabled = isScreenshot || isDisabled("disableCaptions");
 	const areCommentStampsDisabled = isDisabled("disableComments");
 	const areReactionStampsDisabled = isDisabled("disableReactions");
-	const allSettingsDisabled = isScreenshot
-		? isDisabled("disableComments")
-		: isDisabled("disableComments") &&
-			isDisabled("disableSummary") &&
-			isDisabled("disableTranscript");
-
-	const shouldShowLoading = () => {
-		const hasVisibleAiSection = !isSummaryDisabled || !areChaptersDisabled;
-		const hasAiData = Boolean(aiData.summary || aiData.chapters?.length);
-
-		if (!hasVisibleAiSection || !aiGenerationAvailable || hasAiData) {
-			return false;
-		}
-
-		if (!transcriptionStatus) {
-			return transcriptionGenerationAvailable;
-		}
-
-		if (transcriptionStatus === "PROCESSING") {
-			return true;
-		}
-
-		if (
-			transcriptionStatus === "ERROR" ||
-			transcriptionStatus === "SKIPPED" ||
-			transcriptionStatus === "NO_AUDIO"
-		) {
-			return false;
-		}
-
-		if (transcriptionStatus === "COMPLETE") {
-			if (
-				aiData.aiGenerationStatus === "SKIPPED" ||
-				aiData.aiGenerationStatus === "ERROR" ||
-				aiData.aiGenerationStatus === "COMPLETE"
-			) {
-				return false;
-			}
-			if (
-				aiData.aiGenerationStatus === "QUEUED" ||
-				aiData.aiGenerationStatus === "PROCESSING"
-			) {
-				return true;
-			}
-			if (!aiData.aiGenerationStatus) {
-				return true;
-			}
-		}
-
-		return false;
-	};
-
-	const aiLoading = shouldShowLoading();
+	const hasSummary =
+		(!isSummaryDisabled && Boolean(aiData.summary)) ||
+		(!areChaptersDisabled && Boolean(aiData.chapters?.length));
+	const hasTranscript =
+		!isScreenshot &&
+		!isDisabled("disableTranscript") &&
+		transcriptionStatus === "COMPLETE";
 
 	const searchParams = useSearchParams();
 	const initialSeekDone = useRef(false);
@@ -580,9 +527,6 @@ export const Share = ({
 			startTransition(() => {
 				setOptimisticComments(comment);
 			});
-			setTimeout(() => {
-				activityRef.current?.scrollToBottom();
-			}, 100);
 		},
 		[setOptimisticComments],
 	);
@@ -591,9 +535,6 @@ export const Share = ({
 		startTransition(() => {
 			setCommentsData((prev) => [...prev, realComment]);
 		});
-		setTimeout(() => {
-			activityRef.current?.scrollToBottom();
-		}, 100);
 	}, []);
 
 	// If the settle ever commits the saved comment while its optimistic twin is
@@ -743,7 +684,7 @@ export const Share = ({
 		setViewAndUrl,
 	]);
 
-	const showRail = view === "classic" && !allSettingsDisabled;
+	const showRail = view === "classic" && (hasSummary || hasTranscript);
 	const sidebarId = useId();
 	const [railCollapsed, setRailCollapsed] = useState(false);
 
@@ -1104,80 +1045,11 @@ export const Share = ({
 											</motion.div>
 										)}
 									</AnimatePresence>
-
-									<AnimatePresence mode="popLayout" initial={false}>
-										{view === "classic" && (
-											<motion.div
-												key="summary"
-												className="hidden lg:block lg:col-span-full lg:row-start-3"
-												initial={{ opacity: 0 }}
-												animate={{ opacity: 1 }}
-												exit={{ opacity: 0 }}
-												transition={{ duration: reduceMotion ? 0 : 0.14 }}
-											>
-												{!isScreenshot && aiLoading && (
-													<div className="p-4 animate-pulse new-card-style">
-														<div className="space-y-6">
-															<div>
-																<div className="mb-3 w-24 h-6 bg-gray-200 rounded"></div>
-																<div className="mb-4 w-32 h-3 bg-gray-100 rounded"></div>
-																<div className="space-y-3">
-																	<div className="w-full h-4 bg-gray-200 rounded"></div>
-																	<div className="w-5/6 h-4 bg-gray-200 rounded"></div>
-																	<div className="w-4/5 h-4 bg-gray-200 rounded"></div>
-																	<div className="w-full h-4 bg-gray-200 rounded"></div>
-																	<div className="w-3/4 h-4 bg-gray-200 rounded"></div>
-																</div>
-															</div>
-
-															<div>
-																<div className="mb-4 w-24 h-6 bg-gray-200 rounded"></div>
-																<div className="space-y-2">
-																	{[1, 2, 3, 4].map((i) => (
-																		<div
-																			key={i}
-																			className="flex items-center p-2"
-																		>
-																			<div className="mr-3 w-12 h-4 bg-gray-200 rounded"></div>
-																			<div className="flex-1 h-4 bg-gray-200 rounded"></div>
-																		</div>
-																	))}
-																</div>
-															</div>
-														</div>
-													</div>
-												)}
-
-												{/* Mirrors the component's own empty-state bail-out so the
-												    chunk is never fetched for a video with nothing to show. */}
-												{!isScreenshot &&
-													!aiLoading &&
-													((!isSummaryDisabled && Boolean(aiData.summary)) ||
-														(!areChaptersDisabled &&
-															(aiData.chapters?.length ?? 0) > 0)) && (
-														<SummaryChapters
-															isSummaryDisabled={isSummaryDisabled}
-															areChaptersDisabled={areChaptersDisabled}
-															handleSeek={handleSeek}
-															aiData={aiData}
-															aiLoading={aiLoading}
-														/>
-													)}
-											</motion.div>
-										)}
-									</AnimatePresence>
 								</div>
 							</div>
 						</div>
 					</div>
 
-					{/*
-					 * The comments rail. Full height, flush to the viewport edge and
-					 * scrolling independently of the video column — the panel is the
-					 * one part of this page whose usefulness is measured in vertical
-					 * space. Collapsing animates the width away; the pane stays mounted
-					 * so the open tab and scroll position survive the round trip.
-					 */}
 					{showRail && (
 						<aside
 							id={sidebarId}
@@ -1198,22 +1070,14 @@ export const Share = ({
 								<Sidebar
 									sidebarId={sidebarId}
 									data={sidebarData}
-									videoSettings={videoSettings}
-									commentsData={commentsData}
-									setCommentsData={setCommentsData}
-									optimisticComments={visibleComments}
-									setOptimisticComments={setOptimisticComments}
-									handleCommentSuccess={handleCommentSuccess}
-									views={views}
-									onSeek={isScreenshot ? undefined : handleSeek}
-									isScreenshot={isScreenshot}
-									videoId={data.id}
+									hasSummary={hasSummary}
+									hasTranscript={hasTranscript}
+									isSummaryDisabled={isSummaryDisabled}
+									areChaptersDisabled={areChaptersDisabled}
+									onSeek={handleSeek}
 									aiData={aiData}
 									aiGenerationEnabled={aiGenerationAvailable}
-									recordingStopped={recordingStopped}
-									canRecordMedia={canRecordMedia}
 									onCollapse={toggleRail}
-									ref={activityRef}
 								/>
 							</div>
 						</aside>

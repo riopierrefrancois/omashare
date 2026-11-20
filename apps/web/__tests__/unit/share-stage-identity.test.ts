@@ -137,7 +137,7 @@ const createProps = (
 		metadata: null,
 		createdAt: new Date(),
 		isScreenshot: false,
-		transcriptionStatus: null,
+		transcriptionStatus: "COMPLETE",
 		source: { type: "desktopMP4" },
 		orgSettings: null,
 	} as unknown as ShareComponentProps["data"],
@@ -177,6 +177,28 @@ describe("Share", () => {
 
 	afterAll(() => {
 		delete actEnvironment.IS_REACT_ACT_ENVIRONMENT;
+	});
+
+	it("mounts the rail once transcript content becomes available", async () => {
+		const container = document.createElement("div");
+		document.body.append(container);
+		const root = createRoot(container);
+		const props = createProps();
+		await act(async () => {
+			root.render(
+				createElement(Share, {
+					...props,
+					data: { ...props.data, transcriptionStatus: "PROCESSING" },
+				}),
+			);
+		});
+		expect(container.querySelector("aside")).toBeNull();
+		expect(findButton(container, "Show sidebar")).toBeUndefined();
+
+		await act(async () => root.render(createElement(Share, props)));
+		expect(container.querySelector("aside")).not.toBeNull();
+
+		await act(async () => root.unmount());
 	});
 
 	it.each(["loadedmetadata", "canplay"])(

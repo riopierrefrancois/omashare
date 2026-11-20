@@ -168,25 +168,21 @@ describe("Summary tab chapter settings", () => {
 					owner: { id: "owner", isPro: true },
 					orgSettings: { disableComments: true, disableChapters: orgDisabled },
 				} as ComponentProps<typeof Sidebar>["data"],
-				videoId: "video" as ComponentProps<typeof Sidebar>["videoId"],
-				videoSettings: { disableChapters: videoDisabled },
+				hasSummary: true,
+				hasTranscript: false,
+				areChaptersDisabled: videoDisabled ?? orgDisabled,
 				aiData: {
 					summary: "Visible summary",
 					chapters: [{ title: "Chapter to check", start: 12 }],
 					aiGenerationStatus: "COMPLETE",
 				},
-				commentsData: [],
-				optimisticComments: [],
-				handleCommentSuccess: vi.fn(),
-				setOptimisticComments: vi.fn(),
-				setCommentsData: vi.fn(),
-				views: 0,
 			};
 			await act(async () => {
 				root.render(React.createElement(Sidebar, props));
 				await vi.dynamicImportSettled();
 			});
 			expect(container.textContent).toContain("Visible summary");
+			expect(container.querySelector("h2")?.textContent).toBe("Summary");
 			expect(container.textContent?.includes("Chapter to check")).toBe(visible);
 		},
 	);

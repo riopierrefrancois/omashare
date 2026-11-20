@@ -91,6 +91,7 @@ export const Summary: React.FC<SummaryProps> = ({
 
 	const aiData = initialAiData || null;
 	const aiGenerationStatus = aiData?.aiGenerationStatus;
+	const summary = isSummaryDisabled ? null : aiData?.summary;
 	const chapters = areChaptersDisabled ? [] : (aiData?.chapters ?? []);
 
 	const isLoading =
@@ -155,7 +156,7 @@ export const Summary: React.FC<SummaryProps> = ({
 		}
 	};
 
-	if (!ownerIsPro) {
+	if (!ownerIsPro && !summary && chapters.length === 0) {
 		return (
 			<div className="flex flex-col justify-center items-center p-8 h-full text-center">
 				<div className="space-y-4 max-w-sm">
@@ -199,8 +200,6 @@ export const Summary: React.FC<SummaryProps> = ({
 		);
 	}
 
-	if (isSummaryDisabled) return null;
-
 	if (isEditing && isOwner) {
 		return (
 			<SummaryEditor
@@ -230,7 +229,7 @@ export const Summary: React.FC<SummaryProps> = ({
 		);
 	}
 
-	if (!aiData?.summary && chapters.length === 0) {
+	if (!summary && chapters.length === 0) {
 		return (
 			<div className="flex flex-col justify-center items-center p-8 h-full text-center">
 				<FontAwesomeIcon
@@ -291,17 +290,17 @@ export const Summary: React.FC<SummaryProps> = ({
 							{editButton}
 						</div>
 					)}
-					{aiData?.summary && (
+					{summary && (
 						<div>
 							<h3 className="text-lg font-medium">Summary</h3>
 							<div className="text-sm text-gray-12 prose prose-sm prose-gray max-w-none prose-p:my-2 prose-ul:my-2 prose-li:my-0 prose-strong:text-gray-12">
-								<ReactMarkdown>{aiData.summary}</ReactMarkdown>
+								<ReactMarkdown>{summary}</ReactMarkdown>
 							</div>
 						</div>
 					)}
 
 					{chapters.length > 0 && (
-						<div className={aiData?.summary ? "mt-6" : ""}>
+						<div className={summary ? "mt-6" : ""}>
 							<h3 className="mb-2 text-lg font-medium">Chapters</h3>
 							<div className="divide-y">
 								{chapters.map((chapter) => (

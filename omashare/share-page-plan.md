@@ -71,13 +71,13 @@ Use Cap's own Tailwind tokens (`gray-1…gray-12`, `bg-white`, `border-gray-5`, 
 ## Phase B: the share page layout (`apps/web/app/s/[videoId]/`)
 
 ### Task B1: side panel only for Summary and Transcript
-- [ ] In `Sidebar.tsx`, the tabs are **Summary** and **Transcript** only. The Comments/"activity" tab and the views header leave the panel.
-- [ ] A tab shows only when it has content:
+- [x] In `Sidebar.tsx`, the tabs are **Summary** and **Transcript** only. The Comments/"activity" tab and the views header leave the panel.
+- [x] A tab shows only when it has content:
   - Summary: summaries aren't disabled and there's an `aiData.summary`, or chapters aren't disabled and `aiData.chapters` has items.
   - Transcript: transcripts aren't disabled and `transcriptionStatus === "COMPLETE"`.
-- [ ] The first available tab is the default. With one tab, show its title, not a one-item tab bar.
-- [ ] In `Share.tsx`, with no tab available, the side panel (`<aside>`) and its collapse button don't render, and the video column fills the width. A tab can appear later while the page is open, because the status polling already updates `aiData` and `transcriptionStatus`. The panel then appears.
-- [ ] Remove the `SummaryChapters` block under the video in the Player view. The Summary tab already shows the summary and chapters.
+- [x] The first available tab is the default. With one tab, show its title, not a one-item tab bar.
+- [x] In `Share.tsx`, with no tab available, the side panel (`<aside>`) and its collapse button don't render, and the video column fills the width. A tab can appear later while the page is open, because the status polling already updates `aiData` and `transcriptionStatus`. The panel then appears.
+- [x] Remove the `SummaryChapters` block under the video in the Player view. The Summary tab already shows the summary and chapters.
 
 ### Task B2: comments section under the video
 - [ ] New `_components/comments/ShareComments.tsx` (plus small pieces next to it). It renders in the Player view under the video and the reactions toolbar, in the video column, at the same max width as the video.
