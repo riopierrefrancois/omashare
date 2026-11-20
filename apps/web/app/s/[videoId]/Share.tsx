@@ -63,17 +63,21 @@ type CommentWithAuthor = typeof commentsSchema.$inferSelect & {
 	authorImage: ImageUpload.ImageUrl | null;
 };
 
-export type CommentType = typeof commentsSchema.$inferSelect & {
-	authorName?: string | null;
-	authorImage?: ImageUpload.ImageUrl | null;
-	sending?: boolean;
-	/**
-	 * The optimistic entry's temp id, carried onto the saved comment so lists
-	 * can key the pair identically — the settle then updates the mounted card
-	 * in place instead of remounting it (which would restart media playback).
-	 */
-	clientKey?: string;
-};
+export type CommentType = Omit<
+	typeof commentsSchema.$inferSelect,
+	keyof Comment.CommentAuthor
+> &
+	Comment.CommentAuthor & {
+		authorName?: string | null;
+		authorImage?: ImageUpload.ImageUrl | null;
+		sending?: boolean;
+		/**
+		 * The optimistic entry's temp id, carried onto the saved comment so lists
+		 * can key the pair identically — the settle then updates the mounted card
+		 * in place instead of remounting it (which would restart media playback).
+		 */
+		clientKey?: string;
+	};
 
 const SESSION_STORAGE_KEY = "cap_tb_session_id";
 const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes

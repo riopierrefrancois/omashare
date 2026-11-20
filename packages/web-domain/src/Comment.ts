@@ -1,10 +1,17 @@
 import { Schema } from "effect";
+import { UserId } from "./User.ts";
 
 export const CommentId = Schema.String.pipe(Schema.brand("CommentId"));
 export type CommentId = typeof CommentId.Type;
 
 export const CommentType = Schema.Literal("emoji", "text", "video", "audio");
 export type CommentType = typeof CommentType.Type;
+
+export const CommentAuthor = Schema.Struct({
+	authorId: Schema.NullOr(UserId),
+	guestName: Schema.optional(Schema.NullOr(Schema.String)),
+});
+export type CommentAuthor = typeof CommentAuthor.Type;
 
 export const MediaKind = Schema.Literal("video", "audio");
 export type MediaKind = typeof MediaKind.Type;

@@ -1,6 +1,6 @@
 import type { comments as commentsSchema } from "@cap/database/schema";
 import { classNames } from "@cap/utils";
-import type { ImageUpload, Video } from "@cap/web-domain";
+import type { Comment, ImageUpload, Video } from "@cap/web-domain";
 import clsx from "clsx";
 import { AnimatePresence, motion } from "motion/react";
 import dynamic from "next/dynamic";
@@ -31,10 +31,14 @@ const prefetchTab = (tabId: string) => {
 
 type TabType = "activity" | "transcript" | "summary" | "settings";
 
-type CommentType = typeof commentsSchema.$inferSelect & {
-	authorName?: string | null;
-	authorImage?: ImageUpload.ImageUrl | null;
-};
+type CommentType = Omit<
+	typeof commentsSchema.$inferSelect,
+	keyof Comment.CommentAuthor
+> &
+	Comment.CommentAuthor & {
+		authorName?: string | null;
+		authorImage?: ImageUpload.ImageUrl | null;
+	};
 
 type AiGenerationStatus =
 	| "QUEUED"

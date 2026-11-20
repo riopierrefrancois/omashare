@@ -33,11 +33,11 @@ Use Cap's own Tailwind tokens (`gray-1…gray-12`, `bg-white`, `border-gray-5`, 
 ## Phase A: guest comments (server and types)
 
 ### Task A1: schema
-- [ ] In `packages/database/schema.ts`, `comments`:
+- [x] In `packages/database/schema.ts`, `comments`:
   - Make `authorId` nullable (`nanoIdNullable`). It is null for a guest comment.
   - Add `guestName: varchar("guestName", { length: 80 })`, nullable. It holds the name a guest typed. It is null for signed-in authors.
-- [ ] Run `bun run db:generate` from `packages/database`. Commit the schema change together with the generated SQL, snapshot and journal. Name the migration so it reads as OmaShare's (for example `--name omashare_guest_comments` if drizzle-kit allows it).
-- [ ] Update the comment types in `packages/web-domain` (and anywhere `CommentType` is declared) so `authorId` can be null and `guestName?: string | null` exists.
+- [x] Run `bun run db:generate` from `packages/database`. Commit the schema change together with the generated SQL, snapshot and journal. Name the migration so it reads as OmaShare's (for example `--name omashare_guest_comments` if drizzle-kit allows it).
+- [x] Update the comment types in `packages/web-domain` (and anywhere `CommentType` is declared) so `authorId` can be null and `guestName?: string | null` exists.
 
 ### Task A2: posting as a guest (`apps/web/actions/videos/new-comment.ts`)
 - [ ] A signed-in user posts exactly as today.
