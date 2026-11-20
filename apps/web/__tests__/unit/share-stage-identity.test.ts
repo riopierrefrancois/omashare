@@ -114,9 +114,11 @@ vi.mock("@/app/s/[videoId]/_components/Toolbar", async () => {
 	return { Toolbar: () => createElement("div", { "data-toolbar": "" }) };
 });
 
-vi.mock("@/app/s/[videoId]/_components/SummaryChapters", async () => {
+vi.mock("@/app/s/[videoId]/_components/comments/ShareComments", async () => {
 	const { createElement } = await import("react");
-	return { default: () => createElement("div", { "data-summary": "" }) };
+	return {
+		ShareComments: () => createElement("section", { "data-comments": "" }),
+	};
 });
 
 const actEnvironment = globalThis as typeof globalThis & {

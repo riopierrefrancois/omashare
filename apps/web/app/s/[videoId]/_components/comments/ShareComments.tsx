@@ -8,6 +8,7 @@ import type React from "react";
 import {
 	forwardRef,
 	type PropsWithChildren,
+	Suspense,
 	startTransition,
 	useCallback,
 	useEffect,
@@ -19,16 +20,20 @@ import {
 import { toast } from "sonner";
 import { deleteComment } from "@/actions/videos/delete-comment";
 import { newComment } from "@/actions/videos/new-comment";
+import { CapCardAnalytics } from "@/app/(org)/dashboard/caps/components/CapCard/CapCardAnalytics";
 import { useCurrentUser } from "@/app/Layout/AuthContext";
 import { FontAwesomeIcon } from "@/components/FontAwesomeIcon";
-import type { CommentType } from "../../../Share";
-import { ActivityComposer } from "./ActivityComposer";
-import CommentComponent from "./Comment";
-import EmptyState from "./EmptyState";
+import type { CommentType } from "../../Share";
+import { AuthOverlay } from "../AuthOverlayLazy";
+import { ActivityComposer } from "../tabs/Activity/ActivityComposer";
+import CommentComponent from "../tabs/Activity/Comment";
+import EmptyState from "../tabs/Activity/EmptyState";
+
+import CommentAnalytics from "./CommentAnalytics";
 
 const EMPTY_REPLIES: CommentType[] = [];
 
-export const Comments = Object.assign(
+export const ShareComments = Object.assign(
 	forwardRef<
 		{ scrollToBottom: () => void },
 		{
@@ -38,9 +43,11 @@ export const Comments = Object.assign(
 			setOptimisticComments: (newComment: CommentType) => void;
 			handleCommentSuccess: (comment: CommentType) => void;
 			onSeek?: (time: number) => void;
-			setShowAuthOverlay: (v: boolean) => void;
+			setShowAuthOverlay?: (v: boolean) => void;
 			commentsDisabled: boolean;
 			isVideoOwner?: boolean;
+			ownerOrMemberViews?: MaybePromise<number>;
+			commentsData?: CommentType[];
 			ownerName?: string | null;
 			canRecordMedia?: boolean;
 		}
@@ -53,11 +60,12 @@ export const Comments = Object.assign(
 			onSeek,
 			commentsDisabled,
 			videoId,
-			setShowAuthOverlay,
 		} = props;
 		const commentParams = useSearchParams().get("comment");
 		const replyParams = useSearchParams().get("reply");
 		const user = useCurrentUser();
+		const [showAuthOverlay, setShowAuth] = useState(false);
+		const setShowAuthOverlay = props.setShowAuthOverlay ?? setShowAuth;
 
 		const [replyingTo, setReplyingTo] = useState<Comment.CommentId | null>(
 			null,
@@ -246,62 +254,90 @@ export const Comments = Object.assign(
 			[videoId, setComments],
 		);
 
+		const count = optimisticComments.filter(
+			({ type }) => type !== "emoji",
+		).length;
 		return (
-			<Comments.Shell
-				commentInputProps={{
-					onSubmit: handleNewComment,
-					disabled: commentsDisabled,
-				}}
-				setShowAuthOverlay={props.setShowAuthOverlay}
-				commentsContainerRef={commentsContainerRef}
-				videoId={props.videoId}
-				ownerName={props.ownerName}
-				canRecordMedia={props.canRecordMedia}
-				onOptimisticComment={(comment) => {
-					startTransition(() => {
-						setOptimisticComments(comment);
-					});
-				}}
-				onCommentSuccess={handleCommentSuccess}
-			>
-				{commentsDisabled ? (
-					<div className="p-4 space-y-6 h-full">
-						<EmptyState
-							icon={<FontAwesomeIcon icon={faCommentSlash} />}
-							commentsDisabled={commentsDisabled}
-						/>
-					</div>
-				) : rootComments.length === 0 ? (
-					<EmptyState />
-				) : (
-					<div className="p-4 space-y-6">
-						{rootComments.map((comment) => {
-							const replies = repliesByRoot.get(comment.id) ?? EMPTY_REPLIES;
-							return (
-								<CommentComponent
-									// clientKey pins a just-uploaded comment to its optimistic
-									// card's mount, so the settle can't restart its playback.
-									key={comment.clientKey ?? comment.id}
-									comment={comment}
-									isVideoOwner={props.isVideoOwner}
-									replies={replies}
-									onReply={handleStartReply}
-									replyingToId={
-										replyingTo === comment.id ||
-										replies.some((reply) => reply.id === replyingTo)
-											? replyingTo
-											: null
-									}
-									handleReply={handleReply}
-									onCancelReply={handleCancelReply}
-									onDelete={handleDeleteComment}
-									onSeek={onSeek}
-								/>
-							);
-						})}
-					</div>
+			<section aria-label="Comments" className="min-w-0 space-y-3">
+				<div className="flex flex-wrap items-center justify-between gap-2">
+					<h2 className="text-base font-semibold text-gray-12">
+						Comments{" "}
+						<span className="text-sm font-normal text-gray-10">{count}</span>
+					</h2>
+					{props.ownerOrMemberViews !== undefined && (
+						<Suspense fallback={<CapCardAnalytics.Skeleton />}>
+							<CommentAnalytics
+								videoId={videoId}
+								views={props.ownerOrMemberViews}
+								comments={props.commentsData ?? optimisticComments}
+								isLoadingAnalytics={false}
+								isOwner={Boolean(props.isVideoOwner)}
+							/>
+						</Suspense>
+					)}
+				</div>
+				<ShareComments.Shell
+					commentInputProps={{
+						onSubmit: handleNewComment,
+						disabled: commentsDisabled,
+					}}
+					setShowAuthOverlay={setShowAuthOverlay}
+					commentsContainerRef={commentsContainerRef}
+					videoId={props.videoId}
+					ownerName={props.ownerName}
+					canRecordMedia={props.canRecordMedia}
+					onOptimisticComment={(comment) => {
+						startTransition(() => {
+							setOptimisticComments(comment);
+						});
+					}}
+					onCommentSuccess={handleCommentSuccess}
+				>
+					{commentsDisabled ? (
+						<div className="p-4 space-y-6 h-full">
+							<EmptyState
+								icon={<FontAwesomeIcon icon={faCommentSlash} />}
+								commentsDisabled={commentsDisabled}
+							/>
+						</div>
+					) : rootComments.length === 0 ? (
+						<EmptyState />
+					) : (
+						<div className="p-4 space-y-6">
+							{rootComments.map((comment) => {
+								const replies = repliesByRoot.get(comment.id) ?? EMPTY_REPLIES;
+								return (
+									<CommentComponent
+										// clientKey pins a just-uploaded comment to its optimistic
+										// card's mount, so the settle can't restart its playback.
+										key={comment.clientKey ?? comment.id}
+										comment={comment}
+										isVideoOwner={props.isVideoOwner}
+										replies={replies}
+										onReply={handleStartReply}
+										replyingToId={
+											replyingTo === comment.id ||
+											replies.some((reply) => reply.id === replyingTo)
+												? replyingTo
+												: null
+										}
+										handleReply={handleReply}
+										onCancelReply={handleCancelReply}
+										onDelete={handleDeleteComment}
+										onSeek={onSeek}
+									/>
+								);
+							})}
+						</div>
+					)}
+				</ShareComments.Shell>
+				{showAuthOverlay && (
+					<AuthOverlay
+						isOpen={showAuthOverlay}
+						onClose={() => setShowAuth(false)}
+					/>
 				)}
-			</Comments.Shell>
+			</section>
 		);
 	}),
 	{
@@ -322,15 +358,12 @@ export const Comments = Object.assign(
 			}>,
 		) => (
 			<>
-				<div
-					ref={props.commentsContainerRef}
-					className="overflow-y-auto flex-1 min-h-0"
-				>
+				<div ref={props.commentsContainerRef} className="min-w-0">
 					{props.children}
 				</div>
 
 				{!props.commentInputProps?.disabled && props.videoId && (
-					<div className="flex-none p-2 border-t border-gray-5 bg-gray-2">
+					<div className="mt-3 rounded-xl border border-gray-5 bg-gray-2 p-2">
 						<ActivityComposer
 							videoId={props.videoId}
 							ownerName={props.ownerName}
@@ -347,7 +380,7 @@ export const Comments = Object.assign(
 			</>
 		),
 		Skeleton: (props: { setShowAuthOverlay: (v: boolean) => void }) => (
-			<Comments.Shell {...props} commentInputProps={{ disabled: true }} />
+			<ShareComments.Shell {...props} commentInputProps={{ disabled: true }} />
 		),
 	},
 );

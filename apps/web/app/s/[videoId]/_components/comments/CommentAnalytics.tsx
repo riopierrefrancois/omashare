@@ -3,9 +3,9 @@
 import { use, useEffect, useMemo, useState } from "react";
 import { getVideoAnalytics } from "@/actions/videos/get-analytics";
 import { CapCardAnalytics } from "@/app/(org)/dashboard/caps/components/CapCard/CapCardAnalytics";
-import type { CommentType } from "../../../Share";
+import type { CommentType } from "../../Share";
 
-const Analytics = (props: {
+const CommentAnalytics = (props: {
 	videoId: string;
 	views: MaybePromise<number>;
 	comments: CommentType[];
@@ -31,7 +31,7 @@ const Analytics = (props: {
 	}, [props.videoId]);
 
 	const totalComments = useMemo(
-		() => props.comments.filter((c) => c.type === "text").length,
+		() => props.comments.filter((c) => c.type !== "emoji").length,
 		[props.comments],
 	);
 
@@ -48,8 +48,9 @@ const Analytics = (props: {
 			totalComments={totalComments}
 			totalReactions={totalReactions}
 			isOwner={props.isOwner}
+			inline
 		/>
 	);
 };
 
-export default Analytics;
+export default CommentAnalytics;

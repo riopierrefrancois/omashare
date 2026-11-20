@@ -30,6 +30,7 @@ import {
 	videoStatusQueryOptions,
 } from "@/lib/video-status-query";
 import { CaptionProvider } from "./_components/CaptionContext";
+import { ShareComments } from "./_components/comments/ShareComments";
 import { DashboardBackLink } from "./_components/DashboardBackLink";
 import { seekLength } from "./_components/early-length";
 import { PlaybackProvider } from "./_components/playback/PlaybackContext";
@@ -328,6 +329,7 @@ export const Share = ({
 	serverPlaybackUrl = null,
 	posterUrl = null,
 	comments,
+	views,
 	screenshotImageUrl,
 	initialAiData,
 	videoSettings,
@@ -1045,6 +1047,30 @@ export const Share = ({
 											</motion.div>
 										)}
 									</AnimatePresence>
+									{view === "classic" && (
+										<ShareComments
+											videoId={data.id}
+											commentsData={commentsData}
+											optimisticComments={visibleComments}
+											setComments={setCommentsData}
+											setOptimisticComments={setOptimisticComments}
+											handleCommentSuccess={handleCommentSuccess}
+											onSeek={isScreenshot ? undefined : handleSeek}
+											commentsDisabled={areCommentStampsDisabled}
+											isVideoOwner={viewerId === data.owner.id}
+											ownerOrMemberViews={
+												viewerId &&
+												(viewerId === data.owner.id ||
+													data.organizationMembers?.some(
+														(id) => id === viewerId,
+													))
+													? views
+													: undefined
+											}
+											ownerName={data.owner.name}
+											canRecordMedia={canRecordMedia && !isScreenshot}
+										/>
+									)}
 								</div>
 							</div>
 						</div>

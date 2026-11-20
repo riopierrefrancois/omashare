@@ -22,6 +22,7 @@ interface CapCardAnalyticsProps {
 	isLoadingAnalytics: boolean;
 	totalReactions: number;
 	isOwner?: boolean;
+	inline?: boolean;
 }
 
 export const CapCardAnalytics = Object.assign(
@@ -32,11 +33,12 @@ export const CapCardAnalytics = Object.assign(
 		totalReactions,
 		isLoadingAnalytics,
 		isOwner = true,
+		inline = false,
 	}: CapCardAnalyticsProps) =>
 		isLoadingAnalytics ? (
 			<CapCardAnalytics.Skeleton />
 		) : (
-			<Shell>
+			<Shell inline={inline}>
 				<div className="flex flex-wrap gap-3.5 items-center">
 					<Tooltip
 						content="View analytics"
@@ -110,9 +112,18 @@ export const CapCardAnalytics = Object.assign(
 	},
 );
 
-const Shell = (props: PropsWithChildren) => (
-	<div className="flex flex-wrap gap-4 justify-between items-center pt-3 mt-auto text-sm border-t border-gray-3">
-		{props.children}
+const Shell = ({
+	children,
+	inline,
+}: PropsWithChildren<{ inline?: boolean }>) => (
+	<div
+		className={
+			inline
+				? "flex flex-wrap items-center gap-3 text-sm"
+				: "flex flex-wrap gap-4 justify-between items-center pt-3 mt-auto text-sm border-t border-gray-3"
+		}
+	>
+		{children}
 	</div>
 );
 

@@ -11,8 +11,8 @@ import {
 } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ShareComments } from "@/app/s/[videoId]/_components/comments/ShareComments";
 import { PlaybackProvider } from "@/app/s/[videoId]/_components/playback/PlaybackContext";
-import { Comments } from "@/app/s/[videoId]/_components/tabs/Activity/Comments";
 import type { CommentType } from "@/app/s/[videoId]/Share";
 
 const mocks = vi.hoisted(() => ({
@@ -147,7 +147,7 @@ async function render(onSeek = seek, disabled = false, isVideoOwner = false) {
 			children: createElement(
 				Profiler,
 				{ id: comments[0]?.videoId ?? "comments", onRender },
-				createElement(Comments, {
+				createElement(ShareComments, {
 					videoId: "video" as CommentType["videoId"],
 					optimisticComments: comments,
 					setOptimisticComments: optimistic,
@@ -477,7 +477,7 @@ describe("share comments rendering", () => {
 					saved,
 					(state, entry: CommentType) => [...state, entry],
 				);
-				return createElement(Comments, {
+				return createElement(ShareComments, {
 					videoId: "video" as CommentType["videoId"],
 					optimisticComments: pending,
 					setOptimisticComments: addPending,

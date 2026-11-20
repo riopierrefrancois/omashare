@@ -80,10 +80,10 @@ Use Cap's own Tailwind tokens (`gray-1…gray-12`, `bg-white`, `border-gray-5`, 
 - [x] Remove the `SummaryChapters` block under the video in the Player view. The Summary tab already shows the summary and chapters.
 
 ### Task B2: comments section under the video
-- [ ] New `_components/comments/ShareComments.tsx` (plus small pieces next to it). It renders in the Player view under the video and the reactions toolbar, in the video column, at the same max width as the video.
-- [ ] On narrow screens the order is: video, comments, then Summary/Transcript.
-- [ ] Header: **Comments** with the count of text and media comments, replies included. For the owner and members, the views, comments and reactions numbers that used to sit in the panel header go on the right of this line.
-- [ ] Reuse the existing state and handlers that `Share.tsx` passes to `Sidebar` today (`commentsData`, `setCommentsData`, `optimisticComments`, `setOptimisticComments`, `handleCommentSuccess`, delete). Move logic out of `tabs/Activity/Comments.tsx` instead of duplicating it. Delete files that end up unused.
+- [x] New `_components/comments/ShareComments.tsx` (plus small pieces next to it). It renders in the Player view under the video and the reactions toolbar, in the video column, at the same max width as the video.
+- [x] On narrow screens the order is: video, comments, then Summary/Transcript.
+- [x] Header: **Comments** with the count of text and media comments, replies included. For the owner and members, the views, comments and reactions numbers that used to sit in the panel header go on the right of this line.
+- [x] Reuse the existing state and handlers that `Share.tsx` passes to `Sidebar` today (`commentsData`, `setCommentsData`, `optimisticComments`, `setOptimisticComments`, `handleCommentSuccess`, delete). Move logic out of `tabs/Activity/Comments.tsx` instead of duplicating it. Delete files that end up unused.
 
 ### Task B3: comment cards (Workhive look)
 - [ ] Root comments (text, video or audio; no emoji) are sorted **newest first** by `createdAt`.

@@ -25,9 +25,6 @@ vi.mock("@/app/s/[videoId]/_components/tabs/SummaryEditor", () => ({
 }));
 
 vi.mock("@/app/Layout/AuthContext", () => ({ useCurrentUser: () => null }));
-vi.mock("@/app/s/[videoId]/_components/tabs/Activity", () => ({
-	Activity: () => null,
-}));
 vi.mock("next/dynamic", () => ({
 	default: (load: () => Promise<React.ComponentType>) => {
 		const Loaded = lazy(async () => ({ default: await load() }));
@@ -37,7 +34,6 @@ vi.mock("next/dynamic", () => ({
 }));
 
 import { Sidebar } from "@/app/s/[videoId]/_components/Sidebar";
-import SummaryChapters from "@/app/s/[videoId]/_components/SummaryChapters";
 import { Summary } from "@/app/s/[videoId]/_components/tabs/Summary";
 
 type Chapter = { title: string; start: number };
@@ -58,42 +54,20 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
-const chapterViews: [string, (chapters: Chapter[]) => React.ReactElement][] = [
-	[
-		"Summary tab",
-		(chapters) =>
-			React.createElement(Summary, {
-				videoId: "vid" as never,
-				ownerIsPro: true,
-				initialAiData: {
-					summary: "A summary",
-					chapters,
-					aiGenerationStatus: "COMPLETE",
-				},
-			}),
-	],
-	[
-		"SummaryChapters",
-		(chapters) =>
-			React.createElement(SummaryChapters, {
-				isSummaryDisabled: false,
-				areChaptersDisabled: false,
-				handleSeek: () => {},
-				aiData: {
-					title: null,
-					summary: "A summary",
-					chapters,
-					aiGenerationStatus: "COMPLETE",
-				},
-				aiLoading: false,
-			}),
-	],
-];
-
-describe.each(chapterViews)("%s chapter timestamps", (_name, view) => {
+describe("Summary tab chapter timestamps", () => {
 	const renderChapters = (chapters: Chapter[]) => {
 		act(() => {
-			root.render(view(chapters));
+			root.render(
+				React.createElement(Summary, {
+					videoId: "vid" as never,
+					ownerIsPro: true,
+					initialAiData: {
+						summary: "A summary",
+						chapters,
+						aiGenerationStatus: "COMPLETE",
+					},
+				}),
+			);
 		});
 		return Array.from(container.querySelectorAll("button"))
 			.map((button) => button.textContent ?? "")
