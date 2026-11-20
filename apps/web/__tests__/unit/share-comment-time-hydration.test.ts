@@ -4,11 +4,11 @@ import { act, createElement, type ReactElement, type ReactNode } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { CommentCard } from "@/app/s/[videoId]/_components/comments/CommentCard";
 import {
 	RelativeTime,
 	ShareNowProvider,
 } from "@/app/s/[videoId]/_components/RelativeTime";
-import CommentComponent from "@/app/s/[videoId]/_components/tabs/Activity/Comment";
 import { formatTimeAgo } from "@/app/s/[videoId]/_components/tabs/Activity/utils";
 import { fromNow } from "@/app/s/[videoId]/_components/utils/from-now";
 import type { CommentType } from "@/app/s/[videoId]/Share";
@@ -57,14 +57,11 @@ const comment = {
 } as unknown as CommentType;
 
 const commentTree = (serverNow: number | null) => {
-	const node = createElement(CommentComponent, {
+	const node = createElement(CommentCard, {
 		comment,
 		replies: [],
-		onReply: () => undefined,
-		replyingToId: null,
-		handleReply: async () => undefined,
-		onCancelReply: () => undefined,
-		onDelete: () => undefined,
+		onReply: async () => undefined,
+		onDelete: async () => true,
 	});
 	return serverNow === null
 		? node

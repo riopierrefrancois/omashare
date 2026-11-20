@@ -2,19 +2,14 @@
 // effect runtime (~250 KB gz) into the share page's entry chunk. The branded
 // ids carry no constraints, so plain casts replace `.make()` losslessly.
 import type { Comment, User, Video } from "@cap/web-domain";
-import { faCommentSlash } from "@fortawesome/free-solid-svg-icons/faCommentSlash";
 import { useSearchParams } from "next/navigation";
 import type React from "react";
 import {
-	forwardRef,
 	type PropsWithChildren,
 	Suspense,
 	startTransition,
 	useCallback,
-	useEffect,
-	useImperativeHandle,
 	useMemo,
-	useRef,
 	useState,
 } from "react";
 import { toast } from "sonner";
@@ -22,36 +17,31 @@ import { deleteComment } from "@/actions/videos/delete-comment";
 import { newComment } from "@/actions/videos/new-comment";
 import { CapCardAnalytics } from "@/app/(org)/dashboard/caps/components/CapCard/CapCardAnalytics";
 import { useCurrentUser } from "@/app/Layout/AuthContext";
-import { FontAwesomeIcon } from "@/components/FontAwesomeIcon";
 import type { CommentType } from "../../Share";
 import { AuthOverlay } from "../AuthOverlayLazy";
 import { ActivityComposer } from "../tabs/Activity/ActivityComposer";
-import CommentComponent from "../tabs/Activity/Comment";
-import EmptyState from "../tabs/Activity/EmptyState";
 
 import CommentAnalytics from "./CommentAnalytics";
+import { CommentCard } from "./CommentCard";
 
 const EMPTY_REPLIES: CommentType[] = [];
 
 export const ShareComments = Object.assign(
-	forwardRef<
-		{ scrollToBottom: () => void },
-		{
-			setComments: React.Dispatch<React.SetStateAction<CommentType[]>>;
-			videoId: Video.VideoId;
-			optimisticComments: CommentType[];
-			setOptimisticComments: (newComment: CommentType) => void;
-			handleCommentSuccess: (comment: CommentType) => void;
-			onSeek?: (time: number) => void;
-			setShowAuthOverlay?: (v: boolean) => void;
-			commentsDisabled: boolean;
-			isVideoOwner?: boolean;
-			ownerOrMemberViews?: MaybePromise<number>;
-			commentsData?: CommentType[];
-			ownerName?: string | null;
-			canRecordMedia?: boolean;
-		}
-	>((props, ref) => {
+	(props: {
+		setComments: React.Dispatch<React.SetStateAction<CommentType[]>>;
+		videoId: Video.VideoId;
+		optimisticComments: CommentType[];
+		setOptimisticComments: (newComment: CommentType) => void;
+		handleCommentSuccess: (comment: CommentType) => void;
+		onSeek?: (time: number) => void;
+		setShowAuthOverlay?: (v: boolean) => void;
+		commentsDisabled: boolean;
+		isVideoOwner?: boolean;
+		ownerOrMemberViews?: MaybePromise<number>;
+		commentsData?: CommentType[];
+		ownerName?: string | null;
+		canRecordMedia?: boolean;
+	}) => {
 		const {
 			optimisticComments,
 			setOptimisticComments,
@@ -65,53 +55,45 @@ export const ShareComments = Object.assign(
 		const replyParams = useSearchParams().get("reply");
 		const user = useCurrentUser();
 		const [showAuthOverlay, setShowAuth] = useState(false);
+		const [replyTarget, setReplyTarget] = useState<{
+			rootId: Comment.CommentId;
+			recipient: CommentType;
+		}>();
+		const selectReply = useCallback(
+			(root: CommentType, recipient?: CommentType) => {
+				if (recipient && !user) {
+					(props.setShowAuthOverlay ?? setShowAuth)(true);
+					return;
+				}
+				setReplyTarget(recipient ? { rootId: root.id, recipient } : undefined);
+			},
+			[user, props.setShowAuthOverlay],
+		);
 		const setShowAuthOverlay = props.setShowAuthOverlay ?? setShowAuth;
 
-		const [replyingTo, setReplyingTo] = useState<Comment.CommentId | null>(
-			null,
-		);
-
-		const commentsContainerRef = useRef<HTMLDivElement>(null);
-
-		useEffect(() => {
-			if (commentParams || replyParams) return;
-			if (commentsContainerRef.current) {
-				commentsContainerRef.current.scrollTop =
-					commentsContainerRef.current.scrollHeight;
-			}
-		}, [commentParams, replyParams]);
-
-		const scrollToBottom = useCallback(() => {
-			if (commentsContainerRef.current) {
-				commentsContainerRef.current.scrollTo({
-					top: commentsContainerRef.current.scrollHeight,
-					behavior: "smooth",
-				});
-			}
-		}, []);
-
-		useImperativeHandle(ref, () => ({ scrollToBottom }), [scrollToBottom]);
-
 		const { rootComments, repliesByRoot } = useMemo(() => {
-			const byId = new Map(
-				optimisticComments.map((comment) => [comment.id, comment]),
-			);
-			const rootComments = optimisticComments.filter(
-				(comment) => !comment.parentCommentId,
-			);
-			const rootIds = new Set(rootComments.map((comment) => comment.id));
+			const entries = optimisticComments.filter(({ type }) => type !== "emoji");
+			const byId = new Map(entries.map((comment) => [comment.id, comment]));
+			const byOldest = (a: CommentType, b: CommentType) =>
+				new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+			const rootComments = entries
+				.filter((comment) => !comment.parentCommentId)
+				.sort((a, b) => byOldest(b, a));
 			const repliesByRoot = new Map<Comment.CommentId, CommentType[]>();
-			for (const comment of optimisticComments) {
-				const parentId = comment.parentCommentId;
-				if (!parentId) continue;
-				const rootId = rootIds.has(parentId)
-					? parentId
-					: byId.get(parentId)?.parentCommentId;
-				if (!rootId || !rootIds.has(rootId)) continue;
-				const replies = repliesByRoot.get(rootId);
+			for (const comment of entries) {
+				if (!comment.parentCommentId) continue;
+				let parent = byId.get(comment.parentCommentId);
+				const visited = new Set([comment.id]);
+				while (parent?.parentCommentId && !visited.has(parent.id)) {
+					visited.add(parent.id);
+					parent = byId.get(parent.parentCommentId);
+				}
+				if (!parent || parent.parentCommentId) continue;
+				const replies = repliesByRoot.get(parent.id);
 				if (replies) replies.push(comment);
-				else repliesByRoot.set(rootId, [comment]);
+				else repliesByRoot.set(parent.id, [comment]);
 			}
+			for (const replies of repliesByRoot.values()) replies.sort(byOldest);
 			return { rootComments, repliesByRoot };
 		}, [optimisticComments]);
 
@@ -156,99 +138,66 @@ export const ShareComments = Object.assign(
 		};
 
 		const handleReply = useCallback(
-			async (content: string, replyingTo: Comment.CommentId) => {
-				if (!user) return;
-
-				const videoElement = document.querySelector(
-					"video",
-				) as HTMLVideoElement;
-				const currentTime = videoElement?.currentTime || 0;
-
-				const parentComment = optimisticComments.find(
-					(c) => c.id === replyingTo,
-				);
-				const actualParentId = parentComment?.parentCommentId
-					? parentComment.parentCommentId
-					: replyingTo;
-
-				const optimisticReply: CommentType = {
-					id: `temp-reply-${Date.now()}` as Comment.CommentId,
+			async (content: string, root: CommentType) => {
+				if (!user) {
+					setShowAuthOverlay(true);
+					throw new Error("Sign in to reply.");
+				}
+				const currentTime = document.querySelector("video")?.currentTime ?? 0;
+				const id = `temp-${crypto.randomUUID()}` as Comment.CommentId;
+				const now = new Date();
+				setOptimisticComments({
+					id,
 					authorId: user.id,
 					authorName: user.name,
 					authorImage: user.imageUrl,
 					content,
-					createdAt: new Date(),
+					createdAt: now,
 					videoId,
-					parentCommentId: actualParentId,
+					parentCommentId: root.id,
 					type: "text",
 					timestamp: currentTime,
-					updatedAt: new Date(),
+					updatedAt: now,
 					mediaKey: null,
 					mediaDuration: null,
 					mediaMeta: null,
 					sending: true,
-				};
-
-				startTransition(() => {
-					setOptimisticComments(optimisticReply);
 				});
-
-				const data = await newComment({
+				const saved = await newComment({
 					content,
 					videoId,
-					parentCommentId: actualParentId,
+					parentCommentId: root.id,
 					type: "text",
 					timestamp: currentTime,
 					authorImage: user.imageUrl,
 				});
-
-				handleCommentSuccess(data);
-
-				const newReplyElement = document.getElementById(`comment-${data.id}`);
-				if (newReplyElement) {
-					newReplyElement.scrollIntoView({
-						behavior: "smooth",
-						block: "center",
-					});
-				}
-				setReplyingTo(null);
+				handleCommentSuccess({ ...saved, clientKey: id });
 			},
 			[
 				user,
-				optimisticComments,
 				videoId,
 				setOptimisticComments,
 				handleCommentSuccess,
+				setShowAuthOverlay,
 			],
 		);
 
-		const handleCancelReply = useCallback(() => {
-			setReplyingTo(null);
-		}, []);
-
-		const handleStartReply = useCallback(
-			(id: Comment.CommentId) => {
-				if (!user) setShowAuthOverlay(true);
-				else setReplyingTo(id);
-			},
-			[user, setShowAuthOverlay],
-		);
-
 		const handleDeleteComment = useCallback(
-			async (
-				commentId: Comment.CommentId,
-				parentId: Comment.CommentId | null,
-			) => {
+			async (comment: CommentType) => {
 				try {
-					await deleteComment({
-						commentId,
-						parentId,
+					const deleted = await deleteComment({
+						commentId: comment.id,
+						parentId: comment.parentCommentId,
 						videoId,
+						deleteReplies: !comment.parentCommentId,
 					});
-					setComments((prev) => prev.filter((c) => c.id !== commentId));
+					const ids = new Set(deleted?.deletedIds ?? [comment.id]);
+					setComments((prev) => prev.filter(({ id }) => !ids.has(id)));
+					return true;
 				} catch (error) {
 					console.error("Failed to delete comment:", error);
 					toast.error("Couldn't delete the comment. Please try again.");
+					return false;
 				}
 			},
 			[videoId, setComments],
@@ -282,7 +231,6 @@ export const ShareComments = Object.assign(
 						disabled: commentsDisabled,
 					}}
 					setShowAuthOverlay={setShowAuthOverlay}
-					commentsContainerRef={commentsContainerRef}
 					videoId={props.videoId}
 					ownerName={props.ownerName}
 					canRecordMedia={props.canRecordMedia}
@@ -294,40 +242,34 @@ export const ShareComments = Object.assign(
 					onCommentSuccess={handleCommentSuccess}
 				>
 					{commentsDisabled ? (
-						<div className="p-4 space-y-6 h-full">
-							<EmptyState
-								icon={<FontAwesomeIcon icon={faCommentSlash} />}
-								commentsDisabled={commentsDisabled}
-							/>
-						</div>
+						<p className="text-sm text-gray-10">
+							Comments are turned off for this video.
+						</p>
 					) : rootComments.length === 0 ? (
-						<EmptyState />
+						<p className="text-sm text-gray-10">
+							No comments yet. Be the first.
+						</p>
 					) : (
-						<div className="p-4 space-y-6">
-							{rootComments.map((comment) => {
-								const replies = repliesByRoot.get(comment.id) ?? EMPTY_REPLIES;
-								return (
-									<CommentComponent
-										// clientKey pins a just-uploaded comment to its optimistic
-										// card's mount, so the settle can't restart its playback.
-										key={comment.clientKey ?? comment.id}
-										comment={comment}
-										isVideoOwner={props.isVideoOwner}
-										replies={replies}
-										onReply={handleStartReply}
-										replyingToId={
-											replyingTo === comment.id ||
-											replies.some((reply) => reply.id === replyingTo)
-												? replyingTo
-												: null
-										}
-										handleReply={handleReply}
-										onCancelReply={handleCancelReply}
-										onDelete={handleDeleteComment}
-										onSeek={onSeek}
-									/>
-								);
-							})}
+						<div className="space-y-3">
+							{rootComments.map((comment) => (
+								<CommentCard
+									key={comment.clientKey ?? comment.id}
+									comment={comment}
+									replies={repliesByRoot.get(comment.id) ?? EMPTY_REPLIES}
+									isVideoOwner={props.isVideoOwner}
+									onReply={handleReply}
+									viewerId={user?.id}
+									recipient={
+										replyTarget?.rootId === comment.id
+											? replyTarget.recipient
+											: undefined
+									}
+									onSelectReply={selectReply}
+									onDelete={handleDeleteComment}
+									onSeek={onSeek}
+									focusedId={replyParams ?? commentParams}
+								/>
+							))}
 						</div>
 					)}
 				</ShareComments.Shell>
@@ -339,7 +281,7 @@ export const ShareComments = Object.assign(
 				)}
 			</section>
 		);
-	}),
+	},
 	{
 		Shell: (
 			props: PropsWithChildren<{

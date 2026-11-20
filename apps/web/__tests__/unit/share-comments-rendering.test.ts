@@ -24,6 +24,9 @@ const mocks = vi.hoisted(() => ({
 	showError: vi.fn(),
 }));
 
+vi.mock("@/actions/videos/get-analytics", () => ({
+	getVideoAnalytics: vi.fn(),
+}));
 vi.mock("@/actions/videos/new-comment", () => ({ newComment: mocks.post }));
 vi.mock("@/actions/videos/delete-comment", () => ({
 	deleteComment: mocks.remove,
@@ -117,7 +120,7 @@ beforeEach(() => {
 	mocks.params = new URLSearchParams();
 	mocks.rowRenders = 0;
 	mocks.user = { id: "viewer", name: "Viewer", imageUrl: null };
-	mocks.post.mockResolvedValue(comment("saved", "root-0"));
+	mocks.post.mockResolvedValue(comment("saved", "root-1"));
 	mocks.remove.mockResolvedValue(undefined);
 	Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
 		configurable: true,
@@ -177,7 +180,9 @@ async function click(element: HTMLElement | null) {
 
 async function reply(id: string) {
 	await click(
-		row(id).querySelector<HTMLButtonElement>('[title="Reply"] button'),
+		Array.from(row(id).querySelectorAll("button")).find(
+			(item) => item.textContent === "Reply",
+		) ?? null,
 	);
 }
 
@@ -198,6 +203,12 @@ function button(text: string) {
 			(element) => element.textContent === text,
 		) ?? null
 	);
+}
+
+async function askDelete(id: string) {
+	await click(row(id).querySelector('[aria-label^="Options for this"]'));
+	await click(button("Delete"));
+	await click(button("Yes, delete"));
 }
 
 function contents() {
@@ -223,35 +234,37 @@ describe("share comments rendering", () => {
 
 		await render();
 		expect(row("guest").textContent).toContain("Sam");
-		expect(row("guest").querySelector('[title="Delete comment"]')).toBeNull();
+		expect(
+			row("guest").querySelector('[aria-label^="Options for this"]'),
+		).toBeNull();
 
 		await render(seek, false, true);
 		expect(
-			row("guest").querySelector('[title="Delete comment"]'),
+			row("guest").querySelector('[aria-label^="Options for this"]'),
 		).not.toBeNull();
 	});
 
 	it("only renders the affected threads when opening and switching replies", async () => {
 		await render();
-		expect(mocks.rowRenders).toBe(300);
+		expect(mocks.rowRenders).toBe(240);
 		const initialContents = contents();
 		mocks.rowRenders = 0;
-		await reply("root-20");
-		expect(row("root-20").querySelector("textarea")).not.toBeNull();
+		await reply("root-21");
+		expect(row("root-21").querySelector("textarea")).not.toBeNull();
 		expect(mocks.rowRenders).toBeLessThanOrEqual(3);
 		mocks.rowRenders = 0;
-		await reply("nested-40");
-		expect(row("root-20").querySelector("textarea")).toBeNull();
-		expect(row("nested-40").querySelector("textarea")).not.toBeNull();
+		await reply("nested-41");
+		expect(row("root-21").querySelector("textarea")).toBeNull();
+		expect(row("root-41").querySelector("textarea")).not.toBeNull();
 		expect(mocks.rowRenders).toBeLessThanOrEqual(6);
 		expect(contents()).toEqual(initialContents);
 	});
 
 	it("keeps typing and playback updates out of the comment rows", async () => {
 		await render();
-		await reply("reply-20");
+		await reply("reply-21");
 		mocks.rowRenders = 0;
-		await type(row("reply-20").querySelector("textarea"), "A reply draft");
+		await type(row("root-21").querySelector("textarea"), "A reply draft");
 		await type(
 			container.querySelector('textarea[placeholder="Leave a comment"]'),
 			"A comment draft",
@@ -260,7 +273,7 @@ describe("share comments rendering", () => {
 			video.currentTime = 84;
 			video.dispatchEvent(new Event("timeupdate"));
 		});
-		expect(row("reply-20").querySelector("textarea")?.value).toBe(
+		expect(row("root-21").querySelector("textarea")?.value).toBe(
 			"A reply draft",
 		);
 		expect(mocks.rowRenders).toBe(0);
@@ -279,13 +292,15 @@ describe("share comments rendering", () => {
 		expect(row("reply-1").textContent).toContain("Updated reply");
 		mocks.user = { id: "other-viewer", name: "Another viewer", imageUrl: null };
 		await render();
-		expect(container.querySelector('[title="Delete comment"]')).toBeNull();
+		expect(
+			container.querySelector('[aria-label^="Options for this"]'),
+		).toBeNull();
 		await reply("root-1");
 		await type(
 			row("root-1").querySelector("textarea"),
 			"Reply as another viewer",
 		);
-		await click(button("Reply"));
+		await click(button("Send"));
 		expect(optimistic).toHaveBeenCalledWith(
 			expect.objectContaining({
 				authorId: "other-viewer",
@@ -294,29 +309,33 @@ describe("share comments rendering", () => {
 		);
 	});
 
-	it("preserves direct and legacy nested replies, order, emoji and multiline content", async () => {
-		comments = discussion(3);
-		comments.unshift(comment("orphan", "missing"));
-		comments.push(comment("too-deep", "nested-0"));
+	it("shows newest comments first and reveals older replies in order", async () => {
+		comments = [
+			comment("older"),
+			{ ...comment("newer"), createdAt: new Date("2026-10-26") },
+			{ ...comment("reaction"), type: "emoji", content: "🎉" },
+			comment("one", "newer"),
+			{ ...comment("two", "one"), createdAt: new Date("2026-10-26") },
+			{ ...comment("three", "newer"), createdAt: new Date("2026-10-27") },
+		];
 		await render();
-		const expected = comments
-			.filter((entry) => !entry.parentCommentId)
-			.flatMap((entry) => [
-				entry,
-				...comments.filter(
-					(reply) =>
-						reply.parentCommentId === entry.id ||
-						comments.find((parent) => parent.id === reply.parentCommentId)
-							?.parentCommentId === entry.id,
-				),
-			]);
-		expect(contents()).toEqual(
-			expected.map((entry) => ({
-				id: `comment-${entry.id}`,
-				text: entry.content,
-			})),
-		);
-		expect(row("root-1").querySelector("p.mt-2")?.className).toContain(
+		expect(contents().map(({ id }) => id)).toEqual([
+			"comment-newer",
+			"comment-two",
+			"comment-three",
+			"comment-older",
+		]);
+		await click(button("Show 1 earlier reply"));
+		expect(contents().map(({ id }) => id)).toEqual([
+			"comment-newer",
+			"comment-one",
+			"comment-two",
+			"comment-three",
+			"comment-older",
+		]);
+		await click(button("Show fewer replies"));
+		expect(container.querySelector("#comment-one")).toBeNull();
+		expect(row("older").querySelector("p.mt-2")?.className).toContain(
 			"whitespace-pre-wrap",
 		);
 	});
@@ -324,43 +343,49 @@ describe("share comments rendering", () => {
 	it("uses the current reply target and callbacks when submitting or cancelling", async () => {
 		comments = discussion(2);
 		await render();
-		await reply("root-0");
-		await type(row("root-0").querySelector("textarea"), "Discarded");
+		await reply("root-1");
+		await type(row("root-1").querySelector("textarea"), "Discarded");
 		await click(button("Cancel"));
 		expect(mocks.post).not.toHaveBeenCalled();
 		await reply("nested-1");
-		await type(row("nested-1").querySelector("textarea"), "Nested response");
-		await click(button("Reply"));
+		await type(row("root-1").querySelector("textarea"), "Nested response");
+		await click(button("Send"));
 		expect(mocks.post).toHaveBeenCalledWith(
 			expect.objectContaining({
 				content: "Nested response",
-				parentCommentId: "reply-1",
+				parentCommentId: "root-1",
 				timestamp: 42,
 			}),
 		);
 		expect(optimistic).toHaveBeenCalledWith(
 			expect.objectContaining({
 				content: "Nested response",
-				parentCommentId: "reply-1",
+				parentCommentId: "root-1",
 				sending: true,
 			}),
 		);
-		expect(success).toHaveBeenCalledWith(comment("saved", "root-0"));
-		expect(row("nested-1").querySelector("textarea")).toBeNull();
+		expect(success).toHaveBeenCalledWith(
+			expect.objectContaining(comment("saved", "root-1")),
+		);
+		expect(row("root-1").querySelector("textarea")).toBeNull();
 		const updatedSeek = vi.fn();
 		await render(updatedSeek);
-		await click(row("root-1").querySelector("button.text-xs"));
+		await click(
+			Array.from(row("root-1").querySelectorAll("button")).find(
+				(item) => item.textContent === "at 0:12",
+			) ?? null,
+		);
 		expect(updatedSeek).toHaveBeenCalledWith(12);
 	});
 
 	it("refreshes replies after optimistic additions, settlement and deletion", async () => {
 		comments = discussion(2);
 		await render();
-		const pending = { ...comment("pending", "root-0"), sending: true };
+		const pending = { ...comment("pending", "root-1"), sending: true };
 		comments = [...comments, pending];
 		await render();
 		const mounted = row("pending");
-		expect(mounted.className).toContain("opacity-20");
+		expect(mounted.className).toContain("opacity-60");
 		comments = comments.map((entry) =>
 			entry === pending
 				? {
@@ -373,40 +398,61 @@ describe("share comments rendering", () => {
 		);
 		await render();
 		expect(row("saved")).toBe(mounted);
-		expect(row("saved").className).toContain("opacity-100");
-		vi.spyOn(window, "confirm").mockReturnValue(true);
-		await click(row("saved").querySelector('[title="Delete comment"] button'));
+		expect(row("saved").className).not.toContain("opacity-60");
+
+		await askDelete("saved");
 		expect(mocks.remove).toHaveBeenCalledWith({
 			commentId: "saved",
-			parentId: "root-0",
+			parentId: "root-1",
 			videoId: "video",
+			deleteReplies: false,
 		});
 		comments = comments.filter((entry) => entry.id !== "saved");
 		await render();
 		expect(container.querySelector("#comment-saved")).toBeNull();
 	});
 
-	it("offers delete only once your comment is saved, and says so when deleting fails", async () => {
+	it("asks to delete the root with its reply count and lets the viewer keep it", async () => {
 		comments = [
-			...discussion(1),
-			{ ...comment("pending", "root-0"), sending: true },
+			comment("root"),
+			comment("one", "root"),
+			comment("two", "root"),
 		];
 		await render();
-		expect(row("pending").querySelector('[title="Delete comment"]')).toBeNull();
+		await click(
+			row("root").querySelector('[aria-label="Options for this comment"]'),
+		);
+		await click(button("Delete"));
+		expect(row("root").textContent).toContain(
+			"Delete this comment and its 2 replies? It can't be undone.",
+		);
+		await click(button("Keep"));
+		expect(button("Yes, delete")).toBeNull();
+		expect(mocks.remove).not.toHaveBeenCalled();
+	});
+
+	it("offers delete only once your comment is saved, and says so when deleting fails", async () => {
+		comments = [
+			...discussion(2),
+			{ ...comment("pending", "root-1"), sending: true },
+		];
+		await render();
+		expect(
+			row("pending").querySelector('[aria-label^="Options for this"]'),
+		).toBeNull();
 
 		mocks.remove.mockRejectedValueOnce(new Error("Offline"));
 		mocks.showError.mockReset();
 		setComments.mockReset();
 		vi.spyOn(console, "error").mockImplementation(() => {});
-		vi.spyOn(window, "confirm").mockReturnValue(true);
-		await click(
-			row("reply-0").querySelector('[title="Delete comment"] button'),
-		);
+
+		await askDelete("reply-1");
 
 		expect(mocks.remove).toHaveBeenCalledWith({
-			commentId: "reply-0",
-			parentId: "root-0",
+			commentId: "reply-1",
+			parentId: "root-1",
 			videoId: "video",
+			deleteReplies: false,
 		});
 		expect(mocks.showError).toHaveBeenCalledExactlyOnceWith(
 			"Couldn't delete the comment. Please try again.",
@@ -417,15 +463,15 @@ describe("share comments rendering", () => {
 	it.each(["comment", "reply"] as const)(
 		"keeps a failed %s draft for retry and clears it only after saving",
 		async (kind) => {
-			comments = discussion(1);
+			comments = discussion(2);
 			const firstSave = Promise.withResolvers<ReturnType<typeof comment>>();
 			mocks.post.mockReturnValueOnce(firstSave.promise);
 			vi.spyOn(console, "error").mockImplementation(() => {});
 			await render();
-			if (kind === "reply") await reply("root-0");
+			if (kind === "reply") await reply("root-1");
 			const input = container.querySelector("textarea");
 			if (!input) throw new Error("Missing comment editor");
-			const label = kind === "reply" ? "Reply" : "Comment";
+			const label = kind === "reply" ? "Send" : "Comment";
 			await type(input, "Please check the last frame.");
 			await click(button(label));
 			expect(mocks.post).toHaveBeenCalledOnce();
@@ -453,13 +499,15 @@ describe("share comments rendering", () => {
 			expect(mocks.post).toHaveBeenLastCalledWith(
 				expect.objectContaining({
 					content: "Please check the last frame.",
-					parentCommentId: kind === "reply" ? "root-0" : "",
+					parentCommentId: kind === "reply" ? "root-1" : "",
 					timestamp: 42,
 				}),
 			);
-			const saved = comment("saved", kind === "reply" ? "root-0" : "");
+			const saved = comment("saved", kind === "reply" ? "root-1" : "");
 			await act(async () => retry.resolve(saved));
-			expect(success).toHaveBeenCalledExactlyOnceWith(saved);
+			expect(success).toHaveBeenCalledExactlyOnceWith(
+				kind === "reply" ? expect.objectContaining(saved) : saved,
+			);
 			if (kind === "comment") expect(input.value).toBe("");
 			else expect(input.isConnected).toBe(false);
 		},
@@ -472,7 +520,7 @@ describe("share comments rendering", () => {
 			mocks.post.mockReturnValueOnce(save.promise);
 			vi.spyOn(console, "error").mockImplementation(() => {});
 			function LiveComments() {
-				const [saved, setSaved] = useState([comment("root")]);
+				const [saved, setSaved] = useState([comment("existing")]);
 				const [pending, addPending] = useOptimistic(
 					saved,
 					(state, entry: CommentType) => [...state, entry],
@@ -498,7 +546,7 @@ describe("share comments rendering", () => {
 					save.resolve({ ...comment("saved"), content: "Unsent draft" }),
 				);
 				expect(contents()).toEqual([
-					{ id: "comment-root", text: comment("root").content },
+					{ id: "comment-existing", text: comment("existing").content },
 					{ id: "comment-saved", text: "Unsent draft" },
 				]);
 				expect(input.value).toBe("");
@@ -513,14 +561,14 @@ describe("share comments rendering", () => {
 	);
 
 	it("keeps failed replies open and handles empty and disabled discussions", async () => {
-		comments = discussion(1);
+		comments = discussion(2);
 		mocks.post.mockRejectedValue(new Error("Offline"));
 		vi.spyOn(console, "error").mockImplementation(() => {});
 		await render();
-		await reply("root-0");
-		await type(row("root-0").querySelector("textarea"), "Unsent");
-		await click(button("Reply"));
-		expect(row("root-0").querySelector("textarea")).not.toBeNull();
+		await reply("root-1");
+		await type(row("root-1").querySelector("textarea"), "Unsent");
+		await click(button("Send"));
+		expect(row("root-1").querySelector("textarea")).not.toBeNull();
 		expect(success).not.toHaveBeenCalled();
 		comments = [];
 		await render();
@@ -541,7 +589,7 @@ describe("share comments rendering", () => {
 				durations = [];
 				mocks.rowRenders = 0;
 				const start = performance.now();
-				await reply(i % 2 ? "root-20" : "nested-40");
+				await reply(i % 2 ? "root-21" : "nested-41");
 				if (i >= 10) {
 					switching.push(
 						durations.reduce((sum, duration) => sum + duration, 0),
@@ -554,7 +602,7 @@ describe("share comments rendering", () => {
 			for (let i = 0; i < 40; i++) {
 				durations = [];
 				await type(
-					row("root-20").querySelector("textarea"),
+					row("root-21").querySelector("textarea"),
 					`Reply draft ${i}`,
 				);
 				if (i >= 10)

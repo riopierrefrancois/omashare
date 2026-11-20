@@ -1,0 +1,309 @@
+import clsx from "clsx";
+import { memo, useEffect, useState } from "react";
+import { LinkifiedText } from "@/components/LinkifiedText";
+import { SignedImageUrl } from "@/components/SignedImageUrl";
+import { formatPlayerTime } from "@/lib/player-time";
+import type { CommentType } from "../../Share";
+import { MediaCommentBody } from "../media-comment/MediaCommentBody";
+import { isMediaComment } from "../media-comment/media-comment-types";
+import { RelativeTime } from "../RelativeTime";
+import CommentInput from "../tabs/Activity/CommentInput";
+import { formatTimeAgo, formatTimestamp } from "../tabs/Activity/utils";
+
+export const replyCountLabel = (count: number) =>
+	`${count} ${count === 1 ? "reply" : "replies"}`;
+
+const nameOf = (comment: CommentType) =>
+	comment.authorName ?? comment.guestName ?? "Guest";
+
+const quietButton =
+	"rounded px-1.5 py-1 text-sm text-gray-10 hover:bg-gray-3 hover:text-gray-12";
+
+type DeleteComment = (comment: CommentType) => Promise<boolean>;
+
+function DeleteControl({
+	isReply,
+	count,
+	onDelete,
+}: {
+	isReply: boolean;
+	count: number;
+	onDelete: () => Promise<boolean>;
+}) {
+	const [mode, setMode] = useState<"closed" | "menu" | "confirm">("closed");
+	const [pending, setPending] = useState(false);
+	const label = isReply ? "reply" : "comment";
+
+	if (mode === "confirm") {
+		return (
+			<div className="flex basis-full flex-wrap items-center gap-2 rounded-lg border border-gray-5 bg-gray-2 p-2 text-sm">
+				<span>
+					Delete this {label}
+					{count > 0 ? ` and its ${replyCountLabel(count)}` : ""}? It can't be
+					undone.
+				</span>
+				<button
+					type="button"
+					className="font-medium text-red-600"
+					disabled={pending}
+					onClick={async () => {
+						setPending(true);
+						const deleted = await onDelete();
+						setPending(false);
+						if (deleted) setMode("closed");
+					}}
+				>
+					Yes, delete
+				</button>
+				<button
+					type="button"
+					className={quietButton}
+					disabled={pending}
+					onClick={() => setMode("closed")}
+				>
+					Keep
+				</button>
+			</div>
+		);
+	}
+
+	return (
+		<div className="relative ml-auto shrink-0">
+			<button
+				type="button"
+				className={quietButton}
+				aria-label={`Options for this ${label}`}
+				aria-expanded={mode === "menu"}
+				onClick={() => setMode(mode === "menu" ? "closed" : "menu")}
+			>
+				•••
+			</button>
+			{mode === "menu" && (
+				<div className="absolute right-0 z-10 rounded-lg border border-gray-5 bg-white p-1 shadow-sm">
+					<button
+						type="button"
+						className={quietButton}
+						onClick={() => setMode("confirm")}
+					>
+						Delete
+					</button>
+				</div>
+			)}
+		</div>
+	);
+}
+
+function Face({ comment }: { comment: CommentType }) {
+	return (
+		<SignedImageUrl
+			image={comment.authorImage}
+			name={nameOf(comment)}
+			className="size-7 shrink-0 rounded-full"
+			letterClass="text-xs"
+		/>
+	);
+}
+
+function CommentDetails({
+	comment,
+	isReply = false,
+	onSeek,
+	onDelete,
+	replyCount = 0,
+}: {
+	comment: CommentType;
+	isReply?: boolean;
+	onSeek?: (time: number) => void;
+	onDelete?: () => Promise<boolean>;
+	replyCount?: number;
+}) {
+	const timestamp = comment.timestamp;
+	const date = new Date(comment.createdAt);
+	return (
+		<>
+			<div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+				{!isReply && <Face comment={comment} />}
+				<span className="min-w-0 break-all text-sm font-semibold text-gray-12">
+					{nameOf(comment)}
+				</span>
+				<span className="text-xs text-gray-10" title={formatTimestamp(date)}>
+					<RelativeTime date={date} format={formatTimeAgo} />
+				</span>
+				{timestamp !== null && onSeek && (
+					<button
+						type="button"
+						className="rounded-full bg-gray-3 px-2 py-0.5 text-xs text-gray-11 hover:bg-gray-4"
+						onClick={() => onSeek(timestamp)}
+					>
+						at {formatPlayerTime(timestamp).replace(/^0(?=\d:)/, "")}
+					</button>
+				)}
+				{onDelete && (
+					<DeleteControl
+						isReply={isReply}
+						count={replyCount}
+						onDelete={onDelete}
+					/>
+				)}
+			</div>
+			{isMediaComment(comment) && (
+				<MediaCommentBody comment={comment} compact />
+			)}
+			{comment.content && (
+				<p className="mt-2 whitespace-pre-wrap break-words text-sm text-gray-12">
+					<LinkifiedText text={comment.content} />
+				</p>
+			)}
+		</>
+	);
+}
+
+export const CommentCard = memo(function CommentCard({
+	comment,
+	replies,
+	isVideoOwner,
+	onSeek,
+	onDelete,
+	onReply,
+	viewerId,
+	recipient,
+	onSelectReply,
+	focusedId,
+	flashId,
+}: {
+	comment: CommentType;
+	replies: CommentType[];
+	isVideoOwner?: boolean;
+	onSeek?: (time: number) => void;
+	onDelete: DeleteComment;
+	onReply: (content: string, parent: CommentType) => Promise<void>;
+	viewerId?: string;
+	recipient?: CommentType;
+	onSelectReply?: (root: CommentType, recipient?: CommentType) => void;
+	focusedId?: string | null;
+	flashId?: string | null;
+}) {
+	const [expanded, setExpanded] = useState<boolean>();
+	const hidden = Math.max(0, replies.length - 2);
+	const showAll =
+		expanded ?? replies.slice(0, hidden).some(({ id }) => id === focusedId);
+	const canDelete = (entry: CommentType) =>
+		!entry.sending &&
+		(viewerId === entry.authorId || (isVideoOwner && entry.authorId === null));
+	const canDeleteRoot =
+		canDelete(comment) &&
+		(isVideoOwner || !replies.some(({ authorId }) => authorId === null));
+	const activeId = flashId ?? focusedId;
+
+	useEffect(() => {
+		if (activeId !== comment.id && !replies.some(({ id }) => id === activeId))
+			return;
+		if (activeId)
+			document
+				.getElementById(`comment-${activeId}`)
+				?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+	}, [activeId, comment.id, replies]);
+
+	return (
+		<article
+			id={`comment-${comment.id}`}
+			className={clsx(
+				"flex min-w-0 flex-col gap-2 rounded-2xl border border-gray-5 bg-white px-3 py-2",
+				comment.id === activeId && "ring-2 ring-blue-8",
+				comment.sending && !isMediaComment(comment) && "opacity-60",
+			)}
+		>
+			<CommentDetails
+				comment={comment}
+				onSeek={onSeek}
+				replyCount={replies.length}
+				onDelete={canDeleteRoot ? () => onDelete(comment) : undefined}
+			/>
+			<div className="flex items-center gap-2">
+				{!comment.sending && (
+					<button
+						type="button"
+						className={quietButton}
+						onClick={() => onSelectReply?.(comment, comment)}
+					>
+						Reply
+					</button>
+				)}
+				{replies.length > 0 && (
+					<span className="text-xs text-gray-10">
+						{replyCountLabel(replies.length)}
+					</span>
+				)}
+			</div>
+			{(replies.length > 0 || recipient) && (
+				<div className="space-y-3 border-t border-gray-5 pt-3">
+					{hidden > 0 && (
+						<button
+							type="button"
+							className={quietButton}
+							aria-expanded={showAll}
+							onClick={() => setExpanded(!showAll)}
+						>
+							{showAll
+								? "Show fewer replies"
+								: `Show ${hidden} earlier ${hidden === 1 ? "reply" : "replies"}`}
+						</button>
+					)}
+					{(showAll ? replies : replies.slice(-2)).map((reply) => (
+						<div
+							key={reply.clientKey ?? reply.id}
+							id={`comment-${reply.id}`}
+							className={clsx(
+								"flex items-start gap-2.5 rounded-2xl",
+								reply.id === activeId && "ring-2 ring-blue-8",
+								reply.sending && !isMediaComment(reply) && "opacity-60",
+							)}
+						>
+							<Face comment={reply} />
+							<div className="min-w-0 flex-1">
+								<div className="rounded-2xl border border-gray-5 bg-gray-2 px-3 pb-2 pt-1.5">
+									<CommentDetails
+										comment={reply}
+										isReply
+										onSeek={onSeek}
+										onDelete={
+											canDelete(reply) ? () => onDelete(reply) : undefined
+										}
+									/>
+								</div>
+								{!reply.sending && (
+									<button
+										type="button"
+										className={quietButton}
+										onClick={() => onSelectReply?.(comment, reply)}
+									>
+										Reply
+									</button>
+								)}
+							</div>
+						</div>
+					))}
+					{recipient && (
+						<div>
+							<p className="mb-2 text-sm text-gray-10">
+								Replying to {nameOf(recipient)}
+							</p>
+							<CommentInput
+								key={recipient.id}
+								onSubmit={async (content) => {
+									await onReply(content, comment);
+									onSelectReply?.(comment);
+								}}
+								onCancel={() => onSelectReply?.(comment)}
+								buttonLabel="Send"
+								showCancelButton
+								autoFocus
+								placeholder="Write a reply…"
+							/>
+						</div>
+					)}
+				</div>
+			)}
+		</article>
+	);
+});

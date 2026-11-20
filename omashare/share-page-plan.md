@@ -86,17 +86,17 @@ Use Cap's own Tailwind tokens (`gray-1…gray-12`, `bg-white`, `border-gray-5`, 
 - [x] Reuse the existing state and handlers that `Share.tsx` passes to `Sidebar` today (`commentsData`, `setCommentsData`, `optimisticComments`, `setOptimisticComments`, `handleCommentSuccess`, delete). Move logic out of `tabs/Activity/Comments.tsx` instead of duplicating it. Delete files that end up unused.
 
 ### Task B3: comment cards (Workhive look)
-- [ ] Root comments (text, video or audio; no emoji) are sorted **newest first** by `createdAt`.
-- [ ] Card: a rounded white card with a border.
+- [x] Root comments (text, video or audio; no emoji) are sorted **newest first** by `createdAt`.
+- [x] Card: a rounded white card with a border.
   - Header: face, bold name, relative time. If the comment has a `timestamp`, add a small chip **at 0:42**; clicking it seeks the video (`onSeek`).
   - `•••` on the right for whoever can delete the comment.
   - Then the words. A media comment keeps its existing player.
   - Footer: quiet grey **Reply** and "1 reply" or "N replies".
-- [ ] Replies sit inside the card under a top border, oldest to newest, as bubbles in the `reply-bubble.tsx` style.
+- [x] Replies sit inside the card under a top border, oldest to newest, as bubbles in the `reply-bubble.tsx` style.
   - Only the latest 2 show, with **Show N earlier replies** above them and **Show fewer replies** once expanded.
   - **Reply** under a bubble opens the reply box for the root comment, saying "Replying to Sam". Every reply's parent is the root, one level deep.
-- [ ] The reply box opens at the bottom of that card, with **Send** and **Cancel**, and the same guest-name rule as B5.
-- [ ] Delete: `•••` → **Delete** → inline question "Delete this comment and its 2 replies? It can't be undone." (or "Delete this reply? It can't be undone."), with **Yes, delete** and **Keep**. No modal.
+- [x] The reply box opens at the bottom of that card, with **Send** and **Cancel**, and the same guest-name rule as B5.
+- [x] Delete: `•••` → **Delete** → inline question "Delete this comment and its 2 replies? It can't be undone." (or "Delete this reply? It can't be undone."), with **Yes, delete** and **Keep**. No modal.
 
 ### Task B4: reactions
 - [ ] Emoji reactions don't appear as cards.

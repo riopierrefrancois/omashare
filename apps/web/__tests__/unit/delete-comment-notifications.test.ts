@@ -34,7 +34,7 @@ beforeEach(() => {
 	mocks.query.mockReset();
 	mocks.query.mockResolvedValue({ rows: [{ affectedRows: 1, insertId: 0 }] });
 	mocks.query.mockResolvedValueOnce({
-		rows: [[commentId, videoId, null, null]],
+		rows: [[commentId, videoId, null, "viewer", null, null]],
 	});
 });
 
@@ -114,6 +114,53 @@ describe("deleted comment notifications", () => {
 			[commentId, videoId],
 			"execute",
 		);
+	});
+
+	it("deletes a root and its replies for the video owner", async () => {
+		mocks.getCurrentUser.mockResolvedValue({ id: "viewer" });
+		mocks.query
+			.mockResolvedValueOnce({ rows: [["guest-reply", null, null, null]] })
+			.mockResolvedValueOnce({
+				rows: [["legacy-reply", "another-user", null, null]],
+			})
+			.mockResolvedValueOnce({ rows: [] });
+
+		await expect(
+			deleteComment({
+				commentId,
+				videoId,
+				parentId: null,
+				deleteReplies: true,
+			}),
+		).resolves.toEqual({
+			success: true,
+			deletedIds: [commentId, "guest-reply", "legacy-reply"],
+		});
+		expect(mocks.query).toHaveBeenCalledWith(
+			expect.stringContaining("delete from `comments`"),
+			[videoId, commentId, "guest-reply", "legacy-reply"],
+			"execute",
+		);
+	});
+
+	it("does not let a root author delete guest replies on another owner's video", async () => {
+		mocks.getCurrentUser.mockResolvedValue({ id: "commenter" });
+		mocks.query.mockResolvedValueOnce({
+			rows: [["guest-reply", null, null, null]],
+		});
+		vi.spyOn(console, "error").mockImplementation(() => {});
+
+		await expect(
+			deleteComment({
+				commentId,
+				videoId,
+				parentId: null,
+				deleteReplies: true,
+			}),
+		).rejects.toThrow("Only the video owner can delete guest replies.");
+		expect(
+			mocks.query.mock.calls.every(([query]) => query.startsWith("select")),
+		).toBe(true);
 	});
 
 	it("does not delete notifications for a missing or unowned comment", async () => {

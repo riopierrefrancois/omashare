@@ -14,10 +14,12 @@ export async function deleteComment({
 	commentId,
 	parentId,
 	videoId,
+	deleteReplies = false,
 }: {
 	commentId: Comment.CommentId;
 	parentId: Comment.CommentId | null;
 	videoId: Video.VideoId;
+	deleteReplies?: boolean;
 }) {
 	const user = await getCurrentUser();
 
@@ -30,13 +32,7 @@ export async function deleteComment({
 	}
 
 	try {
-		let deletedMedia: {
-			videoId: Video.VideoId;
-			mediaKey: string;
-			thumbnailKey: string | null;
-		} | null = null;
-
-		await db().transaction(async (tx) => {
+		const { deletedIds, mediaKeys } = await db().transaction(async (tx) => {
 			const target = and(
 				eq(comments.id, commentId),
 				eq(comments.videoId, videoId),
@@ -45,6 +41,8 @@ export async function deleteComment({
 				.select({
 					id: comments.id,
 					videoId: comments.videoId,
+					parentCommentId: comments.parentCommentId,
+					ownerId: videos.ownerId,
 					mediaKey: comments.mediaKey,
 					mediaMeta: comments.mediaMeta,
 				})
@@ -68,17 +66,77 @@ export async function deleteComment({
 				);
 			}
 
-			if (existingComment.mediaKey) {
-				deletedMedia = {
-					// The comment's own videoId, not the client-supplied one, decides
-					// which bucket the objects are deleted from.
-					videoId: existingComment.videoId,
-					mediaKey: existingComment.mediaKey,
-					thumbnailKey: existingComment.mediaMeta?.thumbnailKey ?? null,
-				};
-			}
+			const mediaKeys: string[] = [];
+			const collectMedia = (
+				entry: Pick<typeof comments.$inferSelect, "mediaKey" | "mediaMeta">,
+			) => {
+				if (entry.mediaKey) mediaKeys.push(entry.mediaKey);
+				if (entry.mediaMeta?.thumbnailKey)
+					mediaKeys.push(entry.mediaMeta.thumbnailKey);
+			};
+			collectMedia(existingComment);
+			const deletedIds = [commentId];
 
-			await tx.delete(comments).where(target);
+			if (deleteReplies && !existingComment.parentCommentId) {
+				let parents = [commentId];
+				while (parents.length > 0) {
+					const replies = await tx
+						.select({
+							id: comments.id,
+							authorId: comments.authorId,
+							mediaKey: comments.mediaKey,
+							mediaMeta: comments.mediaMeta,
+						})
+						.from(comments)
+						.where(
+							and(
+								eq(comments.videoId, videoId),
+								inArray(comments.parentCommentId, parents),
+							),
+						)
+						.for("update");
+					if (
+						existingComment.ownerId !== user.id &&
+						replies.some(({ authorId }) => authorId === null)
+					) {
+						throw new Error("Only the video owner can delete guest replies.");
+					}
+					parents = replies.map(({ id }) => id);
+					deletedIds.push(...parents);
+					for (const reply of replies) collectMedia(reply);
+				}
+			}
+			await tx
+				.delete(comments)
+				.where(
+					deletedIds.length === 1
+						? target
+						: and(
+								eq(comments.videoId, videoId),
+								inArray(comments.id, deletedIds),
+							),
+				);
+
+			if (deletedIds.length > 1) {
+				await tx
+					.delete(notifications)
+					.where(
+						and(
+							eq(notifications.videoId, videoId),
+							eq(notifications.type, "reply"),
+							or(
+								inArray(
+									sql`JSON_UNQUOTE(JSON_EXTRACT(${notifications.data}, '$.comment.id'))`,
+									deletedIds.slice(1),
+								),
+								inArray(
+									sql`JSON_UNQUOTE(JSON_EXTRACT(${notifications.data}, '$.parentCommentId'))`,
+									deletedIds.slice(1),
+								),
+							),
+						),
+					);
+			}
 
 			// Delete related notifications
 			if (parentId) {
@@ -109,22 +167,19 @@ export async function deleteComment({
 						),
 					);
 			}
+			return { deletedIds, mediaKeys };
 		});
 
 		// After the row is gone, best-effort delete of the media objects; a
 		// storage failure must not fail the action (the video-delete prefix sweep
 		// reclaims any stragglers).
-		if (deletedMedia) {
-			const { videoId: mediaVideoId, mediaKey, thumbnailKey } = deletedMedia;
+		if (mediaKeys.length > 0) {
 			await Effect.gen(function* () {
 				const repo = yield* VideosRepo;
-				const maybeVideo = yield* repo.getById(mediaVideoId);
+				const maybeVideo = yield* repo.getById(videoId);
 				if (Option.isNone(maybeVideo)) return;
 				const [bucket] = yield* Storage.getAccessForVideo(maybeVideo.value[0]);
-				yield* bucket.deleteObjects([
-					{ Key: mediaKey },
-					...(thumbnailKey ? [{ Key: thumbnailKey }] : []),
-				]);
+				yield* bucket.deleteObjects(mediaKeys.map((Key) => ({ Key })));
 			}).pipe(
 				// catchAllCause, not catchAll: a defect (missing credential, storage
 				// layer panic) must not fail the action either — the row is gone.
@@ -136,7 +191,7 @@ export async function deleteComment({
 		}
 
 		revalidatePath(`/s/${videoId}`);
-		return { success: true };
+		return deleteReplies ? { success: true, deletedIds } : { success: true };
 	} catch (error) {
 		console.error("Error deleting comment:", error);
 		throw error;
