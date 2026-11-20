@@ -13,6 +13,8 @@ interface CommentInputProps {
 	onSubmit?: (content: string) => void | Promise<void>;
 	onCancel?: () => void;
 	placeholder?: string;
+	inputId?: string;
+	showErrorMessage?: boolean;
 	showCancelButton?: boolean;
 	buttonLabel?: string;
 	autoFocus?: boolean;
@@ -33,6 +35,8 @@ const CommentInput: React.FC<CommentInputProps> = ({
 	onSubmit,
 	onCancel,
 	placeholder,
+	inputId,
+	showErrorMessage = false,
 	showCancelButton = false,
 	buttonLabel = "Reply",
 	autoFocus = false,
@@ -44,6 +48,7 @@ const CommentInput: React.FC<CommentInputProps> = ({
 	const [content, setContent] = useState("");
 	const [focused, setFocused] = useState(false);
 	const [isSubmitting, startTransition] = useTransition();
+	const submitting = useRef(false);
 	const inputRef = useRef<HTMLTextAreaElement>(null);
 
 	useEffect(() => {
@@ -55,13 +60,20 @@ const CommentInput: React.FC<CommentInputProps> = ({
 	const expanded = !collapsible || focused || content.length > 0;
 
 	const handleSubmit = () => {
-		if (!content.trim() || disabled || isSubmitting || !onSubmit) return;
+		if (!content.trim() || disabled || submitting.current || !onSubmit) return;
+		submitting.current = true;
 		startTransition(async () => {
 			try {
 				await onSubmit(content);
 				setContent("");
-			} catch {
-				toast.error("Couldn't post your comment. Please try again.");
+			} catch (error) {
+				toast.error(
+					showErrorMessage && error instanceof Error
+						? error.message
+						: "Couldn't post your comment. Please try again.",
+				);
+			} finally {
+				submitting.current = false;
 			}
 		});
 	};
@@ -84,6 +96,10 @@ const CommentInput: React.FC<CommentInputProps> = ({
 						    a proper drafting area. */}
 						<textarea
 							ref={inputRef}
+							id={inputId}
+							aria-label={
+								showCancelButton ? "Write a reply" : "Write a comment"
+							}
 							value={content}
 							disabled={disabled || isSubmitting}
 							rows={expanded ? 3 : 2}

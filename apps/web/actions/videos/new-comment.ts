@@ -22,6 +22,18 @@ import { isRateLimited, RATE_LIMIT_IDS } from "@/lib/rate-limit";
 import * as EffectRuntime from "@/lib/server";
 import { isVideoFeedbackDisabled } from "@/lib/video-feedback-rules";
 
+class CommentSubmissionError extends Error {}
+
+export async function postShareComment(data: Parameters<typeof newComment>[0]) {
+	try {
+		return { comment: await newComment(data) };
+	} catch (error) {
+		if (error instanceof CommentSubmissionError)
+			return { error: error.message };
+		throw error;
+	}
+}
+
 export async function newComment(data: {
 	content: string;
 	videoId: Video.VideoId;
@@ -36,11 +48,13 @@ export async function newComment(data: {
 
 	let guestName: string | null = null;
 	if (!user) {
-		if (data.website) throw new Error("User not authenticated");
-		if (data.type !== "text") throw new Error("Sign in to react.");
+		if (data.website)
+			throw new CommentSubmissionError("User not authenticated");
+		if (data.type !== "text")
+			throw new CommentSubmissionError("Sign in to react.");
 		guestName = typeof data.guestName === "string" ? data.guestName.trim() : "";
 		if (!guestName || [...guestName].length > 80)
-			throw new Error("Please add your name.");
+			throw new CommentSubmissionError("Please add your name.");
 	}
 
 	const content = data.content;
@@ -55,14 +69,14 @@ export async function newComment(data: {
 			: "comment";
 
 	if (!content || !videoId) {
-		throw new Error("Content and videoId are required");
+		throw new CommentSubmissionError("Content and videoId are required");
 	}
 
 	const rateLimited = user
 		? await isCommentRateLimited(user.id)
 		: await isGuestCommentRateLimited();
 	if (rateLimited) {
-		throw new Error(COMMENT_RATE_LIMITED_MESSAGE);
+		throw new CommentSubmissionError(COMMENT_RATE_LIMITED_MESSAGE);
 	}
 
 	// Authentication alone isn't authorization: without this, any logged-in user could
@@ -84,11 +98,11 @@ export async function newComment(data: {
 
 	if (Exit.isFailure(accessExit)) {
 		console.error("Video access check failed:", accessExit);
-		throw new Error("Video not found");
+		throw new CommentSubmissionError("Video not found");
 	}
 
 	if (accessExit.value.length === 0) {
-		throw new Error("Video not found");
+		throw new CommentSubmissionError("Video not found");
 	}
 
 	if (
@@ -97,13 +111,13 @@ export async function newComment(data: {
 			conditionalType === "reaction" ? "disableReactions" : "disableComments",
 		)
 	)
-		throw new Error("Feedback is disabled on this video");
+		throw new CommentSubmissionError("Feedback is disabled on this video");
 
 	if (
 		parentCommentId &&
 		!(await isReplyParentOnVideo(parentCommentId, videoId))
 	)
-		throw new Error("Comment not found");
+		throw new CommentSubmissionError("Comment not found");
 
 	const id = Comment.CommentId.make(nanoId());
 

@@ -30,6 +30,7 @@ import {
 	videoStatusQueryOptions,
 } from "@/lib/video-status-query";
 import { CaptionProvider } from "./_components/CaptionContext";
+import { SHARE_COMMENT_FIELD_ID } from "./_components/comments/CommentComposer";
 import { ReactionCounts } from "./_components/comments/ReactionCounts";
 import { ShareComments } from "./_components/comments/ShareComments";
 import { DashboardBackLink } from "./_components/DashboardBackLink";
@@ -360,6 +361,13 @@ export const Share = ({
 
 	const playerRef = useRef<HTMLVideoElement | null>(null);
 	const stageRef = useRef<HTMLDivElement | null>(null);
+	const focusComment = useCallback(() => {
+		(playerRef.current?.isConnected
+			? playerRef.current
+			: stageRef.current?.querySelector("video")
+		)?.pause();
+		document.getElementById(SHARE_COMMENT_FIELD_ID)?.focus();
+	}, []);
 	const initialComments: CommentType[] =
 		comments instanceof Promise ? use(comments) : comments;
 	const [commentsData, setCommentsData] =
@@ -396,8 +404,10 @@ export const Share = ({
 	const aiData = useMemo(
 		() => ({
 			title: videoStatus?.aiTitle || null,
-			summary: videoStatus?.summary ?? initialAiData?.summary ?? null,
-			chapters: videoStatus?.chapters ?? initialAiData?.chapters ?? null,
+			summary:
+				(videoStatus ? videoStatus.summary : initialAiData?.summary) ?? null,
+			chapters:
+				(videoStatus ? videoStatus.chapters : initialAiData?.chapters) ?? null,
 			aiGenerationStatus: videoStatus?.aiGenerationStatus || null,
 		}),
 		[videoStatus, initialAiData],
@@ -1005,7 +1015,7 @@ export const Share = ({
 														onCommentSuccess={handleCommentSuccess}
 														disableComments={areCommentStampsDisabled}
 														disableReactions={areReactionStampsDisabled}
-														canRecordMedia={canRecordMedia && !isScreenshot}
+														onWriteComment={focusComment}
 														data={data}
 													/>
 													{showRail && railCollapsed && (
@@ -1073,7 +1083,7 @@ export const Share = ({
 													? views
 													: undefined
 											}
-											ownerName={data.owner.name}
+											isScreenshot={isScreenshot}
 											canRecordMedia={canRecordMedia && !isScreenshot}
 										/>
 									)}

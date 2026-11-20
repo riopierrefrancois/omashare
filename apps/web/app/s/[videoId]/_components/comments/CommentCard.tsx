@@ -1,13 +1,12 @@
 import clsx from "clsx";
-import { memo, useEffect, useState } from "react";
+import { memo, type ReactNode, useEffect, useRef, useState } from "react";
 import { LinkifiedText } from "@/components/LinkifiedText";
 import { SignedImageUrl } from "@/components/SignedImageUrl";
-import { formatPlayerTime } from "@/lib/player-time";
+import { formatClock } from "@/lib/player-time";
 import type { CommentType } from "../../Share";
 import { MediaCommentBody } from "../media-comment/MediaCommentBody";
 import { isMediaComment } from "../media-comment/media-comment-types";
 import { RelativeTime } from "../RelativeTime";
-import CommentInput from "../tabs/Activity/CommentInput";
 import { formatTimeAgo, formatTimestamp } from "../tabs/Activity/utils";
 
 export const replyCountLabel = (count: number) =>
@@ -135,7 +134,7 @@ function CommentDetails({
 						className="rounded-full bg-gray-3 px-2 py-0.5 text-xs text-gray-11 hover:bg-gray-4"
 						onClick={() => onSeek(timestamp)}
 					>
-						at {formatPlayerTime(timestamp).replace(/^0(?=\d:)/, "")}
+						at {formatClock(timestamp)}
 					</button>
 				)}
 				{onDelete && (
@@ -164,7 +163,7 @@ export const CommentCard = memo(function CommentCard({
 	isVideoOwner,
 	onSeek,
 	onDelete,
-	onReply,
+	renderReply,
 	viewerId,
 	recipient,
 	onSelectReply,
@@ -176,7 +175,7 @@ export const CommentCard = memo(function CommentCard({
 	isVideoOwner?: boolean;
 	onSeek?: (time: number) => void;
 	onDelete: DeleteComment;
-	onReply: (content: string, parent: CommentType) => Promise<void>;
+	renderReply?: (root: CommentType, cancel: () => void) => ReactNode;
 	viewerId?: string;
 	recipient?: CommentType;
 	onSelectReply?: (root: CommentType, recipient?: CommentType) => void;
@@ -186,7 +185,8 @@ export const CommentCard = memo(function CommentCard({
 	const [expanded, setExpanded] = useState<boolean>();
 	const hidden = Math.max(0, replies.length - 2);
 	const showAll =
-		expanded ?? replies.slice(0, hidden).some(({ id }) => id === focusedId);
+		(expanded ?? replies.slice(0, hidden).some(({ id }) => id === focusedId)) ||
+		replies.slice(0, hidden).some(({ id }) => id === flashId);
 	const canDelete = (entry: CommentType) =>
 		!entry.sending &&
 		(viewerId === entry.authorId || (isVideoOwner && entry.authorId === null));
@@ -195,14 +195,18 @@ export const CommentCard = memo(function CommentCard({
 		(isVideoOwner || !replies.some(({ authorId }) => authorId === null));
 	const activeId = flashId ?? focusedId;
 
+	const lastScroll = useRef<{ focused?: string; flashed?: string }>({});
 	useEffect(() => {
+		const kind = flashId ? "flashed" : "focused";
+		if (!activeId || lastScroll.current[kind] === activeId) return;
 		if (activeId !== comment.id && !replies.some(({ id }) => id === activeId))
 			return;
-		if (activeId)
-			document
-				.getElementById(`comment-${activeId}`)
-				?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
-	}, [activeId, comment.id, replies]);
+		const element = document.getElementById(`comment-${activeId}`);
+		if (element) {
+			lastScroll.current[kind] = activeId;
+			element.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+		}
+	}, [activeId, comment.id, replies, flashId]);
 
 	return (
 		<article
@@ -288,18 +292,7 @@ export const CommentCard = memo(function CommentCard({
 							<p className="mb-2 text-sm text-gray-10">
 								Replying to {nameOf(recipient)}
 							</p>
-							<CommentInput
-								key={recipient.id}
-								onSubmit={async (content) => {
-									await onReply(content, comment);
-									onSelectReply?.(comment);
-								}}
-								onCancel={() => onSelectReply?.(comment)}
-								buttonLabel="Send"
-								showCancelButton
-								autoFocus
-								placeholder="Write a reply…"
-							/>
+							{renderReply?.(comment, () => onSelectReply?.(comment))}
 						</div>
 					)}
 				</div>

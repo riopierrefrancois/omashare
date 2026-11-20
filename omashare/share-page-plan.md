@@ -104,14 +104,14 @@ Use Cap's own Tailwind tokens (`gray-1…gray-12`, `bg-white`, `border-gray-5`, 
 - [x] The toolbar and the reaction stamps on the video timeline don't change.
 
 ### Task B5: the comment box (bottom of the section)
-- [ ] A text box with placeholder "Write a comment at 1:13…", using the video's live current time. Above or inside it, a chip **at 1:13** with ✕ to comment without a time. That decides whether `timestamp` is sent.
-- [ ] Enter sends and Shift+Enter makes a new line, unless the existing composer does it differently (then keep that). Send is disabled while the box is empty or sending.
-- [ ] **Signed in:** their face, and the media record buttons exactly where `canRecordMedia` allows them today.
-- [ ] **Guest:** a **Your name** field. It is shown only until a name is saved, and the name is kept in `localStorage["omashare.guestName"]`. Once saved, show "Commenting as Sam · Change". There's also a hidden honeypot input named `website`, which a person never sees or fills.
-- [ ] Guests no longer get the sign-in overlay (`AuthOverlay`) when commenting or replying. Keep it only for things guests still can't do (media comments).
-- [ ] After sending, the new card appears at the top (optimistically, as today). The page scrolls it into view and flashes a ring for about 1.5 s. The box empties. On error, the words stay in the box and a toast says why (in the server's plain message).
-- [ ] With comments turned off: the section shows "Comments are turned off for this video." and no box.
-- [ ] No comments yet: "No comments yet. Be the first." above the box.
+- [x] A text box with placeholder "Write a comment at 1:13…", using the video's live current time. Above or inside it, a chip **at 1:13** with ✕ to comment without a time. That decides whether `timestamp` is sent.
+- [x] Enter sends and Shift+Enter makes a new line, unless the existing composer does it differently (then keep that). Send is disabled while the box is empty or sending.
+- [x] **Signed in:** their face, and the media record buttons exactly where `canRecordMedia` allows them today.
+- [x] **Guest:** a **Your name** field. It is shown only until a name is saved, and the name is kept in `localStorage["omashare.guestName"]`. Once saved, show "Commenting as Sam · Change". There's also a hidden honeypot input named `website`, which a person never sees or fills.
+- [x] Guests no longer get the sign-in overlay (`AuthOverlay`) when commenting or replying. Keep it only for things guests still can't do (media comments).
+- [x] After sending, the new card appears at the top (optimistically, as today). The page scrolls it into view and flashes a ring for about 1.5 s. The box empties. On error, the words stay in the box and a toast says why (in the server's plain message).
+- [x] With comments turned off: the section shows "Comments are turned off for this video." and no box.
+- [x] No comments yet: "No comments yet. Be the first." above the box.
 
 ### Phase B gate
 Biome on the touched files, `bun run typecheck`, and vitest for the touched and new tests. Add component tests where the repo already tests share page components:

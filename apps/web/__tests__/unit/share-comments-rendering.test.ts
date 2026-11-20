@@ -17,7 +17,11 @@ import { PlaybackProvider } from "@/app/s/[videoId]/_components/playback/Playbac
 import type { CommentType } from "@/app/s/[videoId]/Share";
 
 const mocks = vi.hoisted(() => ({
-	user: { id: "viewer", name: "Viewer", imageUrl: null },
+	user: { id: "viewer", name: "Viewer", imageUrl: null } as {
+		id: string;
+		name: string;
+		imageUrl: null;
+	} | null,
 	rowRenders: 0,
 	params: new URLSearchParams(),
 	post: vi.fn(),
@@ -28,7 +32,9 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/actions/videos/get-analytics", () => ({
 	getVideoAnalytics: vi.fn(),
 }));
-vi.mock("@/actions/videos/new-comment", () => ({ newComment: mocks.post }));
+vi.mock("@/actions/videos/new-comment", () => ({
+	postShareComment: mocks.post,
+}));
 vi.mock("@/actions/videos/delete-comment", () => ({
 	deleteComment: mocks.remove,
 }));
@@ -103,7 +109,6 @@ const seek = vi.fn();
 const optimistic = vi.fn();
 const success = vi.fn();
 const setComments = vi.fn();
-const showAuth = vi.fn();
 const onRender: ProfilerOnRenderCallback = (_id, phase, duration) => {
 	if (phase !== "mount") durations.push(duration);
 };
@@ -118,11 +123,12 @@ beforeEach(() => {
 			disconnect() {}
 		},
 	);
+	window.localStorage.clear();
 	mocks.params = new URLSearchParams();
 	mocks.rowRenders = 0;
 	mocks.user = { id: "viewer", name: "Viewer", imageUrl: null };
-	mocks.post.mockResolvedValue(comment("saved", "root-1"));
-	mocks.remove.mockResolvedValue(undefined);
+	mocks.post.mockResolvedValue({ comment: comment("saved", "root-1") });
+	mocks.remove.mockResolvedValue({ success: true });
 	Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
 		configurable: true,
 		value: vi.fn(),
@@ -157,7 +163,6 @@ async function render(onSeek = seek, disabled = false, isVideoOwner = false) {
 					setOptimisticComments: optimistic,
 					handleCommentSuccess: success,
 					setComments,
-					setShowAuthOverlay: showAuth,
 					commentsDisabled: disabled,
 					isVideoOwner,
 					onSeek,
@@ -292,7 +297,7 @@ describe("share comments rendering", () => {
 		mocks.rowRenders = 0;
 		await type(row("root-21").querySelector("textarea"), "A reply draft");
 		await type(
-			container.querySelector('textarea[placeholder="Leave a comment"]'),
+			container.querySelector("textarea#share-comment-draft"),
 			"A comment draft",
 		);
 		await act(async () => {
@@ -472,6 +477,7 @@ describe("share comments rendering", () => {
 		setComments.mockReset();
 		vi.spyOn(console, "error").mockImplementation(() => {});
 
+		await click(button("Show 1 earlier reply"));
 		await askDelete("reply-1");
 
 		expect(mocks.remove).toHaveBeenCalledWith({
@@ -490,14 +496,14 @@ describe("share comments rendering", () => {
 		"keeps a failed %s draft for retry and clears it only after saving",
 		async (kind) => {
 			comments = discussion(2);
-			const firstSave = Promise.withResolvers<ReturnType<typeof comment>>();
+			const firstSave = Promise.withResolvers<{ comment: CommentType }>();
 			mocks.post.mockReturnValueOnce(firstSave.promise);
 			vi.spyOn(console, "error").mockImplementation(() => {});
 			await render();
 			if (kind === "reply") await reply("root-1");
 			const input = container.querySelector("textarea");
 			if (!input) throw new Error("Missing comment editor");
-			const label = kind === "reply" ? "Send" : "Comment";
+			const label = "Send";
 			await type(input, "Please check the last frame.");
 			await click(button(label));
 			expect(mocks.post).toHaveBeenCalledOnce();
@@ -519,7 +525,7 @@ describe("share comments rendering", () => {
 				"Couldn't post your comment. Please try again.",
 			);
 			expect(success).not.toHaveBeenCalled();
-			const retry = Promise.withResolvers<ReturnType<typeof comment>>();
+			const retry = Promise.withResolvers<{ comment: CommentType }>();
 			mocks.post.mockReturnValueOnce(retry.promise);
 			await click(button(label));
 			expect(mocks.post).toHaveBeenLastCalledWith(
@@ -530,9 +536,9 @@ describe("share comments rendering", () => {
 				}),
 			);
 			const saved = comment("saved", kind === "reply" ? "root-1" : "");
-			await act(async () => retry.resolve(saved));
+			await act(async () => retry.resolve({ comment: saved }));
 			expect(success).toHaveBeenCalledExactlyOnceWith(
-				kind === "reply" ? expect.objectContaining(saved) : saved,
+				expect.objectContaining(saved),
 			);
 			if (kind === "comment") expect(input.value).toBe("");
 			else expect(input.isConnected).toBe(false);
@@ -542,14 +548,17 @@ describe("share comments rendering", () => {
 	it.each(["success", "failure"])(
 		"keeps the optimistic comment visible until save %s",
 		async (outcome) => {
-			const save = Promise.withResolvers<ReturnType<typeof comment>>();
+			const save = Promise.withResolvers<{ comment: CommentType }>();
 			mocks.post.mockReturnValueOnce(save.promise);
 			vi.spyOn(console, "error").mockImplementation(() => {});
 			function LiveComments() {
 				const [saved, setSaved] = useState([comment("existing")]);
 				const [pending, addPending] = useOptimistic(
 					saved,
-					(state, entry: CommentType) => [...state, entry],
+					(state, entry: CommentType) =>
+						state.some((saved) => saved.clientKey === entry.id)
+							? state
+							: [...state, entry],
 				);
 				return createElement(ShareComments, {
 					videoId: "video" as CommentType["videoId"],
@@ -557,25 +566,39 @@ describe("share comments rendering", () => {
 					setOptimisticComments: addPending,
 					handleCommentSuccess: (entry) => setSaved((prev) => [...prev, entry]),
 					setComments: setSaved,
-					setShowAuthOverlay: showAuth,
 					commentsDisabled: false,
 				});
 			}
-			await act(async () => root.render(createElement(LiveComments)));
+			const playbackProps = {
+				videoRef: { current: video },
+				stageRef: { current: null },
+				children: createElement(LiveComments),
+			};
+			await act(async () =>
+				root.render(createElement(PlaybackProvider, playbackProps)),
+			);
 			const input = container.querySelector("textarea");
 			if (!input) throw new Error("Missing comment editor");
 			await type(input, "Unsent draft");
-			await click(button("Comment"));
+			await click(button("Send"));
 			expect(contents().map((entry) => entry.text)).toContain("Unsent draft");
 			if (outcome === "success") {
 				await act(async () =>
-					save.resolve({ ...comment("saved"), content: "Unsent draft" }),
+					save.resolve({
+						comment: {
+							...comment("saved"),
+							content: "Unsent draft",
+							createdAt: new Date(),
+						},
+					}),
 				);
 				expect(contents()).toEqual([
-					{ id: "comment-existing", text: comment("existing").content },
 					{ id: "comment-saved", text: "Unsent draft" },
+					{ id: "comment-existing", text: comment("existing").content },
 				]);
 				expect(input.value).toBe("");
+				expect(row("saved").className).toContain("ring-2");
+				expect(row("saved").scrollIntoView).toHaveBeenCalled();
 			} else {
 				await act(async () => save.reject(new Error("Offline")));
 				expect(contents().map((entry) => entry.text)).not.toContain(
@@ -601,6 +624,82 @@ describe("share comments rendering", () => {
 		expect(contents()).toEqual([]);
 		await render(seek, true);
 		expect(container.querySelector("textarea")).toBeNull();
+	});
+
+	it("remembers a guest name for replies and future visits", async () => {
+		mocks.user = null;
+		comments = [comment("root"), comment("existing-reply", "root")];
+		mocks.post.mockResolvedValue({
+			comment: {
+				...comment("guest-saved", "root"),
+				authorId: null,
+				authorName: "Sam",
+			},
+		});
+		await render();
+		await reply("existing-reply");
+		const card = row("root");
+		const text = card.querySelector("textarea");
+		const name = card.querySelector<HTMLInputElement>(
+			'input[autocomplete="name"]',
+		);
+		if (!name) throw new Error("Missing name field");
+		expect(card.textContent).toContain("Replying to Reviewer");
+		await act(async () => {
+			const set = Object.getOwnPropertyDescriptor(
+				HTMLInputElement.prototype,
+				"value",
+			)?.set;
+			if (!set) throw new Error("Missing input setter");
+			set.call(name, "  Sam  ");
+			name.dispatchEvent(new Event("input", { bubbles: true }));
+		});
+		await type(text, "Thanks!");
+		await click(button("Send"));
+		expect(mocks.post).toHaveBeenCalledWith(
+			expect.objectContaining({
+				guestName: "Sam",
+				website: "",
+				parentCommentId: "root",
+			}),
+		);
+		expect(window.localStorage.getItem("omashare.guestName")).toBe("Sam");
+		expect(container.textContent).toContain("Commenting as Sam");
+		await act(async () => root.unmount());
+		root = createRoot(container);
+		await render();
+		expect(container.textContent).toContain("Commenting as Sam");
+		await click(button("Change"));
+		expect(
+			container.querySelector('input[autocomplete="name"]'),
+		).not.toBeNull();
+	});
+
+	it("uses the current playhead and lets guests send without a timestamp", async () => {
+		mocks.user = null;
+		window.localStorage.setItem("omashare.guestName", "Sam");
+		comments = [];
+		await render();
+		const field = container.querySelector("textarea");
+		expect(field?.placeholder).toBe("Write a comment at 0:42…");
+		await act(async () => {
+			video.currentTime = 73;
+			video.dispatchEvent(new Event("timeupdate"));
+		});
+		expect(field?.placeholder).toBe("Write a comment at 1:13…");
+		await click(button("at 1:13 ×"));
+		await type(field, "Untimed");
+		mocks.post.mockResolvedValueOnce({
+			error: "Feedback is disabled on this video",
+		});
+		await click(button("Send"));
+		expect(mocks.post).toHaveBeenCalledWith(
+			expect.objectContaining({ timestamp: null, guestName: "Sam" }),
+		);
+		expect(mocks.showError).toHaveBeenCalledWith(
+			"Feedback is disabled on this video",
+		);
+		expect(field?.value).toBe("Untimed");
 	});
 
 	it.skipIf(!process.env.CAP_COMMENTS_BENCH)(

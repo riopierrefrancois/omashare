@@ -76,7 +76,7 @@ vi.mock("@/lib/rate-limit", async (importOriginal) => ({
 	},
 }));
 
-import { newComment } from "@/actions/videos/new-comment";
+import { newComment, postShareComment } from "@/actions/videos/new-comment";
 
 const post = (
 	type: "text" | "emoji" = "text",
@@ -166,6 +166,20 @@ describe("guest comments", () => {
 			expect(mocks.inserted).toHaveLength(0);
 		},
 	);
+
+	it("returns validation messages to the share composer", async () => {
+		await expect(
+			postShareComment({
+				content: "hi",
+				videoId: "public-video" as never,
+				type: "text",
+				authorImage: null,
+				parentCommentId: "" as never,
+				timestamp: null,
+			}),
+		).resolves.toEqual({ error: "Please add your name." });
+		expect(mocks.inserted).toHaveLength(0);
+	});
 
 	it("refuses a filled honeypot", async () => {
 		await expect(

@@ -25,6 +25,9 @@ vi.mock("@/app/s/[videoId]/_components/tabs/SummaryEditor", () => ({
 }));
 
 vi.mock("@/app/Layout/AuthContext", () => ({ useCurrentUser: () => null }));
+vi.mock("@/app/s/[videoId]/_components/tabs/Transcript", () => ({
+	Transcript: () => React.createElement("div", null, "Transcript text"),
+}));
 vi.mock("next/dynamic", () => ({
 	default: (load: () => Promise<React.ComponentType>) => {
 		const Loaded = lazy(async () => ({ default: await load() }));
@@ -126,6 +129,56 @@ describe("Summary tab chapter settings", () => {
 		});
 		expect(container.textContent).toContain("No summary available");
 		expect(container.textContent).not.toContain("Hidden chapter");
+	});
+
+	it("defaults to Summary when both tabs are available and opens Transcript on request", async () => {
+		const props: ComponentProps<typeof Sidebar> = {
+			data: {
+				id: "video",
+				owner: { id: "owner", isPro: true },
+			} as ComponentProps<typeof Sidebar>["data"],
+			hasSummary: true,
+			hasTranscript: true,
+			aiData: { summary: "Visible summary" },
+		};
+		await act(async () => {
+			root.render(React.createElement(Sidebar, props));
+			await vi.dynamicImportSettled();
+		});
+		expect(container.querySelector('[aria-pressed="true"]')?.textContent).toBe(
+			"Summary",
+		);
+		const transcript = Array.from(container.querySelectorAll("button")).find(
+			(button) => button.textContent === "Transcript",
+		);
+		await act(async () => {
+			transcript?.click();
+			await vi.dynamicImportSettled();
+		});
+		expect(container.textContent).toContain("Transcript text");
+		expect(container.textContent).not.toContain("Visible summary");
+	});
+
+	it("shows chapters when the summary is disabled", async () => {
+		const props: ComponentProps<typeof Sidebar> = {
+			data: {
+				id: "video",
+				owner: { id: "owner", isPro: true },
+			} as ComponentProps<typeof Sidebar>["data"],
+			hasSummary: true,
+			hasTranscript: false,
+			isSummaryDisabled: true,
+			aiData: {
+				summary: "Hidden summary",
+				chapters: [{ title: "Visible chapter", start: 0 }],
+			},
+		};
+		await act(async () => {
+			root.render(React.createElement(Sidebar, props));
+			await vi.dynamicImportSettled();
+		});
+		expect(container.textContent).toContain("Visible chapter");
+		expect(container.textContent).not.toContain("Hidden summary");
 	});
 
 	it.each([

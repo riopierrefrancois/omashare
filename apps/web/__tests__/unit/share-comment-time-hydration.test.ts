@@ -60,7 +60,6 @@ const commentTree = (serverNow: number | null) => {
 	const node = createElement(CommentCard, {
 		comment,
 		replies: [],
-		onReply: async () => undefined,
 		onDelete: async () => true,
 	});
 	return serverNow === null
