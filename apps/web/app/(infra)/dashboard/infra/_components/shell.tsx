@@ -258,7 +258,7 @@ export function Shell({
 					)}
 					<div className="flex items-center justify-between px-2 pb-1">
 						<Link
-							href="/docs/api/rest-api"
+							href="/openapi.json"
 							onNavigate={askBeforeLeaving}
 							className={QUIET_LINK}
 						>

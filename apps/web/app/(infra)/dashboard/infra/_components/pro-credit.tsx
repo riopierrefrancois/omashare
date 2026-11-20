@@ -47,7 +47,10 @@ export function ProCredit({
 		return (
 			<p className={NOTE}>
 				Cap Pro includes $5 of Infra credit every month.{" "}
-				<Link href="/pricing" className={TEXT_LINK}>
+				<Link
+					href="/dashboard/settings/organization/billing"
+					className={TEXT_LINK}
+				>
 					See Cap Pro
 				</Link>
 			</p>

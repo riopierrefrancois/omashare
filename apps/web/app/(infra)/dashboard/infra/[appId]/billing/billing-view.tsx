@@ -196,7 +196,7 @@ export function BillingView({
 						the day's figures become final.{" "}
 						{`${deliveryBilledFromText(deliveryBilledFrom ?? INFRA_DELIVERY_BILLED_FROM)} `}
 						<Link
-							href="/docs/api/billing"
+							href="/dashboard/settings/organization/billing"
 							className={clsx(TEXT_LINK, FOCUS, "rounded-[4px]")}
 						>
 							How billing works

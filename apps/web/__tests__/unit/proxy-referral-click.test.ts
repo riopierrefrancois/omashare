@@ -1,6 +1,9 @@
 import { NextRequest } from "next/server";
+import { encode } from "next-auth/jwt";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { proxy } from "../../proxy";
+
+const sessionKey = vi.hoisted(() => "test-session-signing-key");
 
 const mocks = vi.hoisted(() => ({ isCap: "true" as string | undefined }));
 
@@ -20,6 +23,7 @@ vi.mock("@cap/env", () => ({
 	},
 	serverEnv: () => ({
 		WEB_URL: "https://cap.so",
+		NEXTAUTH_SECRET: sessionKey,
 		VERCEL_URL_HOST: undefined,
 		VERCEL_BRANCH_URL_HOST: undefined,
 		VERCEL_PROJECT_PRODUCTION_URL_HOST: undefined,
@@ -63,10 +67,15 @@ describe("proxy referral click capture", () => {
 	);
 
 	it("keeps the click when a signed-in visitor is redirected to the dashboard", async () => {
+		const token = await encode({
+			secret: sessionKey,
+			token: { sub: "viewer" },
+		});
 		const response = await send("https://cap.so/?dub_id=click_1", {
-			headers: { cookie: "next-auth.session-token=abc" },
+			headers: { cookie: `next-auth.session-token=${token}` },
 		});
 		expect(response.status).toBe(307);
+		expect(response.headers.get("location")).toBe("https://cap.so/dashboard");
 		expect(clickCookie(response)).toContain("dub_id=click_1");
 	});
 

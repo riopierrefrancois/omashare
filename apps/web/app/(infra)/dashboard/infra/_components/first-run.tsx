@@ -46,7 +46,7 @@ export function FirstRun({
 			<header className="mx-auto flex h-14 w-full max-w-[1184px] items-center justify-between px-5 sm:px-8">
 				<Brand />
 				<nav aria-label="Cap Infra" className="flex items-center">
-					<Link href="/docs/api/rest-api" className={QUIET_LINK}>
+					<Link href="/openapi.json" className={QUIET_LINK}>
 						Docs
 					</Link>
 					<Link href="/dashboard/caps" className={QUIET_LINK}>

@@ -17,7 +17,7 @@ import { PlanDoodle } from "../_components/doodles";
 import { SettingsRow, StatusChip } from "../_components/settings-ui";
 
 export function BillingSummaryCard() {
-	const { activeOrganization, setUpgradeModalOpen } = useDashboardContext();
+	const { activeOrganization } = useDashboardContext();
 	const router = useRouter();
 	const [billingLoading, setBillingLoading] = useState(false);
 	const organizationId = activeOrganization?.organization.id;
@@ -70,26 +70,7 @@ export function BillingSummaryCard() {
 		);
 	}
 
-	if (!subscription) {
-		return (
-			<SettingsRow
-				icon={icon}
-				title="Upgrade to Cap Pro"
-				description="Get unlimited sharing, custom domains, Cap AI, and more."
-				control={
-					<Button
-						type="button"
-						size="xs"
-						variant="dark"
-						className="px-4"
-						onClick={() => setUpgradeModalOpen(true)}
-					>
-						Upgrade to Pro
-					</Button>
-				}
-			/>
-		);
-	}
+	if (!subscription) return null;
 
 	const pastDue = subscription.status === "past_due";
 	const canceling = subscription.cancelAtPeriodEnd && !pastDue;

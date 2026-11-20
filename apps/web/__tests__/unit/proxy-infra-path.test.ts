@@ -59,7 +59,7 @@ describe("the address the Infra console is told it renders for", () => {
 		).toBe("/dashboard/infra/a1/keys");
 	});
 
-	it.each(["/dashboard/caps", "/pricing", "/dashboard/infrastructure"])(
+	it.each(["/dashboard/caps", "/s/example", "/dashboard/infrastructure"])(
 		"is not sent for %s",
 		async (path) => {
 			expect(await forwarded(path)).toBeNull();

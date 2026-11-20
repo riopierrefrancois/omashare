@@ -36,13 +36,9 @@ import { markAsRead } from "@/actions/notifications/mark-as-read";
 import Notifications from "@/app/(org)/dashboard/_components/Notifications";
 import { resetUser } from "@/app/utils/analytics";
 import { FontAwesomeIcon } from "@/components/FontAwesomeIcon";
-import { LazyUpgradeModal } from "@/components/LazyUpgradeModal";
 import { SignedImageUrl } from "@/components/SignedImageUrl";
 import { useDashboardContext, useTheme } from "../../Contexts";
 import {
-	ArrowUpIcon,
-	DownloadIcon,
-	HomeIcon,
 	LogoutIcon,
 	MessageCircleMoreIcon,
 	ReferIcon,
@@ -267,7 +263,6 @@ const Top = () => {
 
 const User = () => {
 	const [menuOpen, setMenuOpen] = useState(false);
-	const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 	const { user } = useDashboardContext();
 	const { theme, setThemeHandler } = useTheme();
 	const nextTheme = theme === "light" ? "dark" : "light";
@@ -276,24 +271,6 @@ const User = () => {
 
 	const menuItems = useMemo(
 		() => [
-			{
-				name: "Homepage",
-				icon: <HomeIcon />,
-				href: "/home",
-				onClick: () => setMenuOpen(false),
-				iconClassName: "text-gray-11 group-hover:text-gray-12",
-				showCondition: true,
-			},
-			{
-				name: "Upgrade to Pro",
-				icon: <ArrowUpIcon />,
-				onClick: () => {
-					setMenuOpen(false);
-					setUpgradeModalOpen(true);
-				},
-				iconClassName: "text-amber-400 group-hover:text-amber-500",
-				showCondition: buildEnv.NEXT_PUBLIC_IS_CAP && !user.isPro,
-			},
 			{
 				name: "Earn 40% Referral",
 				icon: <ReferIcon />,
@@ -306,13 +283,6 @@ const User = () => {
 				name: "Chat Support",
 				icon: <MessageCircleMoreIcon />,
 				onClick: () => window.open("https://cap.link/discord", "_blank"),
-				iconClassName: "text-gray-11 group-hover:text-gray-12",
-				showCondition: true,
-			},
-			{
-				name: "Download App",
-				icon: <DownloadIcon />,
-				onClick: () => window.open("https://cap.so/download", "_blank"),
 				iconClassName: "text-gray-11 group-hover:text-gray-12",
 				showCondition: true,
 			},
@@ -352,58 +322,52 @@ const User = () => {
 				showCondition: true,
 			},
 		],
-		[nextTheme, setThemeHandler, themeLabel, user.isPro],
+		[nextTheme, setThemeHandler, themeLabel],
 	);
 
 	return (
-		<>
-			<LazyUpgradeModal
-				open={upgradeModalOpen}
-				onOpenChange={setUpgradeModalOpen}
-			/>
-			<Popover open={menuOpen} onOpenChange={setMenuOpen}>
-				<PopoverTrigger asChild>
-					<div
-						data-state={menuOpen ? "open" : "closed"}
-						className="flex gap-2 justify-between items-center py-1 pr-1.5 pl-1 ml-1 rounded-full transition-colors cursor-pointer data-[state=open]:bg-gray-3 group lg:gap-1.5 hover:bg-gray-3"
-					>
-						<div className="flex items-center">
-							<SignedImageUrl
-								image={user.imageUrl}
-								name={user.name ?? "User"}
-								letterClass="text-xs lg:text-md"
-								className="flex-shrink-0 size-6 text-gray-12"
-							/>
-							<span className="ml-2 text-sm font-medium truncate text-gray-12 max-w-[96px] sm:max-w-[160px]">
-								{user.name ?? "User"}
-							</span>
-						</div>
-						<MoreVertical
-							data-state={menuOpen ? "open" : "closed"}
-							className="size-4 data-[state=open]:text-gray-12 transition-colors text-gray-9 group-hover:text-gray-12"
+		<Popover open={menuOpen} onOpenChange={setMenuOpen}>
+			<PopoverTrigger asChild>
+				<div
+					data-state={menuOpen ? "open" : "closed"}
+					className="flex gap-2 justify-between items-center py-1 pr-1.5 pl-1 ml-1 rounded-full transition-colors cursor-pointer data-[state=open]:bg-gray-3 group lg:gap-1.5 hover:bg-gray-3"
+				>
+					<div className="flex items-center">
+						<SignedImageUrl
+							image={user.imageUrl}
+							name={user.name ?? "User"}
+							letterClass="text-xs lg:text-md"
+							className="flex-shrink-0 size-6 text-gray-12"
 						/>
+						<span className="ml-2 text-sm font-medium truncate text-gray-12 max-w-[96px] sm:max-w-[160px]">
+							{user.name ?? "User"}
+						</span>
 					</div>
-				</PopoverTrigger>
-				<PopoverContent align="end" className="p-1 w-52">
-					<Command>
-						<CommandGroup>
-							{menuItems
-								.filter((item) => item.showCondition)
-								.map((item, index) => (
-									<MenuItem
-										key={index.toString()}
-										icon={item.icon}
-										name={item.name}
-										href={"href" in item ? item.href : undefined}
-										onClick={item.onClick}
-										iconClassName={item.iconClassName}
-									/>
-								))}
-						</CommandGroup>
-					</Command>
-				</PopoverContent>
-			</Popover>
-		</>
+					<MoreVertical
+						data-state={menuOpen ? "open" : "closed"}
+						className="size-4 data-[state=open]:text-gray-12 transition-colors text-gray-9 group-hover:text-gray-12"
+					/>
+				</div>
+			</PopoverTrigger>
+			<PopoverContent align="end" className="p-1 w-52">
+				<Command>
+					<CommandGroup>
+						{menuItems
+							.filter((item) => item.showCondition)
+							.map((item, index) => (
+								<MenuItem
+									key={index.toString()}
+									icon={item.icon}
+									name={item.name}
+									href={"href" in item ? item.href : undefined}
+									onClick={item.onClick}
+									iconClassName={item.iconClassName}
+								/>
+							))}
+					</CommandGroup>
+				</Command>
+			</PopoverContent>
+		</Popover>
 	);
 };
 

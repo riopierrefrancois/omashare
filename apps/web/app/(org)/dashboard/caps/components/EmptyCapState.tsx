@@ -1,10 +1,7 @@
 "use client";
 
-import { Button } from "@cap/ui";
-import { faDownload } from "@fortawesome/free-solid-svg-icons/faDownload";
 import { useCapChromeExtension } from "hooks/useCapChromeExtension";
 import { ChromeRecorderButton } from "@/components/ChromeRecorderButton";
-import { FontAwesomeIcon } from "@/components/FontAwesomeIcon";
 import { CHROME_EXTENSION_BUTTON_CLASS } from "@/lib/chrome-extension";
 import { useRive } from "@/lib/rive";
 import { useTheme } from "../../Contexts";
@@ -39,15 +36,6 @@ export const EmptyCapState: React.FC<EmptyCapStateProps> = ({ userName }) => {
 					</p>
 				</div>
 				<div className="flex flex-wrap gap-2 justify-center items-center mt-4">
-					<Button
-						href="/download"
-						className="flex relative gap-2 justify-center items-center px-4 h-9"
-						size="sm"
-						variant="dark"
-					>
-						<FontAwesomeIcon className="size-3.5" icon={faDownload} />
-						Download Cap
-					</Button>
 					<WebRecorderDialog />
 					{showChromeButton && (
 						<ChromeRecorderButton

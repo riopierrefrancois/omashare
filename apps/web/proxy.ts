@@ -11,16 +11,12 @@ import { buildEnv, serverEnv } from "@cap/env";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { type NextRequest, NextResponse, userAgent } from "next/server";
-import {
-	agentMarkdownResponse,
-	DOCS_MARKDOWN_ROUTE,
-	docsMarkdownSlug,
-	INFRA_MARKDOWN_ROUTE,
-	isInfraMarkdownRequest,
-} from "@/lib/agent-markdown";
+import { getToken } from "next-auth/jwt";
+import { agentMarkdownResponse } from "@/lib/agent-markdown";
 import { restrictEmbedFraming } from "@/lib/developer-embed-origins";
 import { embedPlaybackId } from "@/lib/infra-embed-ancestors";
 import { INFRA_PATH_HEADER, isInfraPathname } from "@/lib/infra-routes";
+import { productRedirect } from "@/lib/product-routes";
 import { getShareIframeRedirectUrl } from "@/lib/share-iframe-navigation";
 
 const addHttps = (s?: string) => {
@@ -149,7 +145,7 @@ export async function proxy(request: NextRequest) {
 
 	if (path.startsWith(DUB_PROXY_PREFIX)) return proxyDub(request);
 
-	if (path.startsWith("/login")) {
+	if (path === "/login" || path.startsWith("/login/")) {
 		return rememberReferralClick(request, setFrameHeaders(NextResponse.next()));
 	}
 
@@ -169,8 +165,23 @@ async function route(request: NextRequest) {
 	const url = new URL(request.url);
 	const path = url.pathname;
 
-	if (path === "/" && request.cookies.has("next-auth.session-token")) {
-		return NextResponse.redirect(new URL("/dashboard/caps", url.origin));
+	if (!isPublicAsset(path) && productRedirect(path, false)) {
+		const signedIn = Boolean(
+			await getToken({
+				req: request,
+				secret: serverEnv().NEXTAUTH_SECRET,
+				cookieName: "next-auth.session-token",
+			}),
+		);
+		const destination = productRedirect(path, signedIn);
+		if (destination) {
+			const response = NextResponse.redirect(
+				new URL(destination, url.origin),
+				307,
+			);
+			response.headers.set("Cache-Control", "private, no-store");
+			return response;
+		}
 	}
 
 	const shareIframeRedirectUrl = getShareIframeRedirectUrl({
@@ -187,58 +198,15 @@ async function route(request: NextRequest) {
 
 	const hostname = url.hostname;
 
-	if (buildEnv.NEXT_PUBLIC_IS_CAP !== "true") {
-		// Files under public/ have no route of their own, so without this every
-		// <img src="/logos/..."> on a self-hosted instance redirects to /login.
-		if (
-			!(
-				isPublicAsset(path) ||
-				path.startsWith("/s/") ||
-				path.startsWith("/c/") ||
-				path.startsWith("/cli/") ||
-				path.startsWith("/mcp/") ||
-				path.startsWith("/middleware") ||
-				path.startsWith("/dashboard") ||
-				path.startsWith("/onboarding") ||
-				path.startsWith("/api") ||
-				path.startsWith("/login") ||
-				path.startsWith("/signup") ||
-				path.startsWith("/invite") ||
-				path.startsWith("/self-hosting") ||
-				path.startsWith("/download") ||
-				path.startsWith("/terms") ||
-				path.startsWith("/verify-otp") ||
-				path.startsWith("/embed/") ||
-				path.startsWith(DEVELOPER_VIDEO_PREFIX) ||
-				path.startsWith("/.well-known/workflow/") ||
-				path.startsWith("/.well-known/oauth-") ||
-				path.startsWith("/.well-known/mcp") ||
-				path === "/.well-known/api-catalog" ||
-				path === "/openapi.json"
-			) &&
-			process.env.NODE_ENV !== "development"
+	if (buildEnv.NEXT_PUBLIC_IS_CAP !== "true") return serve(request);
+
+	if (
+		mainOrigins.some(
+			(origin) =>
+				url.origin === origin ||
+				(origin === "http://localhost" && url.hostname === "localhost"),
 		)
-			return NextResponse.redirect(new URL("/login", url.origin));
-		else return serve(request);
-	}
-
-	if (mainOrigins.some((d) => url.origin.startsWith(d))) {
-		const docsSlug =
-			request.method === "GET" || request.method === "HEAD"
-				? docsMarkdownSlug(path, request.headers.get("accept"))
-				: null;
-		if (docsSlug) {
-			return NextResponse.rewrite(
-				new URL(`${DOCS_MARKDOWN_ROUTE}/${docsSlug}`, url.origin),
-			);
-		}
-		if (
-			(request.method === "GET" || request.method === "HEAD") &&
-			isInfraMarkdownRequest(path, request.headers.get("accept"))
-		) {
-			return NextResponse.rewrite(new URL(INFRA_MARKDOWN_ROUTE, url.origin));
-		}
-
+	) {
 		const markdown = await agentMarkdownResponse(request, { isPublicAsset });
 		if (!markdown) return serve(request);
 		return new NextResponse(markdown.body, {

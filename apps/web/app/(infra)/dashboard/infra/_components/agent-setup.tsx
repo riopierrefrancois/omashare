@@ -36,7 +36,7 @@ export function AgentSetup({ compact = false }: { compact?: boolean }) {
 					variant={compact ? "ghost" : "primary"}
 				/>
 				<Link
-					href="/docs/api/rest-api"
+					href="/openapi.json"
 					className={clsx(
 						TEXT_LINK,
 						"text-[13px] text-[rgba(232,236,244,0.58)]",

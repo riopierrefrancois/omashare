@@ -144,41 +144,6 @@ const nextConfig = {
 			},
 		];
 	},
-	async redirects() {
-		return [
-			{
-				source: "/roadmap",
-				destination:
-					"https://capso.notion.site/7aac740edeee49b5a23be901a7cb734e?v=9d4a3bf3d72d488cad9b899ab73116a1",
-				permanent: true,
-			},
-			{
-				source: "/obs-alternative",
-				destination: "/",
-				permanent: true,
-			},
-			{
-				source: "/updates",
-				destination: "/blog",
-				permanent: true,
-			},
-			{
-				source: "/updates/:slug",
-				destination: "/blog/:slug",
-				permanent: true,
-			},
-			{
-				source: "/docs/api",
-				destination: "/docs/api/get-started",
-				permanent: false,
-			},
-			{
-				source: "/docs/api.md",
-				destination: "/docs/api/get-started.md",
-				permanent: false,
-			},
-		];
-	},
 	env: {
 		appVersion: version,
 	},

@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { NextRequest } from "next/server";
 import { describe, expect, it, vi } from "vitest";
 import { proxy } from "../../proxy";
@@ -40,10 +38,8 @@ const expectLoginRedirect = async (path: string) => {
 };
 
 describe("self-hosted proxy routes", () => {
-	it("allows browser-based CLI authorization pages", () => {
-		const source = readFileSync(join(process.cwd(), "proxy.ts"), "utf8");
-		expect(source).toContain('path.startsWith("/cli/")');
-	});
+	it("allows browser-based CLI authorization pages", () =>
+		expectServed("/cli/authorize"));
 
 	it.each([
 		"/logos/browsers/google-chrome.svg",
@@ -60,8 +56,7 @@ describe("self-hosted proxy routes", () => {
 	it("still redirects page routes to /login", () =>
 		expectLoginRedirect("/pricing"));
 
-	it("still redirects extension-suffixed route handlers to /login", () =>
-		expectLoginRedirect("/install-cli.sh"));
+	it("keeps the CLI install route", () => expectServed("/install-cli.sh"));
 
 	it("does not let a missing file through", () =>
 		expectLoginRedirect("/logos/missing.svg"));

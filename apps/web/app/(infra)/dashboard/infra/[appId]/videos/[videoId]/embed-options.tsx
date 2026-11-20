@@ -108,7 +108,7 @@ export function EmbedOptions({
 				Corner radius, a quality cap, hiding other buttons and events your page
 				can listen to are in{" "}
 				<Link
-					href="/docs/api/rest-api#embed-options"
+					href="/openapi.json"
 					className={clsx(TEXT_LINK, FOCUS, "rounded-[2px]")}
 				>
 					Embed Options

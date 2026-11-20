@@ -38,12 +38,12 @@ Same as `omashare/share-page-plan.md`:
 ## Phase D: routes, brand settings, OmaShare chrome
 
 ### Task D1: inventory, then remove the marketing site
-- [ ] Write `omashare/route-inventory.md`. List every route group and top-level route under `apps/web/app`, each marked **keep** (the product needs it) or **drop** (marketing or docs). Keep `/s`, `/embed`, `/login`, sign-up/verify routes, `/dashboard`, `/onboarding`, `/invite`, `/api`, `/c` if the product uses it, `robots.ts`, `sitemap.ts`, and everything Next needs. Anything you're unsure of goes under keep, with a note.
-- [ ] In the existing proxy/middleware (`proxy.ts`), redirect every **drop** path to `/dashboard`, or to `/login` when signed out. Use a 307, so nothing is cached for good. `/` behaves the same.
+- [x] Write `omashare/route-inventory.md`. List every route group and top-level route under `apps/web/app`, each marked **keep** (the product needs it) or **drop** (marketing or docs). Keep `/s`, `/embed`, `/login`, sign-up/verify routes, `/dashboard`, `/onboarding`, `/invite`, `/api`, `/c` if the product uses it, `robots.ts`, `sitemap.ts`, and everything Next needs. Anything you're unsure of goes under keep, with a note.
+- [x] In the existing proxy/middleware (`proxy.ts`), redirect every **drop** path to `/dashboard`, or to `/login` when signed out. Use a 307, so nothing is cached for good. `/` behaves the same.
   - `robots.ts`: disallow everything except `/s/` and `/embed/`.
   - `sitemap.ts`: empty.
   - Do not delete the route files in this task.
-- [ ] Remove links into dropped pages from kept pages:
+- [x] Remove links into dropped pages from kept pages:
   - the "Get Cap free"/"Log in" signed-out nav on the share page (`ShareHeader.tsx`, `SIGNED_OUT_LINKS`)
   - "Download Cap"
   - "Cap Pro" / "Upgrade" upsell cards and buttons in the dashboard

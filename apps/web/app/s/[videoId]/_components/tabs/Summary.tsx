@@ -186,14 +186,6 @@ export const Summary: React.FC<SummaryProps> = ({
 							automatic titles, video summaries, and intelligent chapter
 							generation.
 						</p>
-						<Button
-							href="/pricing"
-							variant="primary"
-							size="sm"
-							className="mx-auto"
-						>
-							Upgrade to Cap Pro
-						</Button>
 					</div>
 				</div>
 			</div>

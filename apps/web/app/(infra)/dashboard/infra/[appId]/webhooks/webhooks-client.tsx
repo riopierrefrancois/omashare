@@ -153,7 +153,7 @@ export function WebhooksClient({
 					<>
 						Cap sends a signed POST to your server when a video is ready or
 						fails.{" "}
-						<Link href="/docs/api/webhooks" className={TEXT_LINK}>
+						<Link href="/openapi.json" className={TEXT_LINK}>
 							Verify the signature
 						</Link>
 						.

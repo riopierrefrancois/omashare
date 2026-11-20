@@ -77,7 +77,7 @@ export function ApiGuide() {
 							your secret key returns <Endpoint>ready: true</Endpoint> and the
 							playback links once the video has processed. The full reference is
 							in the{" "}
-							<Link href="/docs/api/rest-api" className={TEXT_LINK}>
+							<Link href="/openapi.json" className={TEXT_LINK}>
 								API docs
 							</Link>
 							.
