@@ -2,3 +2,8 @@ target
 crates
 **/node_modules
 **/.next
+# OmaShare: local secrets and overrides never go into an image build
+.env
+.env.*
+!.env.example
+docker-compose.override.yml
