@@ -8,6 +8,7 @@ import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { newComment, postShareComment } from "@/actions/videos/new-comment";
 import { GuestCommentNameProvider } from "@/app/s/[videoId]/_components/comments/GuestCommentName";
+import { PlaybackProvider } from "@/app/s/[videoId]/_components/playback/PlaybackContext";
 import { Toolbar } from "@/app/s/[videoId]/_components/Toolbar";
 import CommentInput from "@/app/s/[videoId]/_components/tabs/Activity/CommentInput";
 import { TimelineComposer } from "@/app/s/[videoId]/_components/timeline/TimelineComposer";
@@ -15,6 +16,7 @@ import {
 	TimelineProvider,
 	useTimelineActions,
 } from "@/app/s/[videoId]/_components/timeline/TimelineProvider";
+import TimelineView from "@/app/s/[videoId]/_components/timeline/TimelineView";
 
 vi.mock("@/actions/videos/new-comment", () => ({
 	newComment: vi.fn(),
@@ -31,6 +33,9 @@ const auth = vi.hoisted(() => ({
 }));
 vi.mock("@/app/Layout/AuthContext", () => ({
 	useCurrentUser: () => auth.user,
+}));
+vi.mock("hooks/use-transcript", () => ({
+	useTranscript: () => ({ data: undefined }),
 }));
 vi.mock("next/dynamic", () => ({ default: () => () => null }));
 vi.mock("@/app/s/[videoId]/_components/AuthOverlayLazy", () => ({
@@ -418,6 +423,44 @@ it("posts a guest comment at the strip anchor and keeps focus", async () => {
 	expect(document.activeElement).toBe(input);
 	expect(input.value).toBe("");
 });
+it("shows the timeline comment button on desktop with a hover pointer", async () => {
+	vi.stubGlobal("matchMedia", (query: string) => ({
+		matches:
+			query === "(min-width: 1024px)" ||
+			query === "(hover: hover) and (pointer: fine)",
+		addEventListener: () => undefined,
+		removeEventListener: () => undefined,
+	}));
+	const player = document.createElement("video");
+	player.currentTime = 37;
+	vi.spyOn(player, "pause").mockImplementation(() => undefined);
+	container.before(player);
+	const playbackProps = {
+		videoRef: { current: player },
+		stageRef: { current: null },
+		fallbackDuration: 60,
+		children: createElement(TimelineView, { videoId, comments: [] }),
+	};
+	const guestProps = {
+		children: createElement(PlaybackProvider, playbackProps),
+	};
+	try {
+		await act(async () =>
+			root.render(createElement(GuestCommentNameProvider, guestProps)),
+		);
+		const trigger = container.querySelector<HTMLButtonElement>(
+			'button[aria-label="Comment at current time"]',
+		);
+		expect(trigger).not.toBeNull();
+		await act(async () => trigger?.click());
+		expect(document.activeElement?.getAttribute("aria-label")).toBe(
+			"Comment at 0:37",
+		);
+	} finally {
+		player.remove();
+	}
+});
+
 it("says so when a toolbar reaction fails to post", async () => {
 	vi.mocked(newComment).mockRejectedValueOnce(new Error("Offline"));
 	vi.spyOn(console, "error").mockImplementation(() => {});

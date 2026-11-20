@@ -523,29 +523,22 @@ function TimelineBand({
 						ref={controlsSlotRef}
 						className="relative h-full min-w-0 flex-1"
 					/>
-					{/*
-					 * Touch replacement for the hover ghost: without a hover pointer
-					 * (or below lg) there is no "add here" affordance on the strip, so
-					 * the bar carries one that opens the composer at the playhead.
-					 */}
-					{!(hasHover && !compact) && (
-						<button
-							type="button"
-							aria-label="Comment at current time"
-							title="Comment at current time"
-							onClick={() => handleAddAtTime(playback.getCurrentTime())}
-							className="flex size-8 shrink-0 items-center justify-center rounded-full text-gray-10 transition-colors hover:bg-gray-3 hover:text-gray-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-9"
+					<button
+						type="button"
+						aria-label="Comment at current time"
+						title="Comment at current time"
+						onClick={() => handleAddAtTime(playback.getCurrentTime())}
+						className="flex size-8 shrink-0 items-center justify-center rounded-full text-gray-10 transition-colors hover:bg-gray-3 hover:text-gray-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-9"
+					>
+						<svg
+							viewBox="0 0 16 16"
+							className="size-4 fill-current"
+							aria-hidden
 						>
-							<svg
-								viewBox="0 0 16 16"
-								className="size-4 fill-current"
-								aria-hidden
-							>
-								<title>Add comment</title>
-								<path d="M8 1.5c-3.6 0-6.5 2.5-6.5 5.6 0 1.8 1 3.4 2.5 4.4-.1.8-.5 1.6-1.1 2.3-.2.2 0 .6.3.6 1.4-.1 2.6-.6 3.5-1.3.4.1.8.1 1.3.1 3.6 0 6.5-2.5 6.5-5.6S11.6 1.5 8 1.5Zm.6 3.4v1.5h1.5a.6.6 0 1 1 0 1.2H8.6v1.5a.6.6 0 1 1-1.2 0V7.6H5.9a.6.6 0 1 1 0-1.2h1.5V4.9a.6.6 0 1 1 1.2 0Z" />
-							</svg>
-						</button>
-					)}
+							<title>Add comment</title>
+							<path d="M8 1.5c-3.6 0-6.5 2.5-6.5 5.6 0 1.8 1 3.4 2.5 4.4-.1.8-.5 1.6-1.1 2.3-.2.2 0 .6.3.6 1.4-.1 2.6-.6 3.5-1.3.4.1.8.1 1.3.1 3.6 0 6.5-2.5 6.5-5.6S11.6 1.5 8 1.5Zm.6 3.4v1.5h1.5a.6.6 0 1 1 0 1.2H8.6v1.5a.6.6 0 1 1-1.2 0V7.6H5.9a.6.6 0 1 1 0-1.2h1.5V4.9a.6.6 0 1 1 1.2 0Z" />
+						</svg>
+					</button>
 					<TimelineZoomControls />
 				</div>
 			</div>

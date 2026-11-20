@@ -137,7 +137,7 @@ PF found there's no visible way to comment in the Timeline view. Stock Cap only 
 - [x] Same focus rule as the bottom box: after sending, focus doesn't fall to `<body>`.
 
 ### Task C3: the "comment here" button is always visible
-- [ ] The control bar's "Comment at current time" button in `TimelineView.tsx` shows on every screen, not only on touch or compact ones. It opens the strip composer at the playhead, as it does today.
+- [x] The control bar's "Comment at current time" button in `TimelineView.tsx` shows on every screen, not only on touch or compact ones. It opens the strip composer at the playhead, as it does today.
 
 ### Phase C gate
 Biome on the touched files, `bun run typecheck`, and vitest for the touched and new tests. Add tests for:
