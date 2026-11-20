@@ -1,5 +1,12 @@
 import clsx from "clsx";
-import { memo, type ReactNode, useEffect, useRef, useState } from "react";
+import {
+	memo,
+	type ReactNode,
+	useEffect,
+	useLayoutEffect,
+	useRef,
+	useState,
+} from "react";
 import { LinkifiedText } from "@/components/LinkifiedText";
 import { SignedImageUrl } from "@/components/SignedImageUrl";
 import { formatClock } from "@/lib/player-time";
@@ -182,6 +189,17 @@ export const CommentCard = memo(function CommentCard({
 	focusedId?: string | null;
 	flashId?: string | null;
 }) {
+	const rootReply = useRef<HTMLButtonElement>(null);
+	const returnTo = useRef<HTMLButtonElement | null>(null);
+	const restoreReplyFocus = useRef(false);
+	useLayoutEffect(() => {
+		if (recipient || !restoreReplyFocus.current) return;
+		restoreReplyFocus.current = false;
+		(returnTo.current?.isConnected
+			? returnTo.current
+			: rootReply.current
+		)?.focus();
+	}, [recipient]);
 	const [expanded, setExpanded] = useState<boolean>();
 	const hidden = Math.max(0, replies.length - 2);
 	const showAll =
@@ -228,7 +246,11 @@ export const CommentCard = memo(function CommentCard({
 					<button
 						type="button"
 						className={quietButton}
-						onClick={() => onSelectReply?.(comment, comment)}
+						ref={rootReply}
+						onClick={(event) => {
+							returnTo.current = event.currentTarget;
+							onSelectReply?.(comment, comment);
+						}}
 					>
 						Reply
 					</button>
@@ -279,7 +301,10 @@ export const CommentCard = memo(function CommentCard({
 									<button
 										type="button"
 										className={quietButton}
-										onClick={() => onSelectReply?.(comment, reply)}
+										onClick={(event) => {
+											returnTo.current = event.currentTarget;
+											onSelectReply?.(comment, reply);
+										}}
 									>
 										Reply
 									</button>
@@ -292,7 +317,10 @@ export const CommentCard = memo(function CommentCard({
 							<p className="mb-2 text-sm text-gray-10">
 								Replying to {nameOf(recipient)}
 							</p>
-							{renderReply?.(comment, () => onSelectReply?.(comment))}
+							{renderReply?.(comment, () => {
+								restoreReplyFocus.current = true;
+								onSelectReply?.(comment);
+							})}
 						</div>
 					)}
 				</div>

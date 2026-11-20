@@ -74,6 +74,7 @@ const CommentInput: React.FC<CommentInputProps> = ({
 				);
 			} finally {
 				submitting.current = false;
+				inputRef.current?.focus();
 			}
 		});
 	};
@@ -101,7 +102,9 @@ const CommentInput: React.FC<CommentInputProps> = ({
 								showCancelButton ? "Write a reply" : "Write a comment"
 							}
 							value={content}
-							disabled={disabled || isSubmitting}
+							disabled={disabled}
+							readOnly={isSubmitting}
+							aria-busy={isSubmitting}
 							rows={expanded ? 3 : 2}
 							onChange={(e) => setContent(e.target.value)}
 							onKeyDown={handleKeyDown}

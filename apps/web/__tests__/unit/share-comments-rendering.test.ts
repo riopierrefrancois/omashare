@@ -508,7 +508,8 @@ describe("share comments rendering", () => {
 			await click(button(label));
 			expect(mocks.post).toHaveBeenCalledOnce();
 			expect(input.value).toBe("Please check the last frame.");
-			expect(input.disabled).toBe(true);
+			expect(input.disabled).toBe(false);
+			expect(input.readOnly).toBe(true);
 			await act(async () => {
 				input.dispatchEvent(
 					new KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
@@ -520,7 +521,7 @@ describe("share comments rendering", () => {
 			});
 			expect(input.isConnected).toBe(true);
 			expect(input.value).toBe("Please check the last frame.");
-			expect(input.disabled).toBe(false);
+			expect(input.readOnly).toBe(false);
 			expect(mocks.showError).toHaveBeenCalledWith(
 				"Couldn't post your comment. Please try again.",
 			);
@@ -542,6 +543,55 @@ describe("share comments rendering", () => {
 			);
 			if (kind === "comment") expect(input.value).toBe("");
 			else expect(input.isConnected).toBe(false);
+		},
+	);
+
+	it("keeps the bottom comment field focused through an Enter submission", async () => {
+		comments = [];
+		const save = Promise.withResolvers<{ comment: CommentType }>();
+		mocks.post.mockReturnValueOnce(save.promise);
+		await render();
+		const input = container.querySelector("textarea");
+		if (!input) throw new Error("Missing comment editor");
+		await act(async () => input.focus());
+		await type(input, "Keep typing here");
+
+		await act(async () => {
+			input.dispatchEvent(
+				new KeyboardEvent("keydown", {
+					key: "Enter",
+					bubbles: true,
+					cancelable: true,
+				}),
+			);
+		});
+		expect(document.activeElement).toBe(input);
+		expect(input.disabled).toBe(false);
+		expect(input.readOnly).toBe(true);
+		expect(input.getAttribute("aria-busy")).toBe("true");
+		expect(button("Send")?.disabled).toBe(true);
+
+		await act(async () => save.resolve({ comment: comment("saved") }));
+		expect(document.activeElement).toBe(input);
+		expect(input.value).toBe("");
+		expect(input.readOnly).toBe(false);
+	});
+
+	it.each(["root", "existing-reply"])(
+		"returns focus to the Reply button on %s after sending",
+		async (target) => {
+			comments = [comment("root"), comment("existing-reply", "root")];
+			mocks.post.mockResolvedValue({ comment: comment("saved", "root") });
+			await render();
+			const trigger = Array.from(row(target).querySelectorAll("button")).find(
+				(item) => item.textContent === "Reply",
+			);
+			await click(trigger ?? null);
+			const input = row("root").querySelector("textarea");
+			await type(input, "Thanks!");
+			await click(button("Send"));
+			expect(input?.isConnected).toBe(false);
+			expect(document.activeElement).toBe(trigger);
 		},
 	);
 
