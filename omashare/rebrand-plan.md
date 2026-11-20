@@ -87,6 +87,14 @@ The brand preview computes chip colors by mixing 12% accent with 88% page color,
 
 ## Phase E: the branded share page
 
+### Task E0: leftovers from the Phase D browser check
+- [ ] The dashboard sidebar still shows a **Cap Pro: Unlimited shareable links** card. Remove it and any other Pro/upgrade card in the sidebar or settings.
+- [ ] Videos uploaded from the dashboard are named "Cap Upload - 20 November 2026". Use the file name without its extension; fall back to "Upload, 20 November 2026".
+- [ ] Organization settings now have two colors: Cap's old **Brand color** (play button, progress bar, focus rings) and the new **Share page look** accent. Merge them into one:
+  - The accent drives the player too.
+  - Hide the old Brand color field.
+  - When an organization has the old one set and no accent, use it as the accent.
+
 ### Task E1: layout (desktop)
 - [ ] Rebuild the Player view of `/s/[videoId]` to `WorkhiveSheet.dc.html`, using the brand from D2:
   - **Header:** 60 px; organization logo and name; an outlined **Copy link** button (40 px); the website button (40 px, filled accent, white text) only when `websiteUrl` is set.
