@@ -13,7 +13,7 @@ Only the **Player** (classic) view changes. The **Timeline** view (`?view=timeli
 
 ## Look and feel reference (copy the look, not the code)
 
-Workhive, in `~/BeastCode/workhive/src/components/simple/companions/notes/`:
+Workhive's card notes (PF's own app; the planner hands the implementer the relevant files):
 - `note-card.tsx` is the root card: `rounded-2xl border px-3 py-2`, white. The header has the face, the bold name, the time in small grey text, and `•••` on the right. Then the words. The footer has a quiet grey **Reply** and "N replies".
 - `note-thread.tsx`: the replies sit inside the same card, under a top border (`border-t pt-3`). Only the latest 2 show, with "Show N earlier replies" above them. One level deep: replying to a reply answers the root.
 - `reply-bubble.tsx`: the face sits outside a soft bubble (`rounded-2xl border px-3 pb-2 pt-1.5`, page-grey background). Inside the bubble are the name, the time and the words. **Reply** sits under the bubble.
