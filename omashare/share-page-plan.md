@@ -129,8 +129,8 @@ Then stop and report. The orchestrator then checks the page in the browser at ht
 PF found there's no visible way to comment in the Timeline view. Stock Cap only has hover-the-strip-and-click, plus a bar button on touch screens, and that composer requires sign-in. PF picked: **the same Comments section under the Timeline card too.**
 
 ### Task C1: the same comments section in both views
-- [ ] Render `ShareComments` under the Timeline card as well, so both views have the same list, cards, replies and bottom box, with guests welcome. It uses the same state as in the Player view, so a comment made in either place (the strip composer or the bottom box) appears in the list and on the timeline at once.
-- [ ] The timeline markers, strip hover and click-to-add stay as they are.
+- [x] Render `ShareComments` under the Timeline card as well, so both views have the same list, cards, replies and bottom box, with guests welcome. It uses the same state as in the Player view, so a comment made in either place (the strip composer or the bottom box) appears in the list and on the timeline at once.
+- [x] The timeline markers, strip hover and click-to-add stay as they are.
 
 ### Task C2: the strip composer takes guests too
 - [ ] `TimelineComposer` lets guests write a text comment with the same guest-name rule as the bottom box: one shared hook/helper, the same `localStorage["omashare.guestName"]` key, and the same honeypot. No sign-in overlay for text. Media recording still needs sign-in, as today.

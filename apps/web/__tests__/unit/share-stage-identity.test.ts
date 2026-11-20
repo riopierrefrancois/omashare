@@ -341,6 +341,8 @@ describe("Share", () => {
 
 		const video = container.querySelector("[data-share-video]");
 		const stage = stageOf(video);
+		const comments = container.querySelector("[data-comments]");
+		expect(comments).not.toBeNull();
 		expect(video).not.toBeNull();
 		expect(stage).not.toBeNull();
 		expect(container.querySelector("[data-sidebar]")).not.toBeNull();
@@ -356,6 +358,7 @@ describe("Share", () => {
 		expect(container.querySelector("[data-timeline-view]")).not.toBeNull();
 		expect(container.querySelector("[data-sidebar]")).toBeNull();
 		expect(container.querySelector("[data-toolbar]")).toBeNull();
+		expect(container.querySelector("[data-comments]")).toBe(comments);
 		expect(window.location.search).toBe("?view=timeline");
 
 		await act(async () => {
@@ -387,6 +390,16 @@ describe("Share", () => {
 		expect(container.querySelector("[data-timeline-view]")).not.toBeNull();
 		expect(container.querySelector("[data-share-video]")).not.toBeNull();
 		expect(container.querySelector("[data-sidebar]")).toBeNull();
+		const deck = container.querySelector("[data-timeline-view]");
+		const comments = container.querySelector("[data-comments]");
+		expect(
+			deck &&
+				comments &&
+				Boolean(
+					deck.compareDocumentPosition(comments) &
+						Node.DOCUMENT_POSITION_FOLLOWING,
+				),
+		).toBe(true);
 
 		await act(async () => {
 			root.unmount();

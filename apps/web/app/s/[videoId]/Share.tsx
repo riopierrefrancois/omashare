@@ -743,20 +743,10 @@ export const Share = ({
 						    flush against the viewport edge while the video stays centred
 						    inside what's left. */}
 						<div className="flex flex-col flex-1 px-4 mx-auto w-full max-w-[80rem] lg:px-8">
-							{/*
-							 * Classic: a normal page section with bottom padding. Timeline: the
-							 * card sizes itself to the video's aspect ratio (viewport-capped)
-							 * and floats in the middle of the leftover viewport — the page above
-							 * keeps this wrapper in a flex column, so flex-1 + justify-center is
-							 * all the vertical centring takes. (Desktop only; small screens keep
-							 * natural flow.)
-							 */}
 							<div
-								className={clsx(
-									view === "timeline"
-										? "mt-2 pb-6 lg:mt-0 lg:pb-0 lg:flex lg:flex-1 lg:flex-col lg:justify-center"
-										: "mt-4 pb-8",
-								)}
+								className={
+									view === "timeline" ? "mt-2 pb-8 lg:mt-4" : "mt-4 pb-8"
+								}
 							>
 								{timelineAvailable && view === "timeline" && (
 									// The top edge of the player card. It sits flush on the grid
@@ -1063,30 +1053,33 @@ export const Share = ({
 											</motion.div>
 										)}
 									</AnimatePresence>
-									{view === "classic" && (
-										<ShareComments
-											videoId={data.id}
-											commentsData={commentsData}
-											optimisticComments={visibleComments}
-											setComments={setCommentsData}
-											setOptimisticComments={setOptimisticComments}
-											handleCommentSuccess={handleCommentSuccess}
-											onSeek={isScreenshot ? undefined : handleSeek}
-											commentsDisabled={areCommentStampsDisabled}
-											isVideoOwner={viewerId === data.owner.id}
-											ownerOrMemberViews={
-												viewerId &&
-												(viewerId === data.owner.id ||
-													data.organizationMembers?.some(
-														(id) => id === viewerId,
-													))
-													? views
-													: undefined
-											}
-											isScreenshot={isScreenshot}
-											canRecordMedia={canRecordMedia && !isScreenshot}
-										/>
+								</div>
+								<div
+									className={clsx(
+										"mt-4",
+										view === "timeline" && "mx-auto w-full max-w-6xl",
 									)}
+								>
+									<ShareComments
+										videoId={data.id}
+										commentsData={commentsData}
+										optimisticComments={visibleComments}
+										setComments={setCommentsData}
+										setOptimisticComments={setOptimisticComments}
+										handleCommentSuccess={handleCommentSuccess}
+										onSeek={isScreenshot ? undefined : handleSeek}
+										commentsDisabled={areCommentStampsDisabled}
+										isVideoOwner={viewerId === data.owner.id}
+										ownerOrMemberViews={
+											viewerId &&
+											(viewerId === data.owner.id ||
+												data.organizationMembers?.some((id) => id === viewerId))
+												? views
+												: undefined
+										}
+										isScreenshot={isScreenshot}
+										canRecordMedia={canRecordMedia && !isScreenshot}
+									/>
 								</div>
 							</div>
 						</div>
