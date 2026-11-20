@@ -99,9 +99,9 @@ Use Cap's own Tailwind tokens (`gray-1…gray-12`, `bg-white`, `border-gray-5`, 
 - [x] Delete: `•••` → **Delete** → inline question "Delete this comment and its 2 replies? It can't be undone." (or "Delete this reply? It can't be undone."), with **Yes, delete** and **Keep**. No modal.
 
 ### Task B4: reactions
-- [ ] Emoji reactions don't appear as cards.
-- [ ] Under the reactions toolbar, a compact row shows each emoji used with its count, for example `😂 2  👍 1`. Hovering shows who reacted (a `title` is enough). Hide the row when there are no reactions.
-- [ ] The toolbar and the reaction stamps on the video timeline don't change.
+- [x] Emoji reactions don't appear as cards.
+- [x] Under the reactions toolbar, a compact row shows each emoji used with its count, for example `😂 2  👍 1`. Hovering shows who reacted (a `title` is enough). Hide the row when there are no reactions.
+- [x] The toolbar and the reaction stamps on the video timeline don't change.
 
 ### Task B5: the comment box (bottom of the section)
 - [ ] A text box with placeholder "Write a comment at 1:13…", using the video's live current time. Above or inside it, a chip **at 1:13** with ✕ to comment without a time. That decides whether `timestamp` is sent.

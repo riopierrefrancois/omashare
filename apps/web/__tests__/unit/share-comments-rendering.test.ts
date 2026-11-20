@@ -11,6 +11,7 @@ import {
 } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ReactionCounts } from "@/app/s/[videoId]/_components/comments/ReactionCounts";
 import { ShareComments } from "@/app/s/[videoId]/_components/comments/ShareComments";
 import { PlaybackProvider } from "@/app/s/[videoId]/_components/playback/PlaybackContext";
 import type { CommentType } from "@/app/s/[videoId]/Share";
@@ -220,6 +221,31 @@ function contents() {
 		}),
 	);
 }
+
+describe("reaction counts", () => {
+	it("groups emojis and shows the reactors in the tooltip", async () => {
+		const reactions: CommentType[] = [
+			{ ...comment("one"), type: "emoji", content: "😂", authorName: "Sam" },
+			{ ...comment("two"), type: "emoji", content: "😂", authorName: "Ada" },
+			{ ...comment("three"), type: "emoji", content: "👍" },
+			comment("text"),
+		];
+		await act(async () =>
+			root.render(createElement(ReactionCounts, { comments: reactions })),
+		);
+		expect(container.querySelector('[title="Sam, Ada"]')?.textContent).toBe(
+			"😂 2",
+		);
+		expect(container.querySelector("ul")?.textContent).toContain("👍 1");
+
+		await act(async () =>
+			root.render(
+				createElement(ReactionCounts, { comments: [comment("text")] }),
+			),
+		);
+		expect(container.querySelector("ul")).toBeNull();
+	});
+});
 
 describe("share comments rendering", () => {
 	it("shows the guest name and gives the video owner the delete control", async () => {

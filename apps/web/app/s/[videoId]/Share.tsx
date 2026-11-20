@@ -30,6 +30,7 @@ import {
 	videoStatusQueryOptions,
 } from "@/lib/video-status-query";
 import { CaptionProvider } from "./_components/CaptionContext";
+import { ReactionCounts } from "./_components/comments/ReactionCounts";
 import { ShareComments } from "./_components/comments/ShareComments";
 import { DashboardBackLink } from "./_components/DashboardBackLink";
 import { seekLength } from "./_components/early-length";
@@ -1020,6 +1021,11 @@ export const Share = ({
 														</button>
 													)}
 												</div>
+												{!areReactionStampsDisabled && (
+													<div className="[&:empty]:hidden mt-2">
+														<ReactionCounts comments={visibleComments} />
+													</div>
+												)}
 											</motion.div>
 										) : (
 											// The band runs its own enter/exit; this wrapper only exists
