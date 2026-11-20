@@ -40,7 +40,7 @@ import {
 import { resolveDefaultPlaybackSpeed } from "@/lib/playback-speed";
 import { getPlayerBrand } from "@/lib/player-brand";
 import * as EffectRuntime from "@/lib/server";
-import { getSharePageBranding } from "@/lib/share-branding";
+import { getShareBrand, getSharePageBranding } from "@/lib/share-branding";
 import { resolveShareCallToAction } from "@/lib/share-call-to-action";
 import { getCustomThumbnailUrl } from "@/lib/share-playback";
 import { buildShareVideoMetadata } from "@/lib/share-video-metadata";
@@ -429,11 +429,17 @@ async function EmbedContent({
 		organizationMetadata,
 	});
 
+	const shareBrand = getShareBrand(video.orgSettings?.brand, {
+		name: video.organizationName,
+		logo: branding?.type === "custom" ? branding.imageUrl : null,
+	});
+
 	const { orgSettings: _orgSettings, ...embedData } = video;
 
 	return (
 		<EmbedVideo
 			data={embedData}
+			shareFont={shareBrand.font}
 			branding={ownerIsProUser && !options.showBranding ? null : branding}
 			posterUrl={posterUrl}
 			playerBrand={playerBrand}

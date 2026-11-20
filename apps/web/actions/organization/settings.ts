@@ -10,13 +10,15 @@ import {
 	isAiGenerationLanguage,
 	type Organisation,
 } from "@cap/web-domain";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { organizationSettingsKeepingRowOwnedKeys } from "@/lib/organization-settings-write";
 import { normalizePlaybackSpeed } from "@/lib/playback-speed";
+import { parseShareBrand } from "@/lib/share-branding";
 import { requireOrganizationSettingsManager } from "./authorization";
 
 type OrganizationSettingsInput = {
+	brand?: Organisation.ShareBrandSettings;
 	disableSummary?: boolean;
 	disableCaptions?: boolean;
 	disableChapters?: boolean;
@@ -103,24 +105,36 @@ export async function updateOrganizationSettings(
 
 	await requireOrganizationSettingsManager(user.id, organizationId);
 
-	const sanitizedSettings =
-		settings.defaultPlaybackSpeed !== undefined
-			? {
-					...settings,
-					defaultPlaybackSpeed: normalizePlaybackSpeed(
-						settings.defaultPlaybackSpeed,
-					),
-				}
-			: settings;
+	const { brand, ...submitted } = settings;
+	if (brand !== undefined) {
+		const parsed = parseShareBrand(brand);
+		await db()
+			.update(organizations)
+			.set({
+				settings: sql`JSON_SET(COALESCE(${organizations.settings}, JSON_OBJECT()), '$.brand', CAST(${JSON.stringify(parsed)} AS JSON))`,
+			})
+			.where(eq(organizations.id, organizationId));
 
-	const nextSettings = userIsPro(user)
-		? sanitizedSettings
-		: preserveProSettings(sanitizedSettings, organization.settings);
-
-	await db()
-		.update(organizations)
-		.set({ settings: organizationSettingsKeepingRowOwnedKeys(nextSettings) })
-		.where(eq(organizations.id, organizationId));
+		revalidatePath("/s/[videoId]", "page");
+		revalidatePath("/embed/[videoId]", "page");
+	} else {
+		const sanitizedSettings =
+			submitted.defaultPlaybackSpeed !== undefined
+				? {
+						...submitted,
+						defaultPlaybackSpeed: normalizePlaybackSpeed(
+							submitted.defaultPlaybackSpeed,
+						),
+					}
+				: submitted;
+		const nextSettings = userIsPro(user)
+			? sanitizedSettings
+			: preserveProSettings(sanitizedSettings, organization.settings);
+		await db()
+			.update(organizations)
+			.set({ settings: organizationSettingsKeepingRowOwnedKeys(nextSettings) })
+			.where(eq(organizations.id, organizationId));
+	}
 
 	revalidatePath("/dashboard/caps");
 	revalidatePath("/dashboard/settings/organization");

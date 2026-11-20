@@ -41,7 +41,7 @@ const defaultSettings: OrganizationSettings = {
 
 type BooleanOrganizationSettingKey = Exclude<
 	keyof OrganizationSettings,
-	"aiGenerationLanguage"
+	"aiGenerationLanguage" | "brand"
 >;
 
 const options: Array<{
@@ -106,6 +106,7 @@ const mergeSettings = (
 ): OrganizationSettings => ({
 	...defaultSettings,
 	...(settings ?? {}),
+	brand: undefined,
 	aiGenerationLanguage: isAiGenerationLanguage(settings?.aiGenerationLanguage)
 		? settings.aiGenerationLanguage
 		: AI_GENERATION_LANGUAGE_AUTO,

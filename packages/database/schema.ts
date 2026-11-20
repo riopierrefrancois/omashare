@@ -241,6 +241,7 @@ export const organizations = mysqlTable(
 		customDomain: varchar("customDomain", { length: 255 }),
 		domainVerified: timestamp("domainVerified"),
 		settings: json("settings").$type<{
+			brand?: Organisation.ShareBrandSettings;
 			disableSummary?: boolean;
 			disableCaptions?: boolean;
 			disableChapters?: boolean;

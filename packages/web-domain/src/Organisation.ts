@@ -18,6 +18,15 @@ export const OrganisationId = Schema.String.pipe(
 );
 export type OrganisationId = typeof OrganisationId.Type;
 
+export type ShareBrandSettings = {
+	accent?: string;
+	ink?: string;
+	page?: string;
+	font?: "roboto" | "geist";
+	websiteLabel?: string;
+	websiteUrl?: string;
+};
+
 export class Organisation extends Schema.Class<Organisation>("Organisation")({
 	id: OrganisationId,
 	name: Schema.String,

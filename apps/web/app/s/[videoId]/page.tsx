@@ -65,7 +65,7 @@ import { getPlayerBrand, playerBrandAttributes } from "@/lib/player-brand";
 import { getPublicShareVideo } from "@/lib/public-share-video";
 import * as EffectRuntime from "@/lib/server";
 import { runPromise } from "@/lib/server";
-import { getSharePageBranding } from "@/lib/share-branding";
+import { getShareBrand, getSharePageBranding } from "@/lib/share-branding";
 import {
 	resolveShareCallToAction,
 	withoutWorkspaceCallToAction,
@@ -1101,13 +1101,21 @@ async function AuthorizedContent({
 	// upload/create paths re-check server-side via canUseMediaComments.
 	const canRecordMedia = Boolean(user) && videoWithOrganizationInfo.owner.isPro;
 
+	const shareBrand = getShareBrand(video.orgSettings?.brand, {
+		name: video.organizationName,
+		logo: resolvedImages.organization,
+	});
+
 	// Bottom padding lives in Share (classic view only): the timeline view's
 	// theater strip must end flush with the viewport, and Share is the one that
 	// knows which view is active. Gutters moved into Share too — the comments
 	// rail is flush to the viewport edge, so only the video column is centred
 	// in a container.
 	return (
-		<div className="flex flex-col flex-1 min-h-0">
+		<div
+			className="flex flex-col flex-1 min-h-0"
+			data-share-font={shareBrand.font}
+		>
 			<Share
 				header={
 					<ShareHeader

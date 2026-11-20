@@ -61,6 +61,7 @@ export const EmbedVideo = forwardRef<
 			hasActiveUpload: boolean | undefined;
 		};
 		branding: SharePageBranding | null;
+		shareFont?: "geist" | "roboto";
 		posterUrl?: string | null;
 		playerBrand?: PlayerBrand | null;
 		user: typeof userSelectProps | null;
@@ -85,6 +86,7 @@ export const EmbedVideo = forwardRef<
 		{
 			data,
 			branding,
+			shareFont,
 			posterUrl = null,
 			playerBrand = null,
 			user: _user,
@@ -276,6 +278,7 @@ export const EmbedVideo = forwardRef<
 			<>
 				<div
 					ref={playerContainerRef}
+					data-share-font={shareFont}
 					{...playerBrandAttributes(playerBrand)}
 					className="relative w-screen h-screen rounded-xl"
 					onPlayCapture={() => setIsPlaying(true)}

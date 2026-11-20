@@ -50,18 +50,21 @@ Same as `omashare/share-page-plan.md`:
   - links to docs, pricing and so on
 
 ### Task D2: organization brand settings
-- [ ] Add a typed `brand` object to `organizations.settings`: `accent`, `ink`, `page` (hex strings), `font` (`"roboto" | "geist"`), `websiteLabel`, `websiteUrl`. All optional.
+- [x] Add a typed `brand` object to `organizations.settings`: `accent`, `ink`, `page` (hex strings), `font` (`"roboto" | "geist"`), `websiteLabel`, `websiteUrl`. All optional.
   - Validate hex values and https URLs on the server.
   - Derive two extra colors in one helper:
     - `accentText`: the accent darkened until it reaches 4.5:1 contrast on white.
     - `accentSoft`: a tint for chips. Use the page color mixed with the accent, or `#F9ECDE`-like for warm accents. Keep it simple and document the formula.
-- [ ] In the dashboard, under the organization settings, add a **Share page look** section:
+- [x] In the dashboard, under the organization settings, add a **Share page look** section:
   - color pickers (or hex fields) for accent, text and page
   - font choice
   - website label and URL
   - a small live preview: a header with the logo and name, and one comment card
   - It saves through the existing settings action. Only owners and admins can change it.
-- [ ] `lib/share-branding.ts` returns the full brand, with defaults filled in, for `/s` and `/embed`.
+- [x] `lib/share-branding.ts` returns the full brand, with defaults filled in, for `/s` and `/embed`.
+
+The brand preview computes chip colors by mixing 12% accent with 88% page color, channel by channel. Accent text mixes the accent with black in one-percent steps until it reaches a 4.5:1 contrast ratio on white.
+
 
 ### Task D3: OmaShare chrome for signed-in pages
 - [ ] Load Geist and Geist Mono with `next/font/google`, and Roboto for share pages that pick it.

@@ -15,7 +15,8 @@ export const organizationSettingsKeepingRowOwnedKeys = (
 	const {
 		allowPublicLinkOverride: _staleOverride,
 		defaultCallToAction: _staleCallToAction,
+		brand: _staleBrand,
 		...rest
 	} = next;
-	return sql`JSON_MERGE_PATCH(CAST(${JSON.stringify(rest)} AS JSON), JSON_OBJECT('allowPublicLinkOverride', JSON_EXTRACT(${organizations.settings}, '$.allowPublicLinkOverride'), 'defaultCallToAction', JSON_EXTRACT(${organizations.settings}, '$.defaultCallToAction')))`;
+	return sql`JSON_MERGE_PATCH(CAST(${JSON.stringify(rest)} AS JSON), JSON_OBJECT('allowPublicLinkOverride', JSON_EXTRACT(${organizations.settings}, '$.allowPublicLinkOverride'), 'defaultCallToAction', JSON_EXTRACT(${organizations.settings}, '$.defaultCallToAction'), 'brand', JSON_EXTRACT(${organizations.settings}, '$.brand')))`;
 };
