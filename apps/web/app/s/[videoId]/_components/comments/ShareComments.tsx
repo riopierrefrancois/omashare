@@ -19,10 +19,9 @@ import type { CommentType } from "../../Share";
 import CommentAnalytics from "./CommentAnalytics";
 import { CommentCard } from "./CommentCard";
 import { CommentComposer, type CommentDraft } from "./CommentComposer";
+import { normalizeGuestName, useGuestCommentName } from "./GuestCommentName";
 
 const EMPTY_REPLIES: CommentType[] = [];
-
-const GUEST_NAME_KEY = "omashare.guestName";
 
 export function ShareComments(props: {
 	setComments: React.Dispatch<React.SetStateAction<CommentType[]>>;
@@ -50,8 +49,7 @@ export function ShareComments(props: {
 	const params = useSearchParams();
 	const focusedId = params.get("reply") ?? params.get("comment");
 	const user = useCurrentUser();
-	const [savedName, setSavedName] = useState("");
-	const [nameDraft, setNameDraft] = useState("");
+	const { remember } = useGuestCommentName();
 	const [flashId, setFlashId] = useState<Comment.CommentId | null>(null);
 	const [replyTarget, setReplyTarget] = useState<{
 		rootId: Comment.CommentId;
@@ -69,16 +67,6 @@ export function ShareComments(props: {
 		},
 		[],
 	);
-
-	useEffect(() => {
-		try {
-			const name = window.localStorage.getItem(GUEST_NAME_KEY)?.trim();
-			if (name && [...name].length <= 80) {
-				setSavedName(name);
-				setNameDraft(name);
-			}
-		} catch {}
-	}, []);
 
 	useEffect(() => {
 		if (!flashId) return;
@@ -115,8 +103,8 @@ export function ShareComments(props: {
 
 	const submit = async (draft: CommentDraft, root?: CommentType) => {
 		const { content, timestamp, website } = draft;
-		const guestName = user ? null : draft.guestName.trim();
-		if (!user && (!guestName || [...guestName].length > 80)) {
+		const guestName = user ? null : normalizeGuestName(draft.guestName);
+		if (!user && !guestName) {
 			throw new Error("Please add your name.");
 		}
 		const parentCommentId = root?.id ?? ("" as Comment.CommentId);
@@ -155,27 +143,9 @@ export function ShareComments(props: {
 			throw new Error("Couldn't post your comment. Please try again.");
 		});
 		if (!result.comment) throw new Error(result.error);
-		if (guestName) {
-			setSavedName(guestName);
-			setNameDraft(guestName);
-			try {
-				window.localStorage.setItem(GUEST_NAME_KEY, guestName);
-			} catch {}
-		}
+		if (guestName) remember(guestName);
 		handleCommentSuccess({ ...result.comment, clientKey: id });
 		setFlashId(result.comment.id);
-	};
-
-	const guestName = {
-		saved: savedName,
-		draft: nameDraft,
-		setDraft: setNameDraft,
-		edit: () => {
-			setSavedName("");
-			try {
-				window.localStorage.removeItem(GUEST_NAME_KEY);
-			} catch {}
-		},
 	};
 
 	const handleDeleteComment = useCallback(
@@ -246,7 +216,6 @@ export function ShareComments(props: {
 												<CommentComposer
 													key={replyTarget.recipient.id}
 													videoId={videoId}
-													guestName={guestName}
 													isScreenshot={props.isScreenshot}
 													onCancel={cancel}
 													onSubmit={async (draft) => {
@@ -276,7 +245,6 @@ export function ShareComments(props: {
 				<div className="rounded-xl border border-gray-5 bg-gray-2 p-2">
 					<CommentComposer
 						videoId={videoId}
-						guestName={guestName}
 						isScreenshot={props.isScreenshot}
 						canRecordMedia={props.canRecordMedia}
 						onSubmit={submit}

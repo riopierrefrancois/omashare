@@ -2,12 +2,18 @@
 
 import { Comment, type Video } from "@cap/web-domain";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { startTransition, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { newComment } from "@/actions/videos/new-comment";
+import { postShareComment } from "@/actions/videos/new-comment";
 import { useCurrentUser } from "@/app/Layout/AuthContext";
 import type { CommentType } from "../../Share";
 import { AuthOverlay } from "../AuthOverlayLazy";
+import {
+	GuestCommentNameFields,
+	normalizeGuestName,
+	readGuestCommentFields,
+	useGuestCommentName,
+} from "../comments/GuestCommentName";
 import { MicGlyph } from "./TimelineBranch";
 import { useTimelineActions, useTimelineState } from "./TimelineProvider";
 import {
@@ -69,19 +75,25 @@ export function TimelineComposer({
 	onRecordIntent,
 }: TimelineComposerProps) {
 	const { composerAnchor } = useTimelineState();
-	const { openComposer, closeComposer } = useTimelineActions();
+	const { closeComposer } = useTimelineActions();
 	const user = useCurrentUser();
 	const reduceMotion = useReducedMotion() ?? false;
 	const [value, setValue] = useState("");
+	const [sending, startTransition] = useTransition();
+	const pending = useRef(composerAnchor);
+	const inputRef = useRef<HTMLInputElement>(null);
+	const guestFields = useRef<HTMLDivElement>(null);
+	const { name, remember } = useGuestCommentName();
 	const [showAuthOverlay, setShowAuthOverlay] = useState(false);
 
 	// Both have to agree: the page was rendered for a signed-in viewer and the
 	// client knows who that is.
-	const canComment = viewerSignedIn && user !== null;
+	const canRecord = viewerSignedIn && user !== null;
 	const anchorTime = composerAnchor?.t ?? 0;
 
 	useEffect(() => {
-		if (!composerAnchor) setValue("");
+		setValue("");
+		if (composerAnchor) inputRef.current?.focus();
 	}, [composerAnchor]);
 
 	const anchorRef = useRef(composerAnchor);
@@ -92,53 +104,65 @@ export function TimelineComposer({
 		else setShowAuthOverlay(true);
 	};
 
-	const submit = async () => {
+	const submit = () => {
 		const content = value.trim();
-		if (!content || !user || !canComment) return;
-
-		const optimistic: CommentType = {
-			id: Comment.CommentId.make(`temp-${Date.now()}`),
-			authorId: user.id,
-			authorName: user.name,
-			authorImage: user.imageUrl,
-			content,
-			createdAt: new Date(),
-			videoId,
-			parentCommentId: Comment.CommentId.make(""),
-			type: "text",
-			timestamp: anchorTime,
-			updatedAt: new Date(),
-			mediaKey: null,
-			mediaDuration: null,
-			mediaMeta: null,
-			sending: true,
-		};
-
-		onOptimisticComment?.(optimistic);
-		setValue("");
-		closeComposer();
-
-		try {
-			const saved = await newComment({
-				content,
-				videoId,
-				authorImage: user.imageUrl,
-				parentCommentId: Comment.CommentId.make(""),
-				type: "text",
-				timestamp: anchorTime,
-			});
-			startTransition(() => {
-				onCommentSuccess?.(saved);
-			});
-		} catch (error) {
-			console.error("Error posting comment:", error);
-			toast.error("Couldn't post your comment. Please try again.");
-			// Bring the draft back unless the viewer has started another one.
-			if (!anchorRef.current) {
-				openComposer(anchorTime);
-				setValue(content);
-			}
+		if (!content || pending.current || !composerAnchor) return;
+		const fields = readGuestCommentFields(guestFields, name);
+		const guestName = user ? null : normalizeGuestName(fields.guestName);
+		if (!user && !guestName) {
+			toast.error("Please add your name.");
+			return;
 		}
+		const anchor = composerAnchor;
+		const id = Comment.CommentId.make(`temp-${crypto.randomUUID()}`);
+		const now = new Date();
+		const parentCommentId = Comment.CommentId.make("");
+		pending.current = anchor;
+		startTransition(async () => {
+			onOptimisticComment?.({
+				id,
+				authorId: user?.id ?? null,
+				guestName,
+				authorName: user ? user.name : guestName,
+				authorImage: user?.imageUrl ?? null,
+				content,
+				createdAt: now,
+				videoId,
+				parentCommentId,
+				type: "text",
+				timestamp: anchor.t,
+				updatedAt: now,
+				mediaKey: null,
+				mediaDuration: null,
+				mediaMeta: null,
+				sending: true,
+			});
+			try {
+				const result = await postShareComment({
+					content,
+					videoId,
+					authorImage: user?.imageUrl ?? null,
+					parentCommentId,
+					type: "text",
+					timestamp: anchor.t,
+					guestName: guestName ?? undefined,
+					website: fields.website,
+				});
+				if (result.comment) {
+					if (guestName) remember(guestName);
+					onCommentSuccess?.({ ...result.comment, clientKey: id });
+					if (anchorRef.current === anchor) setValue("");
+				} else {
+					toast.error(result.error);
+				}
+			} catch (error) {
+				console.error("Error posting comment:", error);
+				toast.error("Couldn't post your comment. Please try again.");
+			} finally {
+				pending.current = null;
+				if (anchorRef.current === anchor) inputRef.current?.focus();
+			}
+		});
 	};
 
 	// Clamped into the window: zooming past the anchor must slide the card to
@@ -176,6 +200,14 @@ export function TimelineComposer({
 								? { duration: 0 }
 								: { type: "spring", stiffness: 420, damping: 34 }
 						}
+						onBlur={(event) => {
+							if (
+								!value.trim() &&
+								!sending &&
+								!event.currentTarget.contains(event.relatedTarget)
+							)
+								closeComposer();
+						}}
 						onKeyDown={(event) => {
 							if (event.key === "Escape") {
 								event.stopPropagation();
@@ -189,51 +221,30 @@ export function TimelineComposer({
 									{formatClock(anchorTime)}
 								</span>
 								<span className="text-xs text-gray-10">
-									{canComment
-										? "Comment at this moment"
-										: "Join the conversation"}
+									Comment at this moment
 								</span>
 							</div>
 
-							{canComment ? (
-								<input
-									// biome-ignore lint/a11y/noAutofocus: the composer is opened by an explicit click.
-									autoFocus
-									type="text"
-									value={value}
-									maxLength={255}
-									placeholder="Add a comment"
-									aria-label={`Comment at ${formatClock(anchorTime)}`}
-									onChange={(event) => setValue(event.target.value)}
-									onBlur={() => {
-										if (!value.trim()) closeComposer();
-									}}
-									onKeyDown={(event) => {
-										if (
-											event.key === "Enter" &&
-											!event.nativeEvent.isComposing
-										) {
-											event.preventDefault();
-											void submit();
-										}
-									}}
-									className="h-8 w-full rounded-lg bg-gray-2 px-2 text-sm text-gray-12 outline-none ring-1 ring-gray-4 placeholder:text-gray-9 focus:ring-blue-9"
-								/>
-							) : (
-								<button
-									type="button"
-									onClick={requestAuth}
-									className="h-8 w-full rounded-lg bg-gray-12 text-[13px] font-medium text-white transition-opacity hover:opacity-90"
-								>
-									Sign in to comment
-								</button>
-							)}
+							{!user && <GuestCommentNameFields fieldsRef={guestFields} />}
+							<input
+								ref={inputRef}
+								type="text"
+								value={value}
+								readOnly={sending && pending.current === composerAnchor}
+								aria-busy={sending && pending.current === composerAnchor}
+								maxLength={255}
+								placeholder="Add a comment"
+								aria-label={`Comment at ${formatClock(anchorTime)}`}
+								onChange={(event) => setValue(event.target.value)}
+								onKeyDown={(event) => {
+									if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+										event.preventDefault();
+										submit();
+									}
+								}}
+								className="h-8 w-full rounded-lg bg-gray-2 px-2 text-sm text-gray-12 outline-none ring-1 ring-gray-4 placeholder:text-gray-9 focus:ring-blue-9"
+							/>
 
-							{/* Reserved even when empty so the recording phase can drop its
-							    buttons in without the card changing height. preventDefault
-							    keeps the focused (empty) input from blurring on the way to a
-							    button — that blur closes the composer, and the click would
-							    land on an unmounted node. */}
 							<div
 								className="flex h-8 items-center gap-1"
 								onPointerDown={(event) => event.preventDefault()}
@@ -246,7 +257,7 @@ export function TimelineComposer({
 												aria-label={option.label}
 												title={option.label}
 												onClick={() => {
-													if (!canComment) {
+													if (!canRecord) {
 														requestAuth();
 														return;
 													}
@@ -258,6 +269,14 @@ export function TimelineComposer({
 											</button>
 										))
 									: null}
+								<button
+									type="button"
+									disabled={!value.trim() || sending}
+									onClick={submit}
+									className="ml-auto rounded-md bg-gray-12 px-3 py-1 text-sm text-white disabled:opacity-50"
+								>
+									Send
+								</button>
 							</div>
 						</div>
 					</motion.div>

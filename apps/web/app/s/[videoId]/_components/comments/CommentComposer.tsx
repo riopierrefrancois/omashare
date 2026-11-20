@@ -9,6 +9,11 @@ import { RecordActionButtons } from "../media-comment/record-actions";
 import { usePlayback } from "../playback/PlaybackContext";
 import CommentInput from "../tabs/Activity/CommentInput";
 import type { RecordIntentKind } from "../timeline/TimelineComposer";
+import {
+	GuestCommentNameFields,
+	readGuestCommentFields,
+	useGuestCommentName,
+} from "./GuestCommentName";
 
 const RecorderSurface = dynamic(
 	() => import("../timeline/recording/RecorderSurface"),
@@ -16,13 +21,6 @@ const RecorderSurface = dynamic(
 );
 
 export const SHARE_COMMENT_FIELD_ID = "share-comment-draft";
-
-export type GuestName = {
-	saved: string;
-	draft: string;
-	setDraft: (name: string) => void;
-	edit: () => void;
-};
 
 export type CommentDraft = {
 	content: string;
@@ -33,7 +31,6 @@ export type CommentDraft = {
 
 export function CommentComposer({
 	videoId,
-	guestName,
 	isScreenshot,
 	onSubmit,
 	onCancel,
@@ -42,7 +39,6 @@ export function CommentComposer({
 	onCommentSuccess,
 }: {
 	videoId: Video.VideoId;
-	guestName: GuestName;
 	isScreenshot?: boolean;
 	onSubmit: (draft: CommentDraft) => Promise<void>;
 	onCancel?: () => void;
@@ -64,45 +60,13 @@ export function CommentComposer({
 		kind: RecordIntentKind;
 		t: number;
 	}>();
-	const website = useRef<HTMLInputElement>(null);
+	const guestFields = useRef<HTMLDivElement>(null);
+	const { name } = useGuestCommentName();
 	const hasTimestamp = !isScreenshot && includeTime;
 
 	return (
 		<div className="space-y-2">
-			{!user &&
-				(guestName.saved ? (
-					<div className="flex flex-wrap items-center gap-1 text-sm text-gray-11">
-						<span>Commenting as {guestName.saved} ·</span>
-						<button
-							type="button"
-							className="text-gray-10 underline"
-							onClick={guestName.edit}
-						>
-							Change
-						</button>
-					</div>
-				) : (
-					<label className="flex flex-wrap items-center gap-2 text-sm text-gray-11">
-						Your name
-						<input
-							autoComplete="name"
-							value={guestName.draft}
-							onChange={(event) => guestName.setDraft(event.target.value)}
-							className="rounded-lg border border-gray-5 bg-white px-2 py-1 text-gray-12"
-						/>
-					</label>
-				))}
-			{!user && (
-				<input
-					hidden
-					ref={website}
-					type="text"
-					name="website"
-					aria-label="Website"
-					tabIndex={-1}
-					autoComplete="off"
-				/>
-			)}
+			{!user && <GuestCommentNameFields fieldsRef={guestFields} />}
 			{!isScreenshot && (
 				<button
 					type="button"
@@ -126,8 +90,7 @@ export function CommentComposer({
 					await onSubmit({
 						content,
 						timestamp: hasTimestamp ? playback.getCurrentTime() : null,
-						guestName: guestName.saved || guestName.draft,
-						website: website.current?.value ?? "",
+						...readGuestCommentFields(guestFields, name),
 					});
 				}}
 				onCancel={onCancel}

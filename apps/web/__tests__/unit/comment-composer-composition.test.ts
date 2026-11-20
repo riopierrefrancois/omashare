@@ -6,7 +6,8 @@ import { act, createElement } from "react";
 import type { Root } from "react-dom/client";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { newComment } from "@/actions/videos/new-comment";
+import { newComment, postShareComment } from "@/actions/videos/new-comment";
+import { GuestCommentNameProvider } from "@/app/s/[videoId]/_components/comments/GuestCommentName";
 import { Toolbar } from "@/app/s/[videoId]/_components/Toolbar";
 import CommentInput from "@/app/s/[videoId]/_components/tabs/Activity/CommentInput";
 import { TimelineComposer } from "@/app/s/[videoId]/_components/timeline/TimelineComposer";
@@ -15,11 +16,21 @@ import {
 	useTimelineActions,
 } from "@/app/s/[videoId]/_components/timeline/TimelineProvider";
 
-vi.mock("@/actions/videos/new-comment", () => ({ newComment: vi.fn() }));
+vi.mock("@/actions/videos/new-comment", () => ({
+	newComment: vi.fn(),
+	postShareComment: vi.fn(),
+}));
 const showError = vi.hoisted(() => vi.fn());
 vi.mock("sonner", () => ({ toast: { error: showError } }));
+const auth = vi.hoisted(() => ({
+	user: { id: "viewer", name: "Viewer", imageUrl: null } as {
+		id: string;
+		name: string;
+		imageUrl: null;
+	} | null,
+}));
 vi.mock("@/app/Layout/AuthContext", () => ({
-	useCurrentUser: () => ({ id: "viewer", name: "Viewer", imageUrl: null }),
+	useCurrentUser: () => auth.user,
 }));
 vi.mock("next/dynamic", () => ({ default: () => () => null }));
 vi.mock("@/app/s/[videoId]/_components/AuthOverlayLazy", () => ({
@@ -76,6 +87,13 @@ let container: HTMLDivElement;
 
 beforeEach(() => {
 	vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+	window.localStorage.clear();
+	auth.user = { id: "viewer", name: "Viewer", imageUrl: null };
+	vi.mocked(postShareComment)
+		.mockReset()
+		.mockImplementation(async (data) => ({
+			comment: await newComment(data),
+		}));
 	vi.mocked(newComment)
 		.mockReset()
 		.mockImplementation(async (data) => ({
@@ -134,7 +152,8 @@ async function renderComposer(kind: "comment" | "reply" | "timeline") {
 				hasHover: true,
 				children: createElement(TimelineHarness),
 			};
-			root.render(createElement(TimelineProvider, props));
+			const guestProps = { children: createElement(TimelineProvider, props) };
+			root.render(createElement(GuestCommentNameProvider, guestProps));
 			return;
 		}
 		root.render(
@@ -154,7 +173,7 @@ async function renderComposer(kind: "comment" | "reply" | "timeline") {
 			open.click();
 		});
 	}
-	const input = container.querySelector("textarea, input");
+	const input = container.querySelector("textarea, input[placeholder]");
 	if (
 		!(input instanceof HTMLTextAreaElement || input instanceof HTMLInputElement)
 	) {
@@ -306,7 +325,7 @@ it.each(["success", "failure"])(
 	},
 );
 
-it("brings the timeline draft back and says so when the comment fails to post", async () => {
+it("keeps the timeline draft and says so when the comment fails to post", async () => {
 	vi.mocked(newComment).mockRejectedValueOnce(
 		new Error("Feedback is disabled on this video"),
 	);
@@ -354,7 +373,7 @@ it("leaves a newer timeline draft alone when an earlier comment fails", async ()
 	const open = container.querySelector("button");
 	if (!open) throw new Error("Composer trigger is missing");
 	await act(async () => open.click());
-	const newer = container.querySelector("input");
+	const newer = container.querySelector<HTMLInputElement>("input[placeholder]");
 	if (!newer) throw new Error("Missing comment field");
 	await change(newer, "Newer draft");
 	await act(async () => {
@@ -368,6 +387,37 @@ it("leaves a newer timeline draft alone when an earlier comment fails", async ()
 	expect(newer.value).toBe("Newer draft");
 });
 
+it("posts a guest comment at the strip anchor and keeps focus", async () => {
+	auth.user = null;
+	const { input } = await renderComposer("timeline");
+	const name = container.querySelector<HTMLInputElement>(
+		'input[name="guestName"]',
+	);
+	if (!name) throw new Error("Missing guest name field");
+	await change(name, " Sam ");
+	await change(input, "Guest feedback");
+	await act(async () => {
+		input.dispatchEvent(
+			new KeyboardEvent("keydown", {
+				key: "Enter",
+				bubbles: true,
+				cancelable: true,
+			}),
+		);
+	});
+	expect(postShareComment).toHaveBeenCalledWith(
+		expect.objectContaining({
+			content: "Guest feedback",
+			guestName: "Sam",
+			website: "",
+			authorImage: null,
+			timestamp: 12,
+		}),
+	);
+	expect(window.localStorage.getItem("omashare.guestName")).toBe("Sam");
+	expect(document.activeElement).toBe(input);
+	expect(input.value).toBe("");
+});
 it("says so when a toolbar reaction fails to post", async () => {
 	vi.mocked(newComment).mockRejectedValueOnce(new Error("Offline"));
 	vi.spyOn(console, "error").mockImplementation(() => {});

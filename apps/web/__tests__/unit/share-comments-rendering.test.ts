@@ -11,6 +11,7 @@ import {
 } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { GuestCommentNameProvider } from "@/app/s/[videoId]/_components/comments/GuestCommentName";
 import { ReactionCounts } from "@/app/s/[videoId]/_components/comments/ReactionCounts";
 import { ShareComments } from "@/app/s/[videoId]/_components/comments/ShareComments";
 import { PlaybackProvider } from "@/app/s/[videoId]/_components/playback/PlaybackContext";
@@ -149,6 +150,11 @@ afterEach(async () => {
 	vi.unstubAllGlobals();
 });
 
+function wrapGuestName(children: ReactNode) {
+	const props = { children };
+	return createElement(GuestCommentNameProvider, props);
+}
+
 async function render(onSeek = seek, disabled = false, isVideoOwner = false) {
 	await act(async () => {
 		const props = {
@@ -169,7 +175,7 @@ async function render(onSeek = seek, disabled = false, isVideoOwner = false) {
 				}),
 			),
 		};
-		root.render(createElement(PlaybackProvider, props));
+		root.render(wrapGuestName(createElement(PlaybackProvider, props)));
 	});
 }
 
@@ -640,7 +646,9 @@ describe("share comments rendering", () => {
 				children: createElement(LiveComments),
 			};
 			await act(async () =>
-				root.render(createElement(PlaybackProvider, playbackProps)),
+				root.render(
+					wrapGuestName(createElement(PlaybackProvider, playbackProps)),
+				),
 			);
 			const input = container.querySelector("textarea");
 			if (!input) throw new Error("Missing comment editor");

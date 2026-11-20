@@ -31,6 +31,7 @@ import {
 } from "@/lib/video-status-query";
 import { CaptionProvider } from "./_components/CaptionContext";
 import { SHARE_COMMENT_FIELD_ID } from "./_components/comments/CommentComposer";
+import { GuestCommentNameProvider } from "./_components/comments/GuestCommentName";
 import { ReactionCounts } from "./_components/comments/ReactionCounts";
 import { ShareComments } from "./_components/comments/ShareComments";
 import { DashboardBackLink } from "./_components/DashboardBackLink";
@@ -706,10 +707,7 @@ export const Share = ({
 	}, []);
 
 	return (
-		<CaptionProvider
-			videoId={data.id}
-			transcriptionStatus={transcriptionStatus}
-		>
+		<ShareProviders videoId={data.id} transcriptionStatus={transcriptionStatus}>
 			<PlaybackProvider
 				videoRef={playerRef}
 				stageRef={stageRef}
@@ -1119,7 +1117,7 @@ export const Share = ({
 					)}
 				</div>
 			</PlaybackProvider>
-		</CaptionProvider>
+		</ShareProviders>
 	);
 };
 
@@ -1160,5 +1158,16 @@ function ScreenshotImage({ src, alt }: { src?: string | null; alt: string }) {
 				className="rounded-xl object-contain"
 			/>
 		</div>
+	);
+}
+
+function ShareProviders({
+	children,
+	...caption
+}: React.ComponentProps<typeof CaptionProvider>) {
+	return (
+		<GuestCommentNameProvider>
+			<CaptionProvider {...caption}>{children}</CaptionProvider>
+		</GuestCommentNameProvider>
 	);
 }

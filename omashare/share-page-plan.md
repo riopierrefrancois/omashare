@@ -133,8 +133,8 @@ PF found there's no visible way to comment in the Timeline view. Stock Cap only 
 - [x] The timeline markers, strip hover and click-to-add stay as they are.
 
 ### Task C2: the strip composer takes guests too
-- [ ] `TimelineComposer` lets guests write a text comment with the same guest-name rule as the bottom box: one shared hook/helper, the same `localStorage["omashare.guestName"]` key, and the same honeypot. No sign-in overlay for text. Media recording still needs sign-in, as today.
-- [ ] Same focus rule as the bottom box: after sending, focus doesn't fall to `<body>`.
+- [x] `TimelineComposer` lets guests write a text comment with the same guest-name rule as the bottom box: one shared hook/helper, the same `localStorage["omashare.guestName"]` key, and the same honeypot. No sign-in overlay for text. Media recording still needs sign-in, as today.
+- [x] Same focus rule as the bottom box: after sending, focus doesn't fall to `<body>`.
 
 ### Task C3: the "comment here" button is always visible
 - [ ] The control bar's "Comment at current time" button in `TimelineView.tsx` shows on every screen, not only on touch or compact ones. It opens the strip composer at the playhead, as it does today.
