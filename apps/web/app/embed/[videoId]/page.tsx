@@ -37,7 +37,7 @@ import {
 	startDeferredLoomProcessing,
 } from "@/lib/loom-deferred-processing";
 import { resolveDefaultPlaybackSpeed } from "@/lib/playback-speed";
-import { getPlayerBrand } from "@/lib/player-brand";
+import { resolvePlayerBrand } from "@/lib/player-brand";
 import * as EffectRuntime from "@/lib/server";
 import { getShareBrand } from "@/lib/share-branding";
 import { resolveShareCallToAction } from "@/lib/share-call-to-action";
@@ -407,15 +407,16 @@ async function EmbedContent({
 				: Promise.resolve(null),
 		]);
 
-	const playerBrand = getPlayerBrand({
-		ownerIsPro: ownerIsProUser,
+	const shareBrand = getShareBrand(
+		video.orgSettings?.brand,
+		{
+			name: video.organizationName,
+			logo: organizationLogo,
+		},
 		organizationMetadata,
-	});
+	);
 
-	const shareBrand = getShareBrand(video.orgSettings?.brand, {
-		name: video.organizationName,
-		logo: organizationLogo,
-	});
+	const playerBrand = resolvePlayerBrand(shareBrand.accent);
 
 	const { orgSettings: _orgSettings, ...embedData } = video;
 

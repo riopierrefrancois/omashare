@@ -40,7 +40,6 @@ import { FontAwesomeIcon } from "@/components/FontAwesomeIcon";
 import { NewOrganization } from "@/components/forms/NewOrganization";
 import { SignedImageUrl } from "@/components/SignedImageUrl";
 import { Tooltip } from "@/components/Tooltip";
-import { UsageButton } from "@/components/UsageButton";
 import { canUseInfra } from "@/lib/infra-access";
 import { INFRA_BASE_PATH } from "@/lib/infra-routes";
 import {
@@ -473,10 +472,6 @@ const AdminNavItems = ({ toggleMobileNav }: Props) => {
 						</div>
 					</div>
 					<div className="pt-2 pb-3 w-full shrink-0">
-						<UsageButton
-							toggleMobileNav={() => toggleMobileNav?.()}
-							subscribed={user.isPro}
-						/>
 						{buildEnv.NEXT_PUBLIC_IS_CAP && (
 							<Tooltip
 								disable={!sidebarCollapsed}

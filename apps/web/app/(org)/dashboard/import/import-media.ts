@@ -190,6 +190,7 @@ async function uploadVideoForServerProcessing(
 
 		setUploadStatus({ status: "creating" });
 		const videoData = await createVideoForServerProcessing({
+			fileName: file.name,
 			duration,
 			resolution,
 			folderId,

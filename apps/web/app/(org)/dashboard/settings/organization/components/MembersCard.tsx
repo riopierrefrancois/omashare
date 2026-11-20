@@ -6,7 +6,6 @@ import { faUser } from "@fortawesome/free-solid-svg-icons/faUser";
 import { useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Mail, Search, UserMinus } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -29,11 +28,7 @@ import {
 	organizationRoleLabel,
 } from "@/lib/permissions/roles";
 import { calculateSeats } from "@/utils/organization";
-import {
-	doodleHost,
-	PaperPlaneDoodle,
-	SeatMeter,
-} from "../_components/doodles";
+import { doodleHost, PaperPlaneDoodle } from "../_components/doodles";
 import {
 	SettingsCard,
 	SettingsSection,
@@ -58,7 +53,7 @@ const plural = (count: number, word: string) =>
 export const MembersCard = ({ setIsInviteDialogOpen }: MembersCardProps) => {
 	const router = useRouter();
 	const { activeOrganization, user } = useDashboardContext();
-	const { proSeatsRemaining, proSeatsUsed, proSeatsTotal } = calculateSeats({
+	const { proSeatsRemaining } = calculateSeats({
 		...(activeOrganization || {}),
 		ownerId: activeOrganization?.organization.ownerId,
 		ownerIsPro: Boolean(activeOrganization?.ownerIsPro),
@@ -275,34 +270,11 @@ export const MembersCard = ({ setIsInviteDialogOpen }: MembersCardProps) => {
 				}
 			>
 				<SettingsCard>
-					{!buildEnv.NEXT_PUBLIC_IS_CAP ? null : canManageBilling &&
-						activeOrganization?.hasActiveProSeatProvider ? (
-						<SeatManagementCard />
-					) : (
-						<div className="flex flex-wrap gap-x-6 gap-y-3 justify-between items-center px-4 py-3.5 sm:px-5">
-							<div className="flex flex-wrap gap-x-4 gap-y-2 items-center">
-								<SeatMeter used={proSeatsUsed} total={proSeatsTotal} />
-								<p className="text-[13px] text-gray-11">
-									<span className="font-medium tabular-nums text-gray-12">
-										{proSeatsUsed} of {proSeatsTotal}
-									</span>{" "}
-									Pro seats in use
-								</p>
-							</div>
-							{canManageBilling ? (
-								<Link
-									href="/dashboard/settings/organization/billing"
-									className="text-[13px] font-medium underline-offset-4 text-gray-12 hover:underline"
-								>
-									Upgrade to Pro
-								</Link>
-							) : (
-								<p className="text-[13px] text-gray-10">
-									The organization owner manages seats.
-								</p>
-							)}
-						</div>
-					)}
+					{buildEnv.NEXT_PUBLIC_IS_CAP &&
+						canManageBilling &&
+						activeOrganization?.hasActiveProSeatProvider && (
+							<SeatManagementCard />
+						)}
 
 					{showSearch && (
 						<label className="flex gap-2.5 items-center px-4 h-11 sm:px-5">

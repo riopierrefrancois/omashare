@@ -6,7 +6,6 @@ import AccessEmailDomain from "./AccessEmailDomain";
 import { CustomDomain } from "./CustomDomain";
 import { OrganizationIcon } from "./OrganizationIcon";
 import OrgName from "./OrgName";
-import { ShareableLinkBrandColor } from "./ShareableLinkBrandColor";
 
 export const OrganizationDetailsCard = () => {
 	const { activeOrganization } = useDashboardContext();
@@ -24,7 +23,6 @@ export const OrganizationDetailsCard = () => {
 			<SettingsSection title="Shareable links">
 				<SettingsCard>
 					<CustomDomain />
-					<ShareableLinkBrandColor />
 				</SettingsCard>
 			</SettingsSection>
 			<SettingsSection title="Access">

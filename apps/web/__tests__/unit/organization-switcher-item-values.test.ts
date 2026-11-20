@@ -32,7 +32,6 @@ vi.mock("@/components/SignedImageUrl", () => ({
 vi.mock("@/components/Tooltip", () => ({
 	Tooltip: ({ children }: { children: unknown }) => children,
 }));
-vi.mock("@/components/UsageButton", () => ({ UsageButton: () => null }));
 vi.mock("@/app/(org)/dashboard/_components/AnimatedIcons", () => ({
 	CapIcon: () => null,
 	ChartLineIcon: () => null,

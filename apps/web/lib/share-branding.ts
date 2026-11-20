@@ -1,4 +1,5 @@
 import type { ImageUpload, Organisation } from "@cap/web-domain";
+import { playerColorFromOrganizationMetadata } from "@/lib/player-brand";
 
 const hexColor = (value: unknown) =>
 	typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value)
@@ -94,8 +95,12 @@ export function shareBrandColors(accent: string, page: string) {
 export function getShareBrand(
 	settings?: Organisation.ShareBrandSettings | null,
 	identity?: { name?: string | null; logo?: ImageUpload.ImageUrl | null },
+	organizationMetadata?: unknown,
 ) {
-	const accent = hexColor(settings?.accent) ?? "#2959C4";
+	const accent =
+		hexColor(settings?.accent) ??
+		hexColor(playerColorFromOrganizationMetadata(organizationMetadata)) ??
+		"#2959C4";
 	const ink = hexColor(settings?.ink) ?? "#1F2335";
 	const page = hexColor(settings?.page) ?? "#FFFFFF";
 	const url = httpsUrl(settings?.websiteUrl);

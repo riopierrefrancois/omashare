@@ -32,11 +32,13 @@ export interface CreateForProcessingResult {
 }
 
 export async function createVideoForServerProcessing({
+	fileName,
 	duration,
 	resolution,
 	folderId,
 	orgId,
 }: {
+	fileName?: string;
 	duration?: number;
 	resolution?: string;
 	folderId?: Folder.FolderId;
@@ -67,12 +69,13 @@ export async function createVideoForServerProcessing({
 	const videoId = Video.VideoId.make(nanoId());
 
 	const date = new Date();
-	const formattedDate = `${date.getDate()} ${date.toLocaleString("default", {
+	const formattedDate = `${date.getDate()} ${date.toLocaleString("en-GB", {
 		month: "long",
 	})} ${date.getFullYear()}`;
 
 	const rawFileKey = `${user.id}/${videoId}/raw-upload.mp4`;
-	const videoTitle = `Cap Upload - ${formattedDate}`;
+	const videoTitle =
+		fileName?.replace(/\.[^.]+$/, "").trim() || `Upload, ${formattedDate}`;
 
 	const uploadResult = await StorageService.createUploadTargetForUser(
 		user.id,

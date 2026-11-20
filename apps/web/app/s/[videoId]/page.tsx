@@ -62,7 +62,7 @@ import {
 	getEffectiveOrganizationRole,
 } from "@/lib/permissions/roles";
 import { resolveDefaultPlaybackSpeed } from "@/lib/playback-speed";
-import { getPlayerBrand, playerBrandAttributes } from "@/lib/player-brand";
+import { playerBrandAttributes, resolvePlayerBrand } from "@/lib/player-brand";
 import { getPublicShareVideo } from "@/lib/public-share-video";
 import * as EffectRuntime from "@/lib/server";
 import { runPromise } from "@/lib/server";
@@ -498,10 +498,13 @@ export default async function ShareVideoPage(props: PageProps<"/s/[videoId]">) {
 					key={videoId}
 					className="flex overflow-x-clip flex-col min-h-screen bg-gray-2 lg:h-screen lg:min-h-0 lg:overflow-hidden"
 					{...playerBrandAttributes(
-						getPlayerBrand({
-							ownerIsPro: userIsPro(data.video.owner),
-							organizationMetadata: data.video.organizationMetadata,
-						}),
+						resolvePlayerBrand(
+							getShareBrand(
+								data.video.orgSettings?.brand,
+								undefined,
+								data.video.organizationMetadata,
+							).accent,
+						),
 					)}
 				>
 					<AuthorizedContent video={data.video} searchParams={searchParams} />
@@ -1107,10 +1110,14 @@ async function AuthorizedContent({
 	// upload/create paths re-check server-side via canUseMediaComments.
 	const canRecordMedia = Boolean(user) && videoWithOrganizationInfo.owner.isPro;
 
-	const shareBrand = getShareBrand(video.orgSettings?.brand, {
-		name: video.organizationName,
-		logo: resolvedImages.organization,
-	});
+	const shareBrand = getShareBrand(
+		video.orgSettings?.brand,
+		{
+			name: video.organizationName,
+			logo: resolvedImages.organization,
+		},
+		organizationMetadata,
+	);
 
 	// Bottom padding lives in Share (classic view only): the timeline view's
 	// theater strip must end flush with the viewport, and Share is the one that
@@ -1161,12 +1168,7 @@ async function AuthorizedContent({
 						canManageSharePageBranding={canManageOrganizationSettings(
 							videoOrganizationRole,
 						)}
-						brandColor={
-							getPlayerBrand({
-								ownerIsPro,
-								organizationMetadata,
-							})?.color ?? null
-						}
+						brandColor={shareBrand.accent}
 						canDownload={canDownloadVideo}
 						hasEdits={videoHasEdits}
 						// Caught separately from the copy the sidebar consumes: the

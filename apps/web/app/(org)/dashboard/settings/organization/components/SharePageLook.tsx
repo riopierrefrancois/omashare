@@ -58,11 +58,15 @@ function SharePageLookForm({
 	const router = useRouter();
 	const websiteLabelId = useId();
 	const websiteUrlId = useId();
-	const defaults = getShareBrand();
-	const preview = getShareBrand(draft, {
-		name: organization.name,
-		logo: organization.iconUrl,
-	});
+	const defaults = getShareBrand(undefined, undefined, organization.metadata);
+	const preview = getShareBrand(
+		draft,
+		{
+			name: organization.name,
+			logo: organization.iconUrl,
+		},
+		organization.metadata,
+	);
 	return (
 		<SettingsSection title="Share page look">
 			<SettingsCard>
