@@ -443,6 +443,21 @@ describe("share comments rendering", () => {
 		expect(container.querySelector("#comment-saved")).toBeNull();
 	});
 
+	it("shows the seek chip only on the root comment", async () => {
+		comments = [
+			{ ...comment("root"), timestamp: 42 },
+			{ ...comment("first-reply", "root"), timestamp: 0 },
+			{ ...comment("second-reply", "root"), timestamp: 18 },
+		];
+		await render();
+
+		await click(button("at 0:42"));
+		expect(seek).toHaveBeenCalledWith(42);
+		expect(button("at 0:00")).toBeNull();
+		expect(button("at 0:18")).toBeNull();
+		expect(row("first-reply").querySelector("time")).not.toBeNull();
+	});
+
 	it("asks to delete the root with its reply count and lets the viewer keep it", async () => {
 		comments = [
 			comment("root"),

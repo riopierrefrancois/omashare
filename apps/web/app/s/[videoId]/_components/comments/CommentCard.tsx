@@ -135,7 +135,7 @@ function CommentDetails({
 				<span className="text-xs text-gray-10" title={formatTimestamp(date)}>
 					<RelativeTime date={date} format={formatTimeAgo} />
 				</span>
-				{timestamp !== null && onSeek && (
+				{!isReply && timestamp !== null && onSeek && (
 					<button
 						type="button"
 						className="rounded-full bg-gray-3 px-2 py-0.5 text-xs text-gray-11 hover:bg-gray-4"
