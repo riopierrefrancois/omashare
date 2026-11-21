@@ -57,10 +57,7 @@ import {
 	startDeferredLoomProcessing,
 } from "@/lib/loom-deferred-processing";
 import { createNotification } from "@/lib/Notification";
-import {
-	canManageOrganizationSettings,
-	getEffectiveOrganizationRole,
-} from "@/lib/permissions/roles";
+import { getEffectiveOrganizationRole } from "@/lib/permissions/roles";
 import { resolveDefaultPlaybackSpeed } from "@/lib/playback-speed";
 import { playerBrandAttributes, resolvePlayerBrand } from "@/lib/player-brand";
 import { getPublicShareVideo } from "@/lib/public-share-video";
@@ -1163,10 +1160,6 @@ async function AuthorizedContent({
 						viewerCount={viewerCount}
 						userOrganizations={userOrganizations}
 						spacesData={spacesData}
-						branding={shareBrand}
-						canManageSharePageBranding={canManageOrganizationSettings(
-							videoOrganizationRole,
-						)}
 						brandColor={shareBrand.accent}
 						canDownload={canDownloadVideo}
 						hasEdits={videoHasEdits}

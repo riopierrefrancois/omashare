@@ -20,16 +20,18 @@ const DESTINATION_ICONS = {
 export function DashboardBackLink({
 	destination,
 	compact = false,
+	label,
 	className,
 }: {
 	destination: ShareDashboardDestination;
 	compact?: boolean;
+	label?: string;
 	className?: string;
 }) {
 	const router = useRouter();
 	const [isSwitching, setIsSwitching] = useState(false);
 	const Icon = DESTINATION_ICONS[destination.kind];
-	const accessibleLabel = `Back to ${destination.label}`;
+	const accessibleLabel = `Back to ${label ?? destination.label}`;
 	const { switchOrganizationId } = destination;
 
 	const classes = clsx(
@@ -48,8 +50,10 @@ export function DashboardBackLink({
 				className="size-4 shrink-0 transition-transform duration-200 group-hover:-translate-x-0.5"
 				aria-hidden
 			/>
-			<Icon className="size-3.5 shrink-0 text-gray-10" aria-hidden />
-			<span className="truncate">{destination.label}</span>
+			{!label && (
+				<Icon className="size-3.5 shrink-0 text-gray-10" aria-hidden />
+			)}
+			<span className="truncate">{label ?? destination.label}</span>
 		</>
 	);
 

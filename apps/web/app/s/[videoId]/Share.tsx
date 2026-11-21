@@ -319,7 +319,6 @@ export const Share = ({
 	serverPlaybackUrl = null,
 	posterUrl = null,
 	comments,
-	views,
 	screenshotImageUrl,
 	initialAiData,
 	videoSettings,
@@ -709,7 +708,12 @@ export const Share = ({
 				fallbackDuration={data.duration}
 			>
 				{topBar}
-				<div className="mx-auto flex w-full max-w-[1240px] flex-1 flex-col items-start gap-6 p-4 sm:p-6 lg:flex-row">
+				<div
+					className={clsx(
+						"relative mx-auto flex w-full max-w-[1240px] flex-1 flex-col items-start gap-6 p-4 sm:p-6 lg:flex-row",
+						viewerId === data.owner.id && "pt-[60px] sm:pt-[60px]",
+					)}
+				>
 					<div
 						className={clsx(
 							"min-w-0 w-full flex-1",
@@ -980,13 +984,6 @@ export const Share = ({
 								onSeek={isScreenshot ? undefined : handleSeek}
 								commentsDisabled={areCommentStampsDisabled}
 								isVideoOwner={viewerId === data.owner.id}
-								ownerOrMemberViews={
-									viewerId &&
-									(viewerId === data.owner.id ||
-										data.organizationMembers?.some((id) => id === viewerId))
-										? views
-										: undefined
-								}
 								isScreenshot={isScreenshot}
 								canRecordMedia={canRecordMedia && !isScreenshot}
 							/>

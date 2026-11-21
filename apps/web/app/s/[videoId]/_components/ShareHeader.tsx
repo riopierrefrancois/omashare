@@ -18,7 +18,6 @@ import { faGear } from "@fortawesome/free-solid-svg-icons/faGear";
 import { faLock } from "@fortawesome/free-solid-svg-icons/faLock";
 import { faShare } from "@fortawesome/free-solid-svg-icons/faShare";
 import { faTrash } from "@fortawesome/free-solid-svg-icons/faTrash";
-import { faUnlock } from "@fortawesome/free-solid-svg-icons/faUnlock";
 import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import {
@@ -29,14 +28,13 @@ import {
 	Lock,
 	MousePointer2,
 	Pencil,
-	Scissors,
 	Users,
 } from "lucide-react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Suspense, use, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { selectShareableLinkBrandingOrganization } from "@/actions/organization/shareable-link-icon";
 import { editTitle } from "@/actions/videos/edit-title";
 import type { VideoStatusResult } from "@/actions/videos/get-status";
 import { useDashboardContext } from "@/app/(org)/dashboard/DashboardContext";
@@ -45,10 +43,10 @@ import { useCurrentUser } from "@/app/Layout/AuthContext";
 import { FontAwesomeIcon } from "@/components/FontAwesomeIcon";
 import { SignedImageUrl } from "@/components/SignedImageUrl";
 import { Tooltip } from "@/components/Tooltip";
+import { formatClock } from "@/lib/player-time";
 import type { ShareDashboardDestination } from "@/lib/share-dashboard-destination";
 import { usePublicEnv } from "@/utils/public-env";
-import { navigateWithTransition } from "@/utils/view-transition";
-import type { ShareBrand, VideoData } from "../types";
+import type { VideoData } from "../types";
 import { DashboardBackLink } from "./DashboardBackLink";
 import { RelativeTime } from "./RelativeTime";
 import { describeShareAudience } from "./share-audience";
@@ -115,10 +113,6 @@ const CustomThumbnailDialog = dynamic(
 	() => import("@/components/custom-thumbnail/CustomThumbnailDialog"),
 	{ ssr: false },
 );
-const DuplicateCapMenuItem = dynamic(() => import("./DuplicateCapMenuItem"), {
-	ssr: false,
-});
-
 /**
  * Shared by the heading and the rename field. Renaming is meant to read as a
  * caret appearing in the title, so both have to render the same glyphs at the
@@ -127,10 +121,16 @@ const DuplicateCapMenuItem = dynamic(() => import("./DuplicateCapMenuItem"), {
  */
 const TITLE_TEXT_CLASS = "text-2xl leading-tight font-bold sm:text-[28px]";
 
+const OWNER_DATE = new Intl.DateTimeFormat("en-US", {
+	month: "short",
+	day: "numeric",
+	timeZone: "UTC",
+});
+
 const TITLE_PLACEHOLDER = "video title";
 
 const ACTION_BAR_BUTTON_CLASS =
-	"h-10 min-w-0 gap-1.5 rounded-full px-3 text-[13px] sm:h-8 sm:px-2.5 sm:text-xs";
+	"h-9 min-w-0 shrink-0 gap-1.5 rounded-[10px] bg-white px-2 text-sm sm:px-3";
 
 export const ShareHeader = ({
 	data,
@@ -143,8 +143,6 @@ export const ShareHeader = ({
 	sharedSpaces = [],
 	viewerCount = 0,
 	spacesData = null,
-	branding,
-	canManageSharePageBranding = false,
 	brandColor = null,
 	canDownload = false,
 	canMoveToFolder = false,
@@ -178,17 +176,10 @@ export const ShareHeader = ({
 		hasPassword?: boolean;
 	}[];
 	spacesData?: Spaces[] | null;
-	branding?: ShareBrand | null;
-	canManageSharePageBranding?: boolean;
 	brandColor?: string | null;
 	canDownload?: boolean;
 	canMoveToFolder?: boolean;
 	hasEdits?: boolean;
-	/**
-	 * Shown to every viewer, not just the owner. The sidebar's analytics row is
-	 * members-only, which left a shared link with no sense of reach at all.
-	 * Resolves late and never blocks the header (see `ViewCount`).
-	 */
 	views?: MaybePromise<number | null>;
 	dashboardDestination?: ShareDashboardDestination | null;
 }) => {
@@ -254,8 +245,6 @@ export const ShareHeader = ({
 	const [passwordProtected, setPasswordProtected] = useState(
 		Boolean(data.hasPassword),
 	);
-	const [isOpeningBrandingSettings, setIsOpeningBrandingSettings] =
-		useState(false);
 	const titleInputRef = useRef<HTMLInputElement>(null);
 	const titleButtonRef = useRef<HTMLButtonElement>(null);
 	/**
@@ -478,10 +467,10 @@ export const ShareHeader = ({
 		return (
 			<Tooltip content={audience.tooltip} position="bottom">
 				<Button
-					className="min-w-0 max-w-full gap-1.5 px-3"
+					className={clsx(ACTION_BAR_BUTTON_CLASS, "max-w-[48vw] shrink")}
 					size="xs"
 					variant="outline"
-					aria-label={`Sharing: ${audience.label}. Click to manage access.`}
+					aria-label={`Who can watch: ${audience.label}`}
 					onClick={() => setIsSharingDialogOpen(true)}
 				>
 					<AudienceIcon className="size-3.5 shrink-0 text-gray-11" />
@@ -520,41 +509,14 @@ export const ShareHeader = ({
 		</Button>
 	);
 
-	const userIsOwnerAndNotPro = user?.id === data.owner.id && !data.owner.isPro;
-	const canEditVideo =
-		isOwner &&
-		!data.isScreenshot &&
-		!data.hasActiveUpload &&
-		(data.source.type === "desktopMP4" || data.source.type === "webMP4");
+	const analyticsHref = `/dashboard/analytics?capId=${data.id}`;
+	const canSeeAnalytics =
+		isOwner || data.organizationMembers?.some((id) => id === user?.id);
+	const dateIsValid = !Number.isNaN(data.createdAt.getTime());
 	const customThumbnail = getCustomThumbnailMetadata(data.metadata);
 	const canPickThumbnailFrame =
 		!data.hasActiveUpload &&
 		(data.source.type === "desktopMP4" || data.source.type === "webMP4");
-	const handleEditVideo = () => {
-		if (userIsOwnerAndNotPro) {
-			setUpgradeModalOpen(true);
-			return;
-		}
-
-		navigateWithTransition("edit-enter", () => push(`/s/${data.id}/edit`));
-	};
-
-	const handleEditBranding = async () => {
-		setIsOpeningBrandingSettings(true);
-
-		try {
-			await selectShareableLinkBrandingOrganization(data.orgId);
-			push("/dashboard/settings/organization");
-		} catch (error) {
-			toast.error(
-				error instanceof Error
-					? error.message
-					: "Failed to open organization settings",
-			);
-			setIsOpeningBrandingSettings(false);
-		}
-	};
-
 	return (
 		<>
 			{sharingDialogMounted && (
@@ -668,47 +630,148 @@ export const ShareHeader = ({
 				</>
 			)}
 			<div className="min-w-0">
-				{(dashboardDestination ||
-					(isOwner && canMoveToFolder) ||
-					(branding?.name && canManageSharePageBranding)) && (
-					<div className="flex flex-wrap gap-1 items-center -ml-1.5 mb-1.5 min-w-0">
-						{dashboardDestination && (
-							<DashboardBackLink destination={dashboardDestination} />
-						)}
-						{branding?.name && canManageSharePageBranding && (
-							<button
-								type="button"
-								onClick={handleEditBranding}
-								disabled={isOpeningBrandingSettings}
-								className="inline-flex h-8 items-center gap-1 rounded-full px-2 text-xs text-gray-11 hover:bg-gray-3"
+				{isOwner && (
+					<nav
+						aria-label="Video owner tools"
+						className="absolute inset-x-4 top-3 flex min-h-9 items-center gap-1.5 sm:inset-x-6 sm:gap-2"
+					>
+						{dashboardDestination ? (
+							<DashboardBackLink
+								destination={dashboardDestination}
+								label="My videos"
+							/>
+						) : (
+							<Link
+								href="/dashboard/caps"
+								className="shrink-0 text-sm text-gray-11"
 							>
-								<Pencil className="size-3.5" aria-hidden />
-								Change logo
-							</button>
+								‹ My videos
+							</Link>
 						)}
-						{isOwner && canMoveToFolder && (
-							<button
-								type="button"
-								onClick={() => {
-									setMoveDialogMounted(true);
-									setMoveDialogOpen(true);
-								}}
-								className="inline-flex gap-1.5 items-center px-3 h-8 text-[13px] rounded-full border transition-colors border-gray-4 bg-gray-1 text-gray-11 hover:border-gray-6 hover:bg-gray-3 hover:text-gray-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-9"
-							>
-								<FolderInput className="size-3.5 shrink-0" aria-hidden />
-								Move to folder or space
-							</button>
-						)}
-					</div>
+						<div className="flex-1" />
+						<span className="mr-1 hidden whitespace-nowrap text-xs text-[#9A9A9A] sm:inline">
+							Only you see this row
+						</span>
+						{renderSharedStatus()}
+						{canDownload &&
+							(hasEdits ? (
+								<VideoDownloadMenu
+									videoId={data.id}
+									hasEdits
+									triggerLabel="Download"
+									triggerClassName={clsx(
+										ACTION_BAR_BUTTON_CLASS,
+										"inline-flex items-center border border-gray-5 hover:bg-gray-3",
+									)}
+									trigger={
+										<>
+											<Download className="size-4" aria-hidden />{" "}
+											<span className="hidden sm:inline">Download</span>
+										</>
+									}
+								/>
+							) : (
+								<Button
+									variant="outline"
+									size="xs"
+									className={ACTION_BAR_BUTTON_CLASS}
+									aria-label="Download"
+									disabled={isDownloading}
+									onClick={() => download("current")}
+								>
+									<Download className="size-4" aria-hidden />{" "}
+									<span className="hidden sm:inline">Download</span>
+								</Button>
+							))}
+						<DropdownMenu modal={false}>
+							<DropdownMenuTrigger asChild>
+								<Button
+									variant="outline"
+									size="xs"
+									aria-label="More for this video"
+									className={clsx(ACTION_BAR_BUTTON_CLASS, "w-9 px-0 sm:px-0")}
+								>
+									<FontAwesomeIcon className="size-4" icon={faEllipsis} />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end" sideOffset={6} className="w-60">
+								{!data.isScreenshot && (
+									<DropdownMenuItem
+										onSelect={() => setIsThumbnailDialogOpen(true)}
+									>
+										<ImageIcon className="mr-2 size-4" /> Change thumbnail
+									</DropdownMenuItem>
+								)}
+								{canMoveToFolder && (
+									<DropdownMenuItem
+										onSelect={() => {
+											setMoveDialogMounted(true);
+											setMoveDialogOpen(true);
+										}}
+									>
+										<FolderInput className="mr-2 size-4" /> Move to a space
+									</DropdownMenuItem>
+								)}
+								<DropdownMenuItem
+									onSelect={() =>
+										user.isPro
+											? setIsPasswordDialogOpen(true)
+											: setUpgradeModalOpen(true)
+									}
+								>
+									<FontAwesomeIcon className="mr-2 size-4" icon={faLock} />
+									{passwordProtected ? "Change password" : "Add a password"}
+								</DropdownMenuItem>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem onSelect={() => push(analyticsHref)}>
+									<FontAwesomeIcon
+										className="mr-2 size-4"
+										icon={faChartSimple}
+									/>{" "}
+									Views and reactions
+									<Suspense fallback={null}>
+										<span className="ml-auto pl-2 text-xs text-gray-10">
+											<ViewCount views={views} />
+										</span>
+									</Suspense>
+								</DropdownMenuItem>
+								<DropdownMenuItem
+									onSelect={() => setIsSettingsDialogOpen(true)}
+								>
+									<FontAwesomeIcon className="mr-2 size-4" icon={faGear} />{" "}
+									Video settings
+								</DropdownMenuItem>
+								{data.owner.isPro && (
+									<DropdownMenuItem onSelect={() => setIsCtaDialogOpen(true)}>
+										<MousePointer2 className="mr-2 size-4" />
+										{data.callToAction
+											? "Edit call to action"
+											: "Add call to action"}
+									</DropdownMenuItem>
+								)}
+								<DropdownMenuSeparator />
+								<DropdownMenuItem
+									onSelect={() => setIsDeleteDialogOpen(true)}
+									className="text-[var(--share-accent-text)] focus:text-[var(--share-accent-text)] hover:text-[var(--share-accent-text)]"
+								>
+									<FontAwesomeIcon className="mr-2 size-4" icon={faTrash} />{" "}
+									Delete video
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</nav>
 				)}
-				<div className="flex flex-col gap-4">
+				{!isOwner && dashboardDestination && (
+					<DashboardBackLink destination={dashboardDestination} />
+				)}
+				<div className={clsx("flex flex-col", isOwner ? "gap-2" : "gap-4")}>
 					<div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 						{/* The title takes the row's slack rather than splitting it with
 						    the link button: `justify-between` on two shrinkable items had
 						    both of them truncating at once, so the title ran out of room
 						    while there was still empty header to its right. */}
 						<div className="flex min-w-0 items-center gap-3 lg:flex-1">
-							<div className="min-w-0 flex-1">
+							<div className="flex min-w-0 flex-1 items-center gap-2">
 								{/*
 								 * Heading and rename field are the same box: same width, same
 								 * type, same position, so opening the field changes nothing on
@@ -793,6 +856,16 @@ export const ShareHeader = ({
 										<span aria-hidden className="ai-title-skeleton" />
 									)}
 								</div>
+								{isOwner && !isEditing && (
+									<button
+										type="button"
+										aria-label="Rename video"
+										onClick={startEditing}
+										className="inline-flex size-9 shrink-0 items-center justify-center rounded-[10px] text-[#9A9A9A] hover:bg-gray-3"
+									>
+										<Pencil className="size-4" aria-hidden />
+									</button>
+								)}
 							</div>
 						</div>
 					</div>
@@ -811,17 +884,34 @@ export const ShareHeader = ({
 									<p className="truncate text-sm font-medium">
 										{data.owner.name}
 									</p>
-									<p className="truncate text-xs text-gray-10">
-										· <RelativeTime date={data.createdAt} format={fromNow} />
-										{views !== undefined && (
-											<Suspense fallback={null}>
-												<ViewCount views={views} />
-											</Suspense>
+									<p
+										className={clsx(
+											"truncate text-gray-10",
+											canSeeAnalytics ? "text-sm" : "text-xs",
 										)}
+									>
+										·{" "}
+										{canSeeAnalytics && dateIsValid ? (
+											<time dateTime={data.createdAt.toISOString()}>
+												{OWNER_DATE.format(data.createdAt)}
+											</time>
+										) : (
+											<RelativeTime date={data.createdAt} format={fromNow} />
+										)}
+										{canSeeAnalytics &&
+											data.duration != null &&
+											!data.isScreenshot && (
+												<> · {formatClock(data.duration)}</>
+											)}
 									</p>
+									{canSeeAnalytics && (
+										<Suspense fallback={null}>
+											<ViewCount views={views} href={analyticsHref} />
+										</Suspense>
+									)}
 								</div>
 							</div>
-							{user !== null ? (
+							{isOwner ? null : user !== null ? (
 								<div className="flex min-w-0 max-w-[60%] justify-end lg:max-w-xs">
 									{renderSharedStatus()}
 								</div>
@@ -843,278 +933,42 @@ export const ShareHeader = ({
 								data.public && renderShareButton("shrink-0")
 							)}
 						</div>
-						{user !== null && (
-							<div className="grid auto-cols-fr grid-flow-col gap-2 sm:flex sm:items-center lg:flex-1">
-								{renderShareButton(ACTION_BAR_BUTTON_CLASS)}
-								<div className="contents sm:ml-auto sm:flex sm:items-center sm:gap-2">
-									{isOwner && (
-										<>
-											{canEditVideo && (
-												<Button
-													variant="gray"
-													size="xs"
-													className={clsx(
-														ACTION_BAR_BUTTON_CLASS,
-														"hidden sm:flex",
-													)}
-													onClick={handleEditVideo}
-												>
-													<Scissors className="size-3.5 text-gray-12" />
-													Edit video
-												</Button>
-											)}
-											<Button
-												variant="gray"
-												size="xs"
-												className={clsx(
-													ACTION_BAR_BUTTON_CLASS,
-													"hidden sm:flex",
-												)}
-												onClick={() => {
-													push(`/dashboard/analytics?capId=${data.id}`);
-												}}
-											>
-												<FontAwesomeIcon
-													className="size-3.5 text-gray-12"
-													icon={faChartSimple}
-												/>
-												View analytics
-											</Button>
-											<DropdownMenu modal={false}>
-												<DropdownMenuTrigger asChild>
-													<Button
-														variant="dark"
-														size="xs"
-														aria-label="Manage video"
-														className={clsx(ACTION_BAR_BUTTON_CLASS, "sm:px-3")}
-													>
-														<FontAwesomeIcon
-															className="size-3.5 shrink-0"
-															icon={faEllipsis}
-														/>
-														<span className="truncate sm:hidden">Manage</span>
-														<span className="hidden sm:inline">
-															Manage video
-														</span>
-													</Button>
-												</DropdownMenuTrigger>
-												<DropdownMenuContent
-													align="end"
-													sideOffset={6}
-													className="min-w-56"
-												>
-													{/* The header buttons phones don't show. Hidden from
-												    `sm` up so nothing is offered twice. Share and copy
-												    link keep their own buttons at every width. */}
-													{canEditVideo && (
-														<DropdownMenuItem
-															onClick={handleEditVideo}
-															className="flex items-center gap-2 rounded-lg sm:hidden"
-														>
-															<Scissors className="size-3.5" />
-															<p className="text-sm text-gray-12">Edit video</p>
-														</DropdownMenuItem>
-													)}
-													<DropdownMenuItem
-														onClick={() => {
-															push(`/dashboard/analytics?capId=${data.id}`);
-														}}
-														className="flex items-center gap-2 rounded-lg sm:hidden"
-													>
-														<FontAwesomeIcon
-															className="size-3"
-															icon={faChartSimple}
-														/>
-														<p className="text-sm text-gray-12">
-															View analytics
-														</p>
-													</DropdownMenuItem>
-													<DropdownMenuSeparator className="sm:hidden" />
-													<DropdownMenuItem
-														onClick={() => setIsSharingDialogOpen(true)}
-														className="flex items-center gap-2 rounded-lg"
-													>
-														<FontAwesomeIcon
-															className="size-3"
-															icon={faShare}
-														/>
-														<p className="text-sm text-gray-12">
-															Sharing & access
-														</p>
-													</DropdownMenuItem>
-													{canMoveToFolder && (
-														<DropdownMenuItem
-															onClick={() => {
-																setMoveDialogMounted(true);
-																setMoveDialogOpen(true);
-															}}
-															className="flex items-center gap-2 rounded-lg"
-														>
-															<FolderInput className="size-3" />
-															<p className="text-sm text-gray-12">
-																Move or add to space
-															</p>
-														</DropdownMenuItem>
-													)}
-													<DropdownMenuItem
-														onClick={() => setIsSettingsDialogOpen(true)}
-														className="flex items-center gap-2 rounded-lg"
-													>
-														<FontAwesomeIcon className="size-3" icon={faGear} />
-														<p className="text-sm text-gray-12">
-															Video settings
-														</p>
-													</DropdownMenuItem>
-													<DropdownMenuItem
-														onClick={() => {
-															if (!data.owner.isPro) setUpgradeModalOpen(true);
-															else setIsCtaDialogOpen(true);
-														}}
-														className="flex items-center gap-2 rounded-lg"
-													>
-														<MousePointer2 className="size-3.5" />
-														<p className="text-sm text-gray-12">
-															{data.callToAction
-																? "Edit call to action"
-																: "Add call to action"}
-														</p>
-														{!data.owner.isPro ? (
-															<span className="ml-auto pl-3 text-xs text-gray-10">
-																Pro
-															</span>
-														) : data.callToActionSource === "workspace" ? (
-															<span className="ml-auto pl-3 text-xs text-gray-10">
-																Default
-															</span>
-														) : data.callToAction ? (
-															<span className="ml-auto pl-3 text-xs text-gray-10">
-																On
-															</span>
-														) : data.callToActionSource === "off" &&
-															data.workspaceCallToAction ? (
-															<span className="ml-auto pl-3 text-xs text-gray-10">
-																Off
-															</span>
-														) : null}
-													</DropdownMenuItem>
-													{!data.isScreenshot && (
-														<DropdownMenuItem
-															onClick={() => setIsThumbnailDialogOpen(true)}
-															className="flex items-center gap-2 rounded-lg"
-														>
-															<ImageIcon className="size-3.5" />
-															<p className="text-sm text-gray-12">Thumbnail</p>
-															{customThumbnail && (
-																<span className="ml-auto pl-3 text-xs text-gray-10">
-																	Custom
-																</span>
-															)}
-														</DropdownMenuItem>
-													)}
-													<DropdownMenuItem
-														onClick={() => {
-															if (!user.isPro) setUpgradeModalOpen(true);
-															else setIsPasswordDialogOpen(true);
-														}}
-														className="flex items-center gap-2 rounded-lg"
-													>
-														<FontAwesomeIcon
-															className="size-3"
-															icon={
-																effectivePasswordProtected ? faLock : faUnlock
-															}
-														/>
-														<p className="text-sm text-gray-12">
-															{passwordProtected
-																? "Edit password"
-																: "Add password"}
-														</p>
-													</DropdownMenuItem>
-													<DuplicateCapMenuItem
-														videoId={data.id}
-														disabled={data.hasActiveUpload}
-													/>
-													{/* Downloads used to live behind a second dots button next to
-												    the link. There is one "everything else about this Cap"
-												    menu, and this is it. */}
-													{canDownload && (
-														<>
-															<DropdownMenuSeparator />
-															<DropdownMenuItem
-																onClick={() => download("current")}
-																disabled={isDownloading}
-																className="flex items-center gap-2 rounded-lg"
-															>
-																<Download className="size-3.5" />
-																<p className="text-sm text-gray-12">
-																	{hasEdits
-																		? "Download current video"
-																		: "Download video"}
-																</p>
-															</DropdownMenuItem>
-															{hasEdits && (
-																<DropdownMenuItem
-																	onClick={() => download("original")}
-																	disabled={isDownloading}
-																	className="flex items-center gap-2 rounded-lg"
-																>
-																	<Download className="size-3.5" />
-																	<p className="text-sm text-gray-12">
-																		Download original video
-																	</p>
-																</DropdownMenuItem>
-															)}
-														</>
-													)}
-													<DropdownMenuSeparator />
-													<DropdownMenuItem
-														onClick={() => setIsDeleteDialogOpen(true)}
-														className="flex items-center gap-2 rounded-lg text-red-500 focus:text-red-600"
-													>
-														<FontAwesomeIcon
-															className="size-3"
-															icon={faTrash}
-														/>
-														<p className="text-sm text-inherit">Delete video</p>
-													</DropdownMenuItem>
-												</DropdownMenuContent>
-											</DropdownMenu>
-										</>
-									)}
-									{/* Space and org members can download someone else's
+						{!isOwner && user !== null && (
+							<div className="flex flex-wrap items-center gap-2">
+								{renderShareButton()}
+								{/* Space and org members can download someone else's
 									    Cap, and they never see "Manage Cap", so the action
 									    has to stand on its own for them. */}
-									{!isOwner &&
-										canDownload &&
-										(hasEdits ? (
-											<VideoDownloadMenu
-												videoId={data.id}
-												hasEdits
-												triggerLabel="Download"
-												triggerClassName={clsx(
-													ACTION_BAR_BUTTON_CLASS,
-													"flex items-center justify-center border border-gray-5 bg-gray-3 text-gray-12 transition hover:bg-gray-6",
-												)}
-												trigger={
-													<>
-														<Download className="size-3.5" aria-hidden />
-														Download
-													</>
-												}
-											/>
-										) : (
-											<Button
-												variant="gray"
-												size="xs"
-												className={ACTION_BAR_BUTTON_CLASS}
-												disabled={isDownloading}
-												onClick={() => download("current")}
-											>
-												<Download className="size-3.5 text-gray-12" />
-												Download
-											</Button>
-										))}
-								</div>
+								{!isOwner &&
+									canDownload &&
+									(hasEdits ? (
+										<VideoDownloadMenu
+											videoId={data.id}
+											hasEdits
+											triggerLabel="Download"
+											triggerClassName={clsx(
+												ACTION_BAR_BUTTON_CLASS,
+												"flex items-center justify-center border border-gray-5 bg-gray-3 text-gray-12 transition hover:bg-gray-6",
+											)}
+											trigger={
+												<>
+													<Download className="size-3.5" aria-hidden />
+													Download
+												</>
+											}
+										/>
+									) : (
+										<Button
+											variant="gray"
+											size="xs"
+											className={ACTION_BAR_BUTTON_CLASS}
+											disabled={isDownloading}
+											onClick={() => download("current")}
+										>
+											<Download className="size-3.5 text-gray-12" />
+											Download
+										</Button>
+									))}
 							</div>
 						)}
 					</div>
@@ -1135,8 +989,22 @@ export const ShareHeader = ({
  * paints immediately. A failed lookup resolves to null and simply says nothing
  * rather than taking the header down with it.
  */
-function ViewCount({ views }: { views: MaybePromise<number | null> }) {
+function ViewCount({
+	views,
+	href,
+}: {
+	views?: MaybePromise<number | null>;
+	href?: string;
+}) {
 	const count = views instanceof Promise ? use(views) : views;
 	if (count === null || count === undefined) return null;
-	return <>{` · ${count} ${count === 1 ? "view" : "views"}`}</>;
+	if (!href) return count;
+	return (
+		<span className="text-sm text-gray-10">
+			·{" "}
+			<Link className="text-[#4F75FE] hover:underline" href={href}>
+				{count} {count === 1 ? "view" : "views"}
+			</Link>
+		</span>
+	);
 }

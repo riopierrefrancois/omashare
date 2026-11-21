@@ -1,4 +1,3 @@
-import { Button } from "@cap/ui";
 // type-only on purpose: a value import of @cap/web-domain drags the whole
 // effect runtime (~250 KB gz) into the share page's entry chunk. The branded
 // ids carry no constraints, so plain casts replace `.make()` losslessly.
@@ -12,8 +11,6 @@ import type { CommentType } from "../Share";
 import type { VideoData } from "../types";
 import { AuthOverlay } from "./AuthOverlayLazy";
 import { handleEmojiReaction, REACTIONS } from "./toolbar-reactions";
-
-const MotionButton = motion.create(Button);
 
 // million-ignore
 interface ToolbarProps {
@@ -161,25 +158,6 @@ export const Toolbar = ({
 										onClick={() => handleEmojiClick(reaction.emoji)}
 									/>
 								))}
-							</div>
-						)}
-
-						{canReact && canComment && (
-							<motion.div className="hidden sm:block w-px bg-gray-5 h-4" />
-						)}
-
-						{canComment && (
-							<div className="max-sm:hidden">
-								<MotionButton
-									onClick={onWriteComment}
-									variant="dark"
-									layout="position"
-									kbd="c"
-									size="sm"
-									className="mx-auto w-fit"
-								>
-									Comment
-								</MotionButton>
 							</div>
 						)}
 					</motion.div>

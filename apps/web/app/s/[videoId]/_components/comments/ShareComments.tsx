@@ -2,7 +2,6 @@ import type { Comment, Video } from "@cap/web-domain";
 import { useSearchParams } from "next/navigation";
 import type React from "react";
 import {
-	Suspense,
 	startTransition,
 	useCallback,
 	useEffect,
@@ -12,11 +11,9 @@ import {
 import { toast } from "sonner";
 import { deleteComment } from "@/actions/videos/delete-comment";
 import { postShareComment } from "@/actions/videos/new-comment";
-import { CapCardAnalytics } from "@/app/(org)/dashboard/caps/components/CapCard/CapCardAnalytics";
 import { useCurrentUser } from "@/app/Layout/AuthContext";
 import type { CommentType } from "../../Share";
 
-import CommentAnalytics from "./CommentAnalytics";
 import { CommentCard } from "./CommentCard";
 import { CommentComposer, type CommentDraft } from "./CommentComposer";
 import { normalizeGuestName, useGuestCommentName } from "./GuestCommentName";
@@ -32,7 +29,6 @@ export function ShareComments(props: {
 	onSeek?: (time: number) => void;
 	commentsDisabled: boolean;
 	isVideoOwner?: boolean;
-	ownerOrMemberViews?: MaybePromise<number>;
 	commentsData?: CommentType[];
 	isScreenshot?: boolean;
 	canRecordMedia?: boolean;
@@ -179,17 +175,6 @@ export function ShareComments(props: {
 					Comments{" "}
 					<span className="text-sm font-normal text-gray-10">{count}</span>
 				</h2>
-				{props.ownerOrMemberViews !== undefined && (
-					<Suspense fallback={<CapCardAnalytics.Skeleton />}>
-						<CommentAnalytics
-							videoId={videoId}
-							views={props.ownerOrMemberViews}
-							comments={props.commentsData ?? optimisticComments}
-							isLoadingAnalytics={false}
-							isOwner={Boolean(props.isVideoOwner)}
-						/>
-					</Suspense>
-				)}
 			</div>
 			{commentsDisabled ? (
 				<p className="text-sm text-gray-10">

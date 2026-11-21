@@ -36,13 +36,13 @@ Today, `ShareHeader.tsx` puts these above the title:
 
 Replace them with the design's single row. The row sits **above the white sheet, on the page color**, only for the owner and for members who can manage the video today:
 
-- [ ] Left: **← My videos**, using the existing `DashboardBackLink` destination.
-- [ ] Right:
+- [x] Left: **← My videos**, using the existing `DashboardBackLink` destination.
+- [x] Right:
   - "Only you see this row" in small dim text. Show it only to the owner.
   - **Who can watch**: an outlined 36 px button showing the current setting (e.g. "Anyone with the link"). It opens the existing sharing and access control, which now absorbs the old blue Share button.
   - **Download**: an outlined button that runs the existing download.
   - **⋯**: an outlined 36 px icon button.
-- [ ] The ⋯ menu offers these items, in this order. Each one opens the existing dialog or action:
+- [x] The ⋯ menu offers these items, in this order. Each one opens the existing dialog or action:
   1. **Trim or cut the video**: the existing `/s/[id]/edit` editor. First check in the browser that the editor loads and saves on this setup (local :3001). If it doesn't, leave this item out and say so in the report.
   2. **Change thumbnail**
   3. **Move to a space**
@@ -52,14 +52,14 @@ Replace them with the design's single row. The row sits **above the white sheet,
   7. **Delete video** in `accentText` red, after a separator
 
   Keep the call-to-action item only if it works today, placed under Video settings. Drop "Duplicate" if it's there.
-- [ ] Under the title:
+- [x] Under the title:
   - A small **pencil** button (36 px, dim) next to the title starts renaming. Inline title editing already exists; keep it.
   - The owner line becomes `avatar · name · date · length · N views`. "N views" is a blue link (`#4F75FE`) to the analytics page. Show it only to the owner and members.
-- [ ] Remove these from the share page for everyone:
+- [x] Remove these from the share page for everyone:
   - "Change logo" (the logo lives in Settings)
   - the black **Comment** button with the `C` key chip, under the video. The C shortcut can stay if it focuses the comment box.
   - the stats row above the comments (eye / bubble / smiley counts and "Analytics")
-- [ ] Guests see no change from Phase E, apart from F2's reactions and F3.
+- [x] Guests see no change from Phase E, apart from F2's reactions and F3.
 
 ### Task F2: reactions and the comments header
 
