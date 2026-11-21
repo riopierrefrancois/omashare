@@ -42,7 +42,7 @@ const options: {
 	{
 		label: "Enable comments",
 		value: "disableComments",
-		description: "Allow viewers to comment on this cap",
+		description: "Allow viewers to comment on this video",
 	},
 	{
 		label: "Enable summary",
@@ -53,7 +53,7 @@ const options: {
 	{
 		label: "Enable captions",
 		value: "disableCaptions",
-		description: "Allow viewers to use captions for this cap",
+		description: "Allow viewers to use captions for this video",
 	},
 	{
 		label: "Enable chapters",
@@ -64,7 +64,7 @@ const options: {
 	{
 		label: "Enable reactions",
 		value: "disableReactions",
-		description: "Allow viewers to react to this cap",
+		description: "Allow viewers to react to this video",
 	},
 	{
 		label: "Enable transcript",
@@ -75,7 +75,7 @@ const options: {
 	{
 		label: "Enable downloads",
 		value: "disableDownloads",
-		description: "Allow viewers to download this cap",
+		description: "Allow viewers to download this video",
 	},
 ];
 

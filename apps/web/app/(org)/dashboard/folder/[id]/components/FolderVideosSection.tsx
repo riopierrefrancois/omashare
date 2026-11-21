@@ -145,7 +145,7 @@ export default function FolderVideosSection({
 			router.refresh();
 		},
 		onError: () => {
-			toast.error("Failed to delete cap");
+			toast.error("Failed to delete video");
 		},
 	});
 
