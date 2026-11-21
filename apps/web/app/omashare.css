@@ -19,6 +19,32 @@ body {
 	color: var(--share-ink);
 }
 
+.source-credit {
+	color: #767676;
+	font-size: 12px;
+	line-height: 1rem;
+}
+
+.source-credit[data-workspace] {
+	color: var(--gray-11);
+	font-family: var(--omashare-mono), monospace;
+}
+
+.source-credit :is(a, span),
+.source-credit a:hover {
+	color: inherit;
+	font: inherit;
+}
+
+.source-credit a {
+	text-decoration: none;
+	text-underline-offset: 2px;
+}
+
+.source-credit a:hover {
+	text-decoration: underline;
+}
+
 @media (width < 640px) {
 	.share-brand:has(.share-comment-dock) {
 		padding-bottom: calc(8rem + env(safe-area-inset-bottom));

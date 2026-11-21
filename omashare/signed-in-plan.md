@@ -72,7 +72,7 @@ Replace them with the design's single row. The row sits **above the white sheet,
 
 ### Task F3: one footer size
 
-- [ ] `components/SourceCredit.tsx`: in the current build, "Cap" and "Source code" render bigger, and in a different face, than the rest of the footer (see PF's screenshot: the links pick up a global link style). Make every part of the footer the same size and face:
+- [x] `components/SourceCredit.tsx`: in the current build, "Cap" and "Source code" render bigger, and in a different face, than the rest of the footer (see PF's screenshot: the links pick up a global link style). Make every part of the footer the same size and face:
   - share pages: the brand font at 12 px, color `#767676`-like dim
   - signed-in pages: Geist Mono 12 px, dim
 

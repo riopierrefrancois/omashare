@@ -182,7 +182,7 @@ export default async function PublicCollectionPage(
 				)}
 			</main>
 
-			<SourceCredit />
+			<SourceCredit shareFont={branding?.font} />
 		</div>
 	);
 }

@@ -113,9 +113,11 @@ function project(
 ) {
 	return query
 		.slice(7, query.indexOf(" from "))
-		.split(", ")
+		.split(/, (?![^()]*\))/)
 		.map((column) => {
 			if (column.includes(" IS NOT NULL")) return 0;
+			if (column === "coalesce(`users`.`name`, `comments`.`guestName`, ?)")
+				return tables.users?.name ?? tables.comments?.guestName ?? "Guest";
 			const match = /^`(?:(\w+)`\.)?`?(\w+)`$/.exec(column);
 			if (!match) throw new Error(`Unexpected projection: ${column}`);
 			const table = match[1] ? tables[match[1]] : Object.values(tables)[0];
@@ -200,9 +202,8 @@ describe("embed page server load", () => {
 			ownerName: "Owner",
 			ownerImageUrl: "avatars/owner.png",
 			branding: {
-				type: "custom",
 				name: "Team",
-				imageUrl: "organizations/team.png",
+				logo: "organizations/team.png",
 			},
 			chapters: [{ title: "Introduction", start: 0 }],
 			defaultPlaybackSpeed: 1.5,
@@ -252,7 +253,7 @@ describe("embed page server load", () => {
 			user: null,
 			minimal: true,
 			chapters: [],
-			branding: { type: "cap" },
+			branding: { name: "Team", logo: null },
 			viewerSettings: { disableChapters: true },
 		});
 		expect(mocks.resolveImage).toHaveBeenCalledTimes(1);
@@ -265,10 +266,12 @@ describe("embed page server load", () => {
 		expect(props).toMatchObject({
 			ownerName: null,
 			ownerImageUrl: null,
-			branding: { type: "cap" },
+			branding: { name: "Team", logo: "organizations/team.png" },
 			comments: [],
 		});
-		expect(mocks.resolveImage).not.toHaveBeenCalled();
+		expect(mocks.resolveImage).toHaveBeenCalledExactlyOnceWith(
+			"organizations/team.png",
+		);
 	});
 
 	it("keeps quota failures viewable", async () => {

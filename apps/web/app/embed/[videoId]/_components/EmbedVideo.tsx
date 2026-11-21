@@ -429,6 +429,7 @@ export const EmbedVideo = forwardRef<
 				)}
 				{!minimal && (
 					<SourceCredit
+						shareFont={shareFont}
 						website={
 							branding?.websiteUrl && branding.websiteLabel
 								? { url: branding.websiteUrl, label: branding.websiteLabel }
