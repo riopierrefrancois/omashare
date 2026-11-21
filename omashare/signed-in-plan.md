@@ -63,12 +63,12 @@ Replace them with the design's single row. The row sits **above the white sheet,
 
 ### Task F2: reactions and the comments header
 
-- [ ] Replace the six emoji buttons under the video with the design's reaction buttons:
+- [x] Replace the six emoji buttons under the video with the design's reaction buttons:
   - 👍 and ♥ as outlined 40 px buttons with their counts, plus a quiet **+ React** button that opens the full emoji set (the existing picker or list).
   - Existing reactions keep working and counting. Any emoji other than 👍 or ♥ that has reactions shows as its own button with its count.
-- [ ] Move the **Player / Timeline** toggle into the comments header, on the right, as a small segmented control labelled **List / On the timeline** (32 px). Remove the old toggle under the video. Both views behave exactly as they do today.
-- [ ] In the comment box, hide the screen, camera and microphone buttons (recorded comments), for everyone. Leave the media-comment code in place, and keep showing existing recorded comments if any exist.
-- [ ] For a signed-in person, the box reads "Commenting as **Name**", with no Change button. Guests keep the Change button.
+- [x] Move the **Player / Timeline** toggle into the comments header, on the right, as a small segmented control labelled **List / On the timeline** (32 px). Remove the old toggle under the video. Both views behave exactly as they do today.
+- [x] In the comment box, hide the screen, camera and microphone buttons (recorded comments), for everyone. Leave the media-comment code in place, and keep showing existing recorded comments if any exist.
+- [x] For a signed-in person, the box reads "Commenting as **Name**", with no Change button. Guests keep the Change button.
 
 ### Task F3: one footer size
 

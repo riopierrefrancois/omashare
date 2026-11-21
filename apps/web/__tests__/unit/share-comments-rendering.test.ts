@@ -50,9 +50,6 @@ vi.mock("sonner", () => ({ toast: { error: mocks.showError } }));
 vi.mock("@cap/env", () => ({
 	buildEnv: { NEXT_PUBLIC_WEB_URL: "http://localhost:3000" },
 }));
-vi.mock("@/app/s/[videoId]/_components/media-comment/record-actions", () => ({
-	RecordActionButtons: () => null,
-}));
 vi.mock("@cap/ui", async () => {
 	const { Button } = await import(
 		"../../../../packages/ui/src/components/Button"
@@ -235,6 +232,7 @@ function contents() {
 
 describe("reaction counts", () => {
 	it("groups emojis and shows the reactors in the tooltip", async () => {
+		const onReact = vi.fn();
 		const reactions: CommentType[] = [
 			{ ...comment("one"), type: "emoji", content: "😂", authorName: "Sam" },
 			{ ...comment("two"), type: "emoji", content: "😂", authorName: "Ada" },
@@ -242,7 +240,9 @@ describe("reaction counts", () => {
 			comment("text"),
 		];
 		await act(async () =>
-			root.render(createElement(ReactionCounts, { comments: reactions })),
+			root.render(
+				createElement(ReactionCounts, { comments: reactions, onReact }),
+			),
 		);
 		expect(container.querySelector('[title="Sam, Ada"]')?.textContent).toBe(
 			"😂 2",
@@ -251,14 +251,29 @@ describe("reaction counts", () => {
 
 		await act(async () =>
 			root.render(
-				createElement(ReactionCounts, { comments: [comment("text")] }),
+				createElement(ReactionCounts, { comments: [comment("text")], onReact }),
 			),
 		);
-		expect(container.querySelector("ul")).toBeNull();
+		expect(
+			Array.from(
+				container.querySelectorAll("ul button"),
+				(item) => item.textContent,
+			),
+		).toEqual(["👍 0", "♥ 0"]);
+		await click(container.querySelector('[aria-label="React with heart, 0"]'));
+		expect(onReact).toHaveBeenCalledWith("♥");
 	});
 });
 
 describe("share comments rendering", () => {
+	it("shows the signed-in name without recording or guest controls", async () => {
+		comments = [];
+		await render();
+		expect(container.textContent).toContain("Commenting as Viewer");
+		expect(button("Change")).toBeNull();
+		expect(container.querySelector('[aria-label^="Record "]')).toBeNull();
+	});
+
 	it("shows the guest name and gives the video owner the delete control", async () => {
 		comments = [
 			{

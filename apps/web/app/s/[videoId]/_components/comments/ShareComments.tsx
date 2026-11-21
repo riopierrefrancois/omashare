@@ -29,9 +29,8 @@ export function ShareComments(props: {
 	onSeek?: (time: number) => void;
 	commentsDisabled: boolean;
 	isVideoOwner?: boolean;
-	commentsData?: CommentType[];
+	viewToggle?: React.ReactNode;
 	isScreenshot?: boolean;
-	canRecordMedia?: boolean;
 }) {
 	const {
 		optimisticComments,
@@ -172,9 +171,10 @@ export function ShareComments(props: {
 		<section aria-label="Comments" className="min-w-0 space-y-3">
 			<div className="flex flex-wrap items-center justify-between gap-2">
 				<h2 className="text-xs font-semibold uppercase tracking-wide text-gray-11 sm:text-base sm:normal-case sm:tracking-normal">
-					Comments{" "}
+					Comments ·{" "}
 					<span className="text-sm font-normal text-gray-10">{count}</span>
 				</h2>
+				{props.viewToggle}
 			</div>
 			{commentsDisabled ? (
 				<p className="text-sm text-gray-10">
@@ -231,7 +231,6 @@ export function ShareComments(props: {
 					<CommentComposer
 						videoId={videoId}
 						isScreenshot={props.isScreenshot}
-						canRecordMedia={props.canRecordMedia}
 						onSubmit={submit}
 						onOptimisticComment={(comment) =>
 							startTransition(() => setOptimisticComments(comment))

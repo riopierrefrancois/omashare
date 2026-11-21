@@ -7,11 +7,12 @@ import {
 describe("toolbar reactions", () => {
 	it("exposes the standard reaction set in display order", () => {
 		expect(REACTIONS).toEqual([
+			{ emoji: "👍", label: "thumbs up" },
+			{ emoji: "♥", label: "heart" },
 			{ emoji: "😂", label: "joy" },
 			{ emoji: "😍", label: "love" },
 			{ emoji: "😮", label: "wow" },
 			{ emoji: "🙌", label: "yay" },
-			{ emoji: "👍", label: "up" },
 			{ emoji: "👎", label: "down" },
 		]);
 	});

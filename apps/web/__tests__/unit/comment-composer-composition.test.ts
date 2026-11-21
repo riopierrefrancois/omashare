@@ -51,7 +51,10 @@ vi.mock("@cap/ui", async () => {
 	const { Button } = await import(
 		"../../../../packages/ui/src/components/Button"
 	);
-	return { Button };
+	const dropdown = await import(
+		"../../../../packages/ui/src/components/Dropdown"
+	);
+	return { Button, ...dropdown };
 });
 
 const videoId = "video" as Video.VideoId;
@@ -296,6 +299,7 @@ it.each(["success", "failure"])(
 					null,
 					createElement(Toolbar, {
 						data: video,
+						comments: [],
 						onCommentSuccess: success,
 						onWriteComment: () => container.querySelector("textarea")?.focus(),
 					}),
@@ -304,18 +308,18 @@ it.each(["success", "failure"])(
 			);
 		});
 		const reaction = container.querySelector<HTMLButtonElement>(
-			'button[aria-label="up"]',
+			'button[aria-label="React with thumbs up, 0"]',
 		);
 		if (!reaction) throw new Error("Missing reaction button");
 		await act(async () => reaction.click());
 		expect(newComment).toHaveBeenCalledExactlyOnceWith(
 			expect.objectContaining({ content: "👍", type: "emoji" }),
 		);
-		const open = Array.from(container.querySelectorAll("button")).find(
-			(button) => button.textContent?.includes("Comment"),
-		);
-		if (!open) throw new Error("Missing comment button");
-		await act(async () => open.click());
+		await act(async () => {
+			window.dispatchEvent(
+				new KeyboardEvent("keydown", { key: "c", cancelable: true }),
+			);
+		});
 		const input = container.querySelector("textarea");
 		if (!input) throw new Error("Missing comment field");
 		expect(document.activeElement).toBe(input);
@@ -466,10 +470,10 @@ it("says so when a toolbar reaction fails to post", async () => {
 	vi.spyOn(console, "error").mockImplementation(() => {});
 	showError.mockReset();
 	await act(async () => {
-		root.render(createElement(Toolbar, { data: video }));
+		root.render(createElement(Toolbar, { data: video, comments: [] }));
 	});
 	const reaction = container.querySelector<HTMLButtonElement>(
-		'button[aria-label="up"]',
+		'button[aria-label="React with thumbs up, 0"]',
 	);
 	if (!reaction) throw new Error("Missing reaction button");
 	await act(async () => reaction.click());

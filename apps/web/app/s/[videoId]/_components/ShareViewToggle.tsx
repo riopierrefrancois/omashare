@@ -6,8 +6,8 @@ import { motion, useReducedMotion } from "motion/react";
 export type ShareView = "classic" | "timeline";
 
 const OPTIONS: { value: ShareView; label: string }[] = [
-	{ value: "classic", label: "Player" },
-	{ value: "timeline", label: "Timeline" },
+	{ value: "classic", label: "List" },
+	{ value: "timeline", label: "On the timeline" },
 ];
 
 interface ShareViewToggleProps {
@@ -27,7 +27,10 @@ export function ShareViewToggle({
 	const reduceMotion = useReducedMotion() ?? false;
 
 	return (
-		<div className="inline-flex items-center gap-0.5 p-0.5 rounded-full border border-gray-5 bg-gray-3">
+		<fieldset
+			aria-label="Show comments"
+			className="inline-flex h-8 items-center gap-0.5 rounded-[10px] bg-gray-3 p-0.5"
+		>
 			{OPTIONS.map((option) => {
 				const active = option.value === view;
 				return (
@@ -44,7 +47,7 @@ export function ShareViewToggle({
 						onPointerEnter={prefetch}
 						onFocus={prefetch}
 						className={classNames(
-							"relative px-3 py-1 rounded-full text-xs font-medium transition-colors duration-150",
+							"relative h-full px-3 rounded-lg text-xs font-medium transition-colors duration-150",
 							"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-9",
 							disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
 							active ? "text-gray-12" : "text-gray-11 hover:text-gray-12",
@@ -53,7 +56,7 @@ export function ShareViewToggle({
 						{active && (
 							<motion.span
 								layoutId="share-view-thumb"
-								className="absolute inset-0 rounded-full border border-gray-5 bg-white shadow-sm"
+								className="absolute inset-0 rounded-lg border border-gray-5 bg-white shadow-sm"
 								transition={
 									reduceMotion
 										? { duration: 0 }
@@ -65,6 +68,6 @@ export function ShareViewToggle({
 					</button>
 				);
 			})}
-		</div>
+		</fieldset>
 	);
 }

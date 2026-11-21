@@ -31,7 +31,6 @@ import {
 import { CaptionProvider } from "./_components/CaptionContext";
 import { SHARE_COMMENT_FIELD_ID } from "./_components/comments/CommentComposer";
 import { GuestCommentNameProvider } from "./_components/comments/GuestCommentName";
-import { ReactionCounts } from "./_components/comments/ReactionCounts";
 import { ShareComments } from "./_components/comments/ShareComments";
 import { seekLength } from "./_components/early-length";
 import { MobileShareDetails } from "./_components/MobileShareDetails";
@@ -208,7 +207,6 @@ interface ShareProps {
 	initialView?: ShareView;
 	/** Server-resolved `?captions=off` so the player never flashes captions on before hiding them. */
 	captionsInitiallyOff?: boolean;
-	canRecordMedia?: boolean;
 	viewerSignedIn?: boolean;
 	header?: React.ReactNode;
 	topBar?: React.ReactNode;
@@ -331,7 +329,6 @@ export const Share = ({
 	transcriptionGenerationAvailable,
 	initialView = "classic",
 	captionsInitiallyOff = false,
-	canRecordMedia = false,
 	viewerSignedIn = false,
 	header,
 	topBar,
@@ -729,26 +726,6 @@ export const Share = ({
 						>
 							{header}
 						</div>
-						{timelineAvailable && view === "timeline" && (
-							// The top edge of the player card. It sits flush on the grid
-							// below (which carries the bottom corners and the rest of the
-							// border), so the two read as one contained, rounded unit,
-							// centred at the same width. Classic view's toggle lives under
-							// the player instead.
-							<div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-end gap-3 border-x border-gray-5 bg-white px-5">
-								<div className="flex shrink-0 items-center gap-2">
-									<ShareViewToggle
-										view={view}
-										onChange={setViewAndUrl}
-										// Fullscreen: a morph would rip the video out of the
-										// fullscreen element. Recording: leaving the timeline
-										// unmounts the recorder and silently discards the take.
-										disabled={stageFullscreen || timelineRecording}
-										prefetch={prefetchTimeline}
-									/>
-								</div>
-							</div>
-						)}
 
 						{/*
 						 * One grid, two arrangements. The stage below is a single JSX node
@@ -903,17 +880,8 @@ export const Share = ({
 										transition={{ duration: reduceMotion ? 0 : 0.14 }}
 									>
 										<div className="flex flex-wrap items-center gap-2 max-sm:px-1">
-											{timelineAvailable && (
-												<div className="flex justify-start">
-													<ShareViewToggle
-														view={view}
-														onChange={setViewAndUrl}
-														disabled={stageFullscreen || timelineRecording}
-														prefetch={prefetchTimeline}
-													/>
-												</div>
-											)}
 											<Toolbar
+												comments={visibleComments}
 												onOptimisticComment={handleOptimisticComment}
 												onCommentSuccess={handleCommentSuccess}
 												disableComments={areCommentStampsDisabled}
@@ -934,11 +902,6 @@ export const Share = ({
 												</button>
 											)}
 										</div>
-										{!areReactionStampsDisabled && (
-											<div className="[&:empty]:hidden mt-2">
-												<ReactionCounts comments={visibleComments} />
-											</div>
-										)}
 									</motion.div>
 								) : (
 									// The band runs its own enter/exit; this wrapper only exists
@@ -956,7 +919,6 @@ export const Share = ({
 												filmstripSource={filmstripSource}
 												onOptimisticComment={handleOptimisticComment}
 												onCommentSuccess={handleCommentSuccess}
-												canRecordMedia={canRecordMedia}
 												viewerSignedIn={viewerSignedIn}
 												disableReactions={areReactionStampsDisabled}
 												onRecordingActiveChange={setTimelineRecording}
@@ -976,7 +938,16 @@ export const Share = ({
 						>
 							<ShareComments
 								videoId={data.id}
-								commentsData={commentsData}
+								viewToggle={
+									timelineAvailable && (
+										<ShareViewToggle
+											view={view}
+											onChange={setViewAndUrl}
+											disabled={stageFullscreen || timelineRecording}
+											prefetch={prefetchTimeline}
+										/>
+									)
+								}
 								optimisticComments={visibleComments}
 								setComments={setCommentsData}
 								setOptimisticComments={setOptimisticComments}
@@ -985,7 +956,6 @@ export const Share = ({
 								commentsDisabled={areCommentStampsDisabled}
 								isVideoOwner={viewerId === data.owner.id}
 								isScreenshot={isScreenshot}
-								canRecordMedia={canRecordMedia && !isScreenshot}
 							/>
 						</div>
 					</div>

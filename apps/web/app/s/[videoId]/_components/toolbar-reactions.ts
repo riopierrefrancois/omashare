@@ -3,7 +3,13 @@ export interface ReactionDefinition {
 	label: string;
 }
 
+export const PINNED_REACTIONS = [
+	{ emoji: "👍", label: "thumbs up" },
+	{ emoji: "♥", label: "heart" },
+] satisfies ReactionDefinition[];
+
 export const REACTIONS: readonly ReactionDefinition[] = [
+	...PINNED_REACTIONS,
 	{
 		emoji: "😂",
 		label: "joy",
@@ -19,10 +25,6 @@ export const REACTIONS: readonly ReactionDefinition[] = [
 	{
 		emoji: "🙌",
 		label: "yay",
-	},
-	{
-		emoji: "👍",
-		label: "up",
 	},
 	{
 		emoji: "👎",
