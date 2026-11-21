@@ -1,4 +1,5 @@
 import type { Video } from "@cap/web-domain";
+import clsx from "clsx";
 import dynamic from "next/dynamic";
 import { useRef, useState, useSyncExternalStore } from "react";
 import { useCurrentUser } from "@/app/Layout/AuthContext";
@@ -64,7 +65,12 @@ export function CommentComposer({
 	const hasTimestamp = !isScreenshot && includeTime;
 
 	return (
-		<div className="relative space-y-2 rounded-2xl border-[1.5px] border-solid border-[var(--share-accent,#2959C4)] bg-white px-3 py-2">
+		<div
+			className={clsx(
+				"relative space-y-2 rounded-2xl border-[1.5px] border-solid border-[var(--share-accent,#2959C4)] bg-white px-3 py-2",
+				!onCancel && "max-sm:rounded-none max-sm:border-0",
+			)}
+		>
 			<div className="flex flex-wrap items-center justify-between gap-2">
 				{user ? (
 					<p className="text-sm text-gray-11">
@@ -89,6 +95,7 @@ export function CommentComposer({
 			</div>
 			<CommentInput
 				inputId={onCancel ? undefined : SHARE_COMMENT_FIELD_ID}
+				compactOnPhone={!onCancel}
 				placeholder={
 					onCancel
 						? "Write a reply…"

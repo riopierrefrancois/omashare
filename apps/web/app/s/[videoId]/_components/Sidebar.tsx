@@ -27,6 +27,7 @@ export function Sidebar({
 	aiData,
 	aiGenerationEnabled,
 	onSeek,
+	onCollapse,
 }: {
 	data: VideoData;
 	hasSummary: boolean;
@@ -36,6 +37,7 @@ export function Sidebar({
 	aiData?: ComponentProps<typeof Summary>["initialAiData"];
 	aiGenerationEnabled?: boolean;
 	onSeek?: (time: number) => void;
+	onCollapse?: () => void;
 }) {
 	const user = useCurrentUser();
 	const [selected, setSelected] = useState<Tab>();
@@ -80,6 +82,19 @@ export function Sidebar({
 							{label}
 						</button>
 					))
+				)}
+				{onCollapse && (
+					<button
+						type="button"
+						aria-label="Hide sidebar"
+						title="Hide sidebar"
+						onClick={() => {
+							if (canLeave()) onCollapse();
+						}}
+						className="hidden shrink-0 rounded-lg px-3 text-gray-10 hover:bg-white lg:block"
+					>
+						<span aria-hidden>›</span>
+					</button>
 				)}
 			</div>
 			<div className="min-h-0 flex-1 overflow-auto">

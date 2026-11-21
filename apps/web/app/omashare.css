@@ -18,3 +18,19 @@ body {
 	background-color: var(--share-page);
 	color: var(--share-ink);
 }
+
+@media (width < 640px) {
+	.share-brand:has(.share-comment-dock) {
+		padding-bottom: calc(8rem + env(safe-area-inset-bottom));
+	}
+
+	.share-player-sheet .player-brand-play {
+		width: 56px;
+		height: 56px;
+	}
+
+	.share-player-sheet .player-brand-play svg {
+		width: 22px;
+		height: 22px;
+	}
+}

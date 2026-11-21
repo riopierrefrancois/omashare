@@ -175,7 +175,7 @@ export function ShareComments(props: {
 	return (
 		<section aria-label="Comments" className="min-w-0 space-y-3">
 			<div className="flex flex-wrap items-center justify-between gap-2">
-				<h2 className="text-base font-semibold text-gray-12">
+				<h2 className="text-xs font-semibold uppercase tracking-wide text-gray-11 sm:text-base sm:normal-case sm:tracking-normal">
 					Comments{" "}
 					<span className="text-sm font-normal text-gray-10">{count}</span>
 				</h2>
@@ -242,7 +242,7 @@ export function ShareComments(props: {
 				</div>
 			)}
 			{!commentsDisabled && (
-				<div>
+				<div className="share-comment-dock max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:z-30 max-sm:border-t max-sm:border-gray-5 max-sm:bg-white max-sm:pb-[env(safe-area-inset-bottom)]">
 					<CommentComposer
 						videoId={videoId}
 						isScreenshot={props.isScreenshot}

@@ -15,6 +15,7 @@ import {
 	use,
 	useCallback,
 	useEffect,
+	useId,
 	useMemo,
 	useOptimistic,
 	useRef,
@@ -33,6 +34,7 @@ import { GuestCommentNameProvider } from "./_components/comments/GuestCommentNam
 import { ReactionCounts } from "./_components/comments/ReactionCounts";
 import { ShareComments } from "./_components/comments/ShareComments";
 import { seekLength } from "./_components/early-length";
+import { MobileShareDetails } from "./_components/MobileShareDetails";
 import { PlaybackProvider } from "./_components/playback/PlaybackContext";
 import { ShareVideo } from "./_components/ShareVideo";
 import { type ShareView, ShareViewToggle } from "./_components/ShareViewToggle";
@@ -685,6 +687,19 @@ export const Share = ({
 	]);
 
 	const showRail = view === "classic" && (hasSummary || hasTranscript);
+	const sidebarId = useId();
+	const [railCollapsed, setRailCollapsed] = useState(false);
+
+	const details = {
+		data: sidebarData,
+		hasSummary,
+		hasTranscript,
+		isSummaryDisabled,
+		areChaptersDisabled,
+		onSeek: handleSeek,
+		aiData,
+		aiGenerationEnabled: aiGenerationAvailable,
+	};
 
 	return (
 		<ShareProviders videoId={data.id} transcriptionStatus={transcriptionStatus}>
@@ -694,17 +709,17 @@ export const Share = ({
 				fallbackDuration={data.duration}
 			>
 				{topBar}
-				<main className="mx-auto flex w-full max-w-[1240px] flex-1 flex-col items-start gap-6 p-4 sm:p-6 lg:flex-row">
+				<div className="mx-auto flex w-full max-w-[1240px] flex-1 flex-col items-start gap-6 p-4 sm:p-6 lg:flex-row">
 					<div
 						className={clsx(
 							"min-w-0 w-full flex-1",
-							view === "classic" && "rounded-xl bg-white shadow-sm",
+							view === "classic" && "sm:rounded-xl sm:bg-white sm:shadow-sm",
 						)}
 					>
 						<div
 							className={clsx(
 								view === "classic"
-									? "px-4 pt-5 sm:px-10 sm:pt-8"
+									? "sm:px-10 sm:pt-8"
 									: "mx-auto w-full max-w-6xl rounded-t-xl border border-b-0 border-gray-5 bg-white px-5 pt-4",
 							)}
 						>
@@ -747,7 +762,7 @@ export const Share = ({
 								// escape.
 								view === "timeline"
 									? "mx-auto w-full max-w-6xl gap-0 rounded-b-xl border border-t-0 border-gray-5 bg-white"
-									: "gap-4 px-4 py-5 sm:px-10",
+									: "share-player-sheet mt-3 gap-2 rounded-2xl border border-gray-5 bg-white p-1.5 sm:mt-0 sm:gap-4 sm:border-0 sm:px-10 sm:py-5",
 								"lg:grid-cols-1",
 							)}
 						>
@@ -883,7 +898,7 @@ export const Share = ({
 										exit={{ opacity: 0 }}
 										transition={{ duration: reduceMotion ? 0 : 0.14 }}
 									>
-										<div className="flex flex-wrap items-center gap-2">
+										<div className="flex flex-wrap items-center gap-2 max-sm:px-1">
 											{timelineAvailable && (
 												<div className="flex justify-start">
 													<ShareViewToggle
@@ -902,6 +917,18 @@ export const Share = ({
 												onWriteComment={focusComment}
 												data={data}
 											/>
+											{showRail && <MobileShareDetails {...details} />}
+											{showRail && railCollapsed && (
+												<button
+													type="button"
+													aria-controls={sidebarId}
+													aria-expanded={false}
+													onClick={() => setRailCollapsed(false)}
+													className="hidden h-9 rounded-lg border border-gray-5 px-3 text-sm hover:bg-gray-2 lg:block"
+												>
+													Show sidebar
+												</button>
+											)}
 										</div>
 										{!areReactionStampsDisabled && (
 											<div className="[&:empty]:hidden mt-2">
@@ -938,7 +965,7 @@ export const Share = ({
 						</div>
 						<div
 							className={clsx(
-								"rounded-b-xl border-t-2 border-gray-5 bg-[color-mix(in_srgb,var(--share-page)_50%,white)] px-4 py-5 sm:px-10",
+								"py-5 sm:rounded-b-xl sm:border-t-2 sm:border-gray-5 sm:bg-[color-mix(in_srgb,var(--share-page)_50%,white)] sm:px-10",
 								view === "timeline" &&
 									"mx-auto mt-4 w-full max-w-6xl rounded-xl",
 							)}
@@ -967,22 +994,22 @@ export const Share = ({
 					</div>
 					{showRail && (
 						<aside
+							id={sidebarId}
 							aria-label="Summary and transcript"
-							className="w-full shrink-0 lg:w-[min(32%,360px)]"
+							className={clsx(
+								"hidden w-full shrink-0 sm:block",
+								railCollapsed ? "lg:w-0" : "lg:w-[min(32%,360px)]",
+							)}
 						>
-							<Sidebar
-								data={sidebarData}
-								hasSummary={hasSummary}
-								hasTranscript={hasTranscript}
-								isSummaryDisabled={isSummaryDisabled}
-								areChaptersDisabled={areChaptersDisabled}
-								onSeek={handleSeek}
-								aiData={aiData}
-								aiGenerationEnabled={aiGenerationAvailable}
-							/>
+							<div className={railCollapsed ? "lg:invisible" : undefined}>
+								<Sidebar
+									{...details}
+									onCollapse={() => setRailCollapsed(true)}
+								/>
+							</div>
 						</aside>
 					)}
-				</main>
+				</div>
 				{footer}
 			</PlaybackProvider>
 		</ShareProviders>

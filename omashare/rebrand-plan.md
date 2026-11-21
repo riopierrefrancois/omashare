@@ -115,7 +115,7 @@ The brand preview computes chip colors by mixing 12% accent with 88% page color,
 - [x] The comment box follows the design: 1.5 px accent outline, no inner border on the text area, "Commenting as Alex · Change" (Change in `accentText`), the `at 1:13 ✕` chip, and an accent **Send**.
 
 ### Task E3: phone
-- [ ] Below 640 px, follow `WorkhivePlatformPhone.dc.html`:
+- [x] Below 640 px, follow `WorkhivePlatformPhone.dc.html`:
   - a 52 px header with an icon-only copy-link button (44 px)
   - video, title, reactions and a **Summary** button that opens summary and chapters in a sheet
   - comment cards

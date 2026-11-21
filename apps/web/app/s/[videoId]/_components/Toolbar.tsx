@@ -32,13 +32,12 @@ interface EmojiButtonProps {
 }
 
 const EmojiButton = ({ label, emoji, onClick }: EmojiButtonProps) => (
-	<motion.div layout className="relative size-10">
+	<motion.div layout className="relative size-10 max-sm:size-11">
 		<motion.button
 			layout
 			className="inline-flex relative justify-center items-center p-1 text-xl leading-6 align-middle bg-transparent rounded-full transition-colors ease-in-out size-full font-emoji sm:text-2xl duration-600 hover:bg-gray-200 active:bg-blue-500 active:duration-0"
-			role="img"
-			aria-label={label ? label : ""}
-			aria-hidden={label ? "false" : "true"}
+			type="button"
+			aria-label={label}
 			onClick={onClick}
 		>
 			{emoji}
@@ -123,7 +122,9 @@ export const Toolbar = ({
 				event.altKey ||
 				event.shiftKey ||
 				(event.target instanceof HTMLElement &&
-					event.target.closest("input, textarea, select, [contenteditable]"))
+					event.target.closest(
+						"input, textarea, select, [contenteditable], dialog[open]",
+					))
 			)
 				return;
 			event.preventDefault();
@@ -139,10 +140,7 @@ export const Toolbar = ({
 
 	return (
 		<>
-			<motion.div
-				layout
-				className="flex overflow-hidden p-2 mx-auto max-w-full bg-white rounded-full border border-gray-5 md:max-w-fit"
-			>
+			<motion.div layout className="flex w-fit max-w-full items-center">
 				<AnimatePresence initial={false} mode="popLayout">
 					<motion.div
 						layout
@@ -151,10 +149,10 @@ export const Toolbar = ({
 						animate={{ scale: 1 }}
 						exit={{ scale: 0.9 }}
 						transition={{ duration: 0.2, ease: "easeInOut" }}
-						className="flex flex-col gap-2 items-center mx-auto w-full md:justify-center sm:grid sm:grid-flow-col md:w-fit min-h-[28px]"
+						className="flex flex-wrap items-center gap-2"
 					>
 						{canReact && (
-							<div className="flex gap-2 justify-evenly items-center w-full md:w-fit md:justify-center">
+							<div className="flex gap-2 flex-wrap items-center">
 								{REACTIONS.map((reaction) => (
 									<EmojiButton
 										key={reaction.emoji}
@@ -167,15 +165,11 @@ export const Toolbar = ({
 						)}
 
 						{canReact && canComment && (
-							<motion.div className="hidden sm:block w-px bg-gray-5 h-[16px] mx-4" />
+							<motion.div className="hidden sm:block w-px bg-gray-5 h-4" />
 						)}
 
 						{canComment && (
-							<div
-								className={
-									canReact ? "ml-auto w-full sm:w-auto" : "w-full sm:w-auto"
-								}
-							>
+							<div className="max-sm:hidden">
 								<MotionButton
 									onClick={onWriteComment}
 									variant="dark"

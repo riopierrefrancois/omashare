@@ -203,6 +203,39 @@ describe("Share", () => {
 		await act(async () => root.unmount());
 	});
 
+	it("opens the phone summary sheet with the same visibility rules as the desktop panel", async () => {
+		const container = document.createElement("div");
+		document.body.append(container);
+		const root = createRoot(container);
+		const props = createProps({
+			initialAiData: { chapters: [{ start: 0, title: "Intro" }] },
+		});
+		vi.stubGlobal("matchMedia", () => ({
+			addEventListener: () => {},
+			removeEventListener: () => {},
+		}));
+		try {
+			await act(async () => root.render(createElement(Share, props)));
+			const dialog = container.querySelector("dialog");
+			if (!dialog) throw new Error("Missing phone summary sheet");
+			Object.defineProperty(dialog, "showModal", {
+				value: () => {
+					dialog.open = true;
+				},
+			});
+			expect(dialog.open).toBe(false);
+			expect(dialog.querySelector("[data-sidebar]")).toBeNull();
+			const summary = findButton(container, "Summary");
+			expect(summary).toBeDefined();
+			await act(async () => summary?.click());
+			expect(dialog.open).toBe(true);
+			expect(dialog.querySelector("[data-sidebar]")).not.toBeNull();
+		} finally {
+			await act(async () => root.unmount());
+			vi.unstubAllGlobals();
+		}
+	});
+
 	it.each(["loadedmetadata", "canplay"])(
 		"seeks a timestamp link when %s arrives after five seconds",
 		async (readyEvent) => {

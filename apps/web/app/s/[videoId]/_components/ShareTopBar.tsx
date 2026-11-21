@@ -93,8 +93,8 @@ export function ShareTopBar({
 
 	return (
 		<header className="shrink-0 border-b border-gray-5 bg-white">
-			<div className="mx-auto flex h-[60px] max-w-[1240px] items-center gap-2.5 px-6">
-				<div className="flex min-w-0 flex-1 items-center gap-2 text-lg font-bold">
+			<div className="mx-auto flex h-[52px] max-w-[1240px] items-center gap-2 px-3.5 sm:h-[60px] sm:gap-2.5 sm:px-6">
+				<div className="flex min-w-0 flex-1 items-center gap-2 text-[17px] font-bold sm:text-lg">
 					{brand.logo && (
 						<Image
 							src={brand.logo}
@@ -102,7 +102,7 @@ export function ShareTopBar({
 							width={28}
 							height={28}
 							unoptimized
-							className="size-7 shrink-0 object-contain"
+							className="size-[26px] shrink-0 object-contain sm:size-7"
 						/>
 					)}
 					{brand.name && <span className="truncate">{brand.name}</span>}
@@ -113,14 +113,16 @@ export function ShareTopBar({
 						aria-label="Copy link"
 						aria-expanded={showCopyOptions}
 						onClick={handleCopyClick}
-						className="flex h-10 items-center justify-center gap-1.5 rounded-[10px] border border-gray-5 bg-white px-3.5 text-sm font-medium hover:bg-gray-2"
+						className="flex size-11 items-center justify-center gap-1.5 rounded-xl border border-gray-5 bg-white text-sm font-medium hover:bg-gray-2 sm:h-10 sm:w-auto sm:rounded-[10px] sm:px-3.5"
 					>
 						{linkCopied ? (
 							<Check size={16} aria-hidden />
 						) : (
 							<Link2 size={16} aria-hidden />
 						)}
-						<span>{linkCopied ? "Copied" : "Copy link"}</span>
+						<span className="hidden sm:inline">
+							{linkCopied ? "Copied" : "Copy link"}
+						</span>
 					</button>
 					{showCopyOptions && (
 						<div className="absolute right-0 top-full z-50 mt-1 min-w-full w-max overflow-hidden rounded-lg border border-gray-6 bg-white shadow-lg">
@@ -146,7 +148,7 @@ export function ShareTopBar({
 				{brand.websiteUrl && (
 					<a
 						href={brand.websiteUrl}
-						className="flex h-10 min-w-0 items-center rounded-[10px] bg-[var(--share-accent)] px-4 text-sm font-semibold !text-white"
+						className="hidden h-10 min-w-0 items-center rounded-[10px] bg-[var(--share-accent)] px-4 text-sm font-semibold !text-white sm:flex"
 					>
 						<span className="truncate">Visit {brand.websiteLabel}</span>
 					</a>

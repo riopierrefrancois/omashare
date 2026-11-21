@@ -1,4 +1,5 @@
 import { Button } from "@cap/ui";
+import clsx from "clsx";
 import type React from "react";
 import {
 	type ReactNode,
@@ -29,6 +30,7 @@ interface CommentInputProps {
 	 * of the sidebar costs one row; replies keep the always-open form.
 	 */
 	collapsible?: boolean;
+	compactOnPhone?: boolean;
 }
 
 const CommentInput: React.FC<CommentInputProps> = ({
@@ -44,6 +46,7 @@ const CommentInput: React.FC<CommentInputProps> = ({
 	avatar,
 	actions,
 	collapsible = false,
+	compactOnPhone = false,
 }) => {
 	const [content, setContent] = useState("");
 	const [focused, setFocused] = useState(false);
@@ -91,7 +94,12 @@ const CommentInput: React.FC<CommentInputProps> = ({
 			<div className="flex-1">
 				<div className="flex items-start gap-2">
 					{avatar && <div className="shrink-0">{avatar}</div>}
-					<div className="flex-1 min-w-0">
+					<div
+						className={clsx(
+							"flex-1 min-w-0",
+							compactOnPhone && "max-sm:flex max-sm:items-start max-sm:gap-2",
+						)}
+					>
 						{/* Two rows even at idle: a one-line sliver reads as a search box,
 						    and this field is the sidebar's whole point. Focus grows it to
 						    a proper drafting area. */}
@@ -111,14 +119,21 @@ const CommentInput: React.FC<CommentInputProps> = ({
 							onFocus={() => setFocused(true)}
 							onBlur={() => setFocused(false)}
 							placeholder={placeholder || "Leave a comment..."}
-							className="w-full resize-none border-0 bg-transparent p-0 text-sm leading-[22px] placeholder:text-gray-10 focus:outline-none"
+							className={clsx(
+								"w-full resize-none border-0 bg-transparent p-0 text-sm leading-[22px] placeholder:text-gray-10 focus:outline-none",
+								compactOnPhone &&
+									"max-sm:h-11 max-sm:min-w-0 max-sm:flex-1 max-sm:rounded-xl max-sm:border-[1.5px] max-sm:border-[var(--share-accent)] max-sm:px-3 max-sm:py-2.5 max-sm:text-base",
+							)}
 						/>
 						{expanded && (
 							<div className="flex items-center justify-end gap-2">
 								<Button
 									size="xs"
 									variant="primary"
-									className="h-9 rounded-lg !bg-[var(--share-accent,#2959C4)] px-4 !text-white enabled:hover:brightness-95"
+									className={clsx(
+										"h-9 rounded-lg !bg-[var(--share-accent,#2959C4)] px-4 !text-white enabled:hover:brightness-95",
+										compactOnPhone && "max-sm:h-11 max-sm:rounded-xl",
+									)}
 									onClick={() => handleSubmit()}
 									disabled={!content.trim() || disabled || isSubmitting}
 								>
