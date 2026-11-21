@@ -1,7 +1,7 @@
-import { LogoSpinner } from "@cap/ui";
 import type { Video } from "@cap/web-domain";
 import clsx from "clsx";
 import { Effect } from "effect";
+import { Play } from "lucide-react";
 import Image from "next/image";
 import type { CSSProperties, ReactNode } from "react";
 import {
@@ -15,6 +15,7 @@ import {
 	useState,
 	useSyncExternalStore,
 } from "react";
+import { VideoLoadingSpinner } from "@/components/VideoLoadingSpinner";
 import { durationParts } from "@/lib/date-format";
 import { useEffectQuery } from "@/lib/EffectRuntime";
 import { ThumbnailRequest } from "@/lib/Requests/ThumbnailRequest";
@@ -78,15 +79,6 @@ export const formatDuration = (durationSecs: number) => {
 		return "< 1 sec"; // For very short durations
 	}
 };
-
-function generateRandomGrayScaleColor() {
-	const minGrayScaleValue = 190;
-	const maxGrayScaleValue = 235;
-	const grayScaleValue = Math.floor(
-		Math.random() * (maxGrayScaleValue - minGrayScaleValue) + minGrayScaleValue,
-	);
-	return `rgb(${grayScaleValue}, ${grayScaleValue}, ${grayScaleValue})`;
-}
 
 function getPreviewGifSrc(videoId: Video.VideoId) {
 	return `/api/video/preview?videoId=${encodeURIComponent(videoId)}&fallback=none`;
@@ -169,6 +161,7 @@ const VideoThumbnailView = memo(
 		);
 		const containerRef = useRef<HTMLDivElement>(null);
 		const imageRef = useRef<HTMLImageElement>(null);
+		const thumbnailSrc = thumbnailUrl.data;
 		const latestVideoId = useRef(videoId);
 		const [previewState, setPreviewState] = useState<PreviewState>(() => ({
 			videoId,
@@ -177,13 +170,12 @@ const VideoThumbnailView = memo(
 		}));
 		latestVideoId.current = videoId;
 
-		const randomGradient = `linear-gradient(to right, ${generateRandomGrayScaleColor()}, ${generateRandomGrayScaleColor()})`;
-
 		useEffect(() => {
-			if (imageRef.current?.complete && imageRef.current.naturalWidth !== 0) {
-				setImageStatus("success");
+			const image = imageRef.current;
+			if (thumbnailSrc && image?.complete && image.currentSrc) {
+				setImageStatus(image.naturalWidth > 0 ? "success" : "error");
 			}
-		}, [setImageStatus]);
+		}, [setImageStatus, thumbnailSrc]);
 
 		useEffect(() => {
 			const element = containerRef.current;
@@ -210,10 +202,14 @@ const VideoThumbnailView = memo(
 			};
 		}, []);
 
-		const showError =
-			!hasActiveUpload && (thumbnailUrl.isError || imageStatus === "error");
 		const showLoading =
-			hasActiveUpload || thumbnailUrl.isPending || imageStatus === "loading";
+			hasActiveUpload ||
+			awaitingSeed ||
+			(thumbnailSrc
+				? imageStatus === "loading"
+				: thumbnailUrl.isPending && thumbnailUrl.isFetching);
+		const showFallback =
+			!showLoading && (!thumbnailSrc || imageStatus === "error");
 		const previewStatus =
 			previewState.videoId === videoId ? previewState.status : "loading";
 		const isPreviewHovered =
@@ -235,37 +231,42 @@ const VideoThumbnailView = memo(
 			<div
 				ref={containerRef}
 				className={clsx(
-					`overflow-hidden relative mx-auto w-full h-full bg-black rounded-t-xl border-b border-gray-3 aspect-video`,
+					"relative mx-auto h-full w-full overflow-hidden rounded-t-xl border-b border-gray-3 bg-gray-3 aspect-video",
 					containerClass,
 				)}
 			>
-				<div className="flex absolute inset-0 z-10 justify-center items-center">
-					{showError ? (
-						<div
-							className="w-full h-full"
-							style={{ backgroundImage: randomGradient }}
-						/>
-					) : (
-						showLoading &&
-						!thumbnailUrl.data && (
-							<LogoSpinner className="w-5 h-auto animate-spin md:w-8" />
-						)
-					)}
-				</div>
-				{thumbnailUrl.data && (
+				{showLoading && (
+					<output
+						aria-label="Loading thumbnail"
+						className="absolute inset-0 z-10 grid place-items-center text-gray-10"
+					>
+						<VideoLoadingSpinner className="size-5" />
+					</output>
+				)}
+				{showFallback && (
+					<div
+						role="img"
+						aria-label="Thumbnail unavailable"
+						className="absolute inset-0 grid place-items-center text-gray-9"
+					>
+						<Play aria-hidden="true" className="size-5" strokeWidth={1.5} />
+					</div>
+				)}
+				{thumbnailSrc && (
 					<Image
 						ref={imageRef}
-						src={thumbnailUrl.data}
+						src={thumbnailSrc}
 						unoptimized
 						fill={true}
 						sizes="(max-width: 768px) 100vw, 33vw"
 						alt={alt}
-						key={videoId}
+						aria-hidden={imageStatus !== "success" || undefined}
+						key={thumbnailSrc}
 						style={{ objectFit }}
 						className={clsx(
 							"w-full h-full rounded-t-xl",
 							imageClass,
-							imageStatus === "loading" && "opacity-0",
+							imageStatus !== "success" && "opacity-0",
 						)}
 						onLoad={() => setImageStatus("success")}
 						onError={() => setImageStatus("error")}

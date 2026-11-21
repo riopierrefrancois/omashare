@@ -1,8 +1,9 @@
 "use client";
 
-import { LogoSpinner } from "@cap/ui";
 import { calculateStrokeDashoffset, getProgressCircleConfig } from "@cap/utils";
 import { useStore } from "@tanstack/react-store";
+import Image from "next/image";
+import { VideoLoadingSpinner } from "@/components/VideoLoadingSpinner";
 import { type UploadStatus, useUploadingContext } from "../UploadingContext";
 
 const { circumference } = getProgressCircleConfig();
@@ -21,18 +22,25 @@ export const UploadPlaceholderCard = () => {
 	);
 
 	if (!uploadStatus) return null;
+	const thumbnailUrl =
+		uploadStatus.status === "uploadingVideo"
+			? uploadStatus.thumbnailUrl
+			: undefined;
 	return (
 		<div className="flex flex-col gap-4 w-full h-full rounded-xl bg-gray-1 border-gray-3 border-[1px]">
 			<div className="overflow-hidden relative w-full bg-black rounded-t-xl border-b border-gray-3 aspect-video group">
-				{uploadStatus.status === "uploadingVideo" ? (
-					<img
-						src={uploadStatus.thumbnailUrl}
+				{thumbnailUrl ? (
+					<Image
+						fill
+						unoptimized
+						src={thumbnailUrl}
+						sizes="(max-width: 768px) 100vw, 33vw"
 						alt="Uploading thumbnail"
 						className="object-cover w-full h-full"
 					/>
 				) : (
 					<div className="flex justify-center items-center w-full h-full">
-						<LogoSpinner className="w-8 h-8 animate-spin" />
+						<VideoLoadingSpinner className="relative z-10 size-8 text-white" />
 					</div>
 				)}
 
@@ -42,7 +50,11 @@ export const UploadPlaceholderCard = () => {
 					<span className="text-sm font-semibold text-white">
 						{getFriendlyStatus(uploadStatus.status)}
 					</span>
-					<svg className="w-4 h-4 transform -rotate-90" viewBox="0 0 20 20">
+					<svg
+						aria-hidden="true"
+						className="w-4 h-4 transform -rotate-90"
+						viewBox="0 0 20 20"
+					>
 						<circle
 							cx="10"
 							cy="10"

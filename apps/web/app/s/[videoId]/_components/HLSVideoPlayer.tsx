@@ -1,6 +1,5 @@
 "use client";
 
-import { LogoSpinner } from "@cap/ui";
 import { calculateStrokeDashoffset, getProgressCircleConfig } from "@cap/utils";
 import type { Video } from "@cap/web-domain";
 import { faPlay } from "@fortawesome/free-solid-svg-icons/faPlay";
@@ -16,6 +15,7 @@ import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { retryVideoProcessing } from "@/actions/video/retry-processing";
 import { FontAwesomeIcon } from "@/components/FontAwesomeIcon";
+import { VideoLoadingSpinner } from "@/components/VideoLoadingSpinner";
 import type { ShareCallToAction } from "@/lib/share-call-to-action";
 import { CallToActionOverlay } from "./call-to-action/CallToActionOverlay";
 import { bindCaptionTrackCueText } from "./caption-tracks";
@@ -742,7 +742,7 @@ export function HLSVideoPlayer({
 				)}
 			>
 				<div className="flex flex-col gap-2 items-center">
-					<LogoSpinner className="w-8 h-auto animate-spin sm:w-10" />
+					<VideoLoadingSpinner className="size-8 text-[var(--share-accent,white)] sm:size-10" />
 				</div>
 			</div>
 			<AnimatePresence>
