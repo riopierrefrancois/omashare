@@ -98,6 +98,10 @@ Replace them with the design's single row. The row sits **above the white sheet,
 - [x] The same sidebar and chrome apply to the other dashboard pages (analytics, settings, spaces, folders). Those pages keep their content.
 - [x] Remove every user-visible "Cap"/"Caps" left in the dashboard chrome and in the My videos page (e.g. "Search caps").
 
+### Task F5: no Cap logo while videos load (added after the gate check)
+- [ ] `LogoSpinner` from `@cap/ui` is Cap's logo spinning. It still shows on kept pages: `components/VideoThumbnail.tsx` (a card waiting for, or missing, its thumbnail), `UploadPlaceholderCard.tsx`, `CapVideoPlayer.tsx`, `HLSVideoPlayer.tsx` and `RecordingInProgress.tsx`. Replace it there with a plain, brand-free spinner: a thin ring in the current text color, or the accent on share pages. Don't change `@cap/ui`.
+- [ ] A card whose thumbnail fails to load, or that has none, shows a quiet neutral tile (light grey, with a small outlined play glyph in dim grey), never a black box with a spinner that runs forever.
+
 ### Phase F gate
 
 - Biome on the touched files, `bun run typecheck`, and vitest for the touched and new tests.
