@@ -1,20 +1,16 @@
 "use client";
 
-import { useClickAway } from "@uidotdev/usehooks";
 import { AnimatePresence, motion } from "framer-motion";
-import { X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
-import { type MutableRefObject, useState } from "react";
+import { useState } from "react";
 import { OmaShareMark } from "@/components/OmaShareMark";
 
-import { DashboardSearch } from "./DashboardSearch";
 import NavItems from "./Items";
+import { SidebarAccount } from "./SidebarAccount";
 
 export const AdminMobileNav = () => {
 	const [sidebarOpen, setSidebarOpen] = useState(false);
-	const sidebarRef: MutableRefObject<HTMLDivElement> = useClickAway(() =>
-		setSidebarOpen(false),
-	);
 
 	return (
 		<>
@@ -26,8 +22,13 @@ export const AdminMobileNav = () => {
 						exit={{ opacity: 0, display: "none" }}
 						className="flex fixed inset-0 z-[60] lg:hidden bg-gray-1/50"
 					>
+						<button
+							type="button"
+							aria-label="Close navigation"
+							onClick={() => setSidebarOpen(false)}
+							className="absolute inset-0"
+						/>
 						<motion.div
-							ref={sidebarRef}
 							initial={{ x: "100%" }}
 							animate={{
 								x: 0,
@@ -36,7 +37,10 @@ export const AdminMobileNav = () => {
 							exit={{ x: "100%" }}
 							className="relative flex-1 flex flex-col ml-auto max-w-xs w-[275px] border-l border-gray-3 pt-5 pb-4 px-4 bg-gray-2"
 						>
-							<div className="flex justify-end items-center mb-6 w-full rounded-full">
+							<div className="flex justify-between items-center mb-4 w-full">
+								<Link href="/dashboard" onClick={() => setSidebarOpen(false)}>
+									<OmaShareMark />
+								</Link>
 								<button
 									type="button"
 									aria-label="Close navigation menu"
@@ -47,20 +51,23 @@ export const AdminMobileNav = () => {
 								</button>
 							</div>
 							<NavItems toggleMobileNav={() => setSidebarOpen(false)} />
+							<SidebarAccount
+								inDrawer
+								onNavigate={() => setSidebarOpen(false)}
+							/>
 						</motion.div>
 					</motion.div>
 				) : null}
 			</AnimatePresence>
-			<div className="flex fixed z-[51] w-full h-16 border-b border-gray-3 bg-gray-1 lg:border-none lg:hidden">
-				<div className="flex gap-3 items-center px-4 w-full h-full">
-					<Link className="block flex-shrink-0" href="/dashboard">
-						<OmaShareMark />
-					</Link>
-					<div className="flex-1 min-w-0">
-						<DashboardSearch shortcutEnabled={false} />
-					</div>
-				</div>
-			</div>
+			<button
+				type="button"
+				className="flex size-9 shrink-0 items-center justify-center rounded-lg text-gray-11 hover:bg-gray-3"
+				aria-label="Open navigation menu"
+				aria-expanded={sidebarOpen}
+				onClick={() => setSidebarOpen(true)}
+			>
+				<Menu className="size-5" aria-hidden />
+			</button>
 		</>
 	);
 };

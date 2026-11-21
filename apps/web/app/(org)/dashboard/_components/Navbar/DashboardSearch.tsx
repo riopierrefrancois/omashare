@@ -9,7 +9,6 @@ import {
 	DialogContent,
 	DialogTitle,
 } from "@cap/ui";
-import clsx from "clsx";
 import { useDetectPlatform } from "hooks/useDetectPlatform";
 import {
 	BarChart3,
@@ -122,11 +121,11 @@ const createSpaceItem = (space: Spaces): SearchItem => ({
 
 export function DashboardSearch({
 	shortcutEnabled = true,
-	compact = false,
+	showTrigger = true,
 }: {
 	shortcutEnabled?: boolean;
-	compact?: boolean;
-} = {}) {
+	showTrigger?: boolean;
+}) {
 	const router = useRouter();
 	const pathname = usePathname();
 	const { activeOrganization, spacesData, user } = useDashboardContext();
@@ -182,7 +181,7 @@ export function DashboardSearch({
 			},
 			{
 				id: "analytics",
-				title: "Analytics",
+				title: "Views and reactions",
 				subtitle: "Review views and engagement",
 				href: "/dashboard/analytics",
 				value: "analytics stats views engagement",
@@ -364,28 +363,22 @@ export function DashboardSearch({
 
 	return (
 		<>
-			<button
-				type="button"
-				onClick={() => setOpen(true)}
-				className={clsx(
-					"flex group gap-2 items-center px-3 max-w-[480px] h-9 lg:h-8 rounded-lg border transition-colors duration-200 bg-gray-2 border-gray-3 hover:bg-gray-3 hover:border-gray-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-6",
-					compact ? "w-auto" : "w-full",
-				)}
-				aria-label="Search dashboard"
-			>
-				<Search className="flex-shrink-0 size-3.5 transition-colors text-gray-9 group-hover:text-gray-11" />
-				<span
-					className={clsx(
-						"flex-1 text-[13px] text-left truncate text-gray-10",
-						compact && "hidden",
-					)}
+			{showTrigger && (
+				<button
+					type="button"
+					onClick={() => setOpen(true)}
+					className="w-full flex group gap-2 items-center px-3 max-w-[480px] h-9 lg:h-8 rounded-lg border transition-colors duration-200 bg-gray-2 border-gray-3 hover:bg-gray-3 hover:border-gray-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-6"
+					aria-label="Search dashboard"
 				>
-					Search caps, spaces, settings…
-				</span>
-				<kbd className="hidden items-center px-1.5 h-[18px] text-[11px] font-medium rounded-[5px] border select-none sm:inline-flex text-gray-10 border-gray-4 bg-gray-1">
-					{shortcutKey}
-				</kbd>
-			</button>
+					<Search className="flex-shrink-0 size-3.5 transition-colors text-gray-9 group-hover:text-gray-11" />
+					<span className="flex-1 text-[13px] text-left truncate text-gray-10">
+						Search videos, spaces, settings…
+					</span>
+					<kbd className="hidden items-center px-1.5 h-[18px] text-[11px] font-medium rounded-[5px] border select-none sm:inline-flex text-gray-10 border-gray-4 bg-gray-1">
+						{shortcutKey}
+					</kbd>
+				</button>
+			)}
 			<Dialog open={open} onOpenChange={setOpen}>
 				<DialogContent
 					aria-describedby={undefined}
@@ -397,7 +390,7 @@ export function DashboardSearch({
 							ref={inputRef}
 							value={query}
 							onValueChange={updateQuery}
-							placeholder="Search caps, spaces, settings…"
+							placeholder="Search videos, spaces, settings…"
 							className="h-[52px] text-[15px] pr-12 outline-none"
 						/>
 						<CommandList className="overflow-y-auto px-2 pt-1 pb-2 h-[min(60vh,440px)] max-h-[min(60vh,440px)]">

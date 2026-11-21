@@ -88,7 +88,7 @@ const Notifications = forwardRef<HTMLDivElement, NotificationsProps>(
 				transition={{ ease: "easeOut", duration: 0.2 }}
 				onClick={(e) => e.stopPropagation()}
 				className={clsx(
-					"flex overflow-hidden absolute right-0 top-11 flex-col rounded-xl border origin-top-right cursor-default w-[400px] h-[450px] bg-gray-1 border-gray-3 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.2)]",
+					"absolute bottom-full mb-2 flex h-[450px] max-h-[calc(100dvh-6rem)] w-[min(400px,calc(100vw-2rem))] cursor-default flex-col overflow-hidden rounded-xl border bg-gray-1 border-gray-3 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.2)]",
 					className,
 				)}
 				{...rest}

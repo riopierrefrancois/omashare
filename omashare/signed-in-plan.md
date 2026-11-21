@@ -80,23 +80,23 @@ Replace them with the design's single row. The row sits **above the white sheet,
 
 ### Task F4: My videos chrome (`DashboardV2.dc.html`)
 
-- [ ] **No top bar** on the My videos page:
+- [x] **No top bar** on the My videos page:
   - Remove the "Search caps, spaces, settings… Ctrl K" bar. If Ctrl K search is used elsewhere, keep it working from the keyboard, with no visible bar.
   - The page's own search field ("Search your videos", with a `/` key hint) is the only search box.
   - The bell and the account menu move to the **bottom of the sidebar** (see the design): avatar, name, bell with an unread dot, and ⋯ for the account menu.
-- [ ] **Sidebar** (232 px):
+- [x] **Sidebar** (232 px):
   - the OmaShare mark
   - an organization switcher button: logo, name and up/down chevron, with **no** "No custom domain set" line and **no** member avatar row ("P + + +")
   - nav: **My videos** (count), **Views and reactions** (the analytics page), **Settings** (organization settings)
   - "Spaces" with + and the spaces list. Rename "All Workhive"-style entries to "Everyone at <org>". Hide "Browse spaces" unless the person has more spaces than are listed.
   - Remove **Record a video** (Cap's desktop download) and **Import Media** (the same as Upload; the Upload button already covers it) from the nav. Leave their routes in place.
-- [ ] **Header row:** `My videos 3`, then search, an outlined **New folder** and a filled **Upload**, in that order on the right.
-- [ ] **Grid:**
+- [x] **Header row:** `My videos 3`, then search, an outlined **New folder** and a filled **Upload**, in that order on the right.
+- [x] **Grid:**
   - Remove the select-all checkbox row and the "15 per page" picker.
   - A selection checkbox appears on a card only on hover, or once something is selected. Selecting still opens the existing selected-videos bar.
   - Pagination shows at the bottom only when there are more videos than fit on one page (keep 15 per page).
-- [ ] The same sidebar and chrome apply to the other dashboard pages (analytics, settings, spaces, folders). Those pages keep their content.
-- [ ] Remove every user-visible "Cap"/"Caps" left in the dashboard chrome and in the My videos page (e.g. "Search caps").
+- [x] The same sidebar and chrome apply to the other dashboard pages (analytics, settings, spaces, folders). Those pages keep their content.
+- [x] Remove every user-visible "Cap"/"Caps" left in the dashboard chrome and in the My videos page (e.g. "Search caps").
 
 ### Phase F gate
 

@@ -202,7 +202,7 @@ export const SettingsDialog = ({
 		<Dialog open={isOpen} onOpenChange={onClose}>
 			<DialogContent className="max-w-md min-w-fit">
 				<DialogHeader
-					description="Manage the settings for this cap"
+					description="Manage the settings for this video"
 					icon={<FontAwesomeIcon icon={faGear} className="size-3.5" />}
 				>
 					<DialogTitle>Settings</DialogTitle>

@@ -13,7 +13,6 @@ import DashboardInner from "./_components/DashboardInner";
 import { DashboardPasteImport } from "./_components/DashboardPasteImport";
 import MobileTab from "./_components/MobileTab";
 import DesktopNav from "./_components/Navbar/Desktop";
-import MobileNav from "./_components/Navbar/Mobile";
 import { DashboardContexts } from "./Contexts";
 import { UploadingProvider } from "./caps/UploadingContext";
 import {
@@ -124,10 +123,9 @@ export default async function DashboardLayout({
 					shareableLinkUsage={shareableLinkUsage}
 				>
 					<DashboardPasteImport />
-					<div className="dashboard-chrome dashboard-grid">
+					<div className="dashboard-chrome grid h-dvh w-full grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)_auto] lg:grid-cols-[auto_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)]">
 						<DesktopNav />
-						<div className="flex h-full [grid-area:main] focus:outline-none">
-							<MobileNav />
+						<div className="flex h-full min-h-0 min-w-0 col-start-1 row-start-1 lg:col-start-2 focus:outline-none">
 							<DashboardInner>{children}</DashboardInner>
 						</div>
 						<MobileTab />

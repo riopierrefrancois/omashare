@@ -8,7 +8,7 @@ describe("dashboard top bar titles", () => {
 	it("uses the sidebar wording for top-level pages", () => {
 		expect(labels("/dashboard/caps")).toEqual(["My videos"]);
 		expect(labels("/dashboard/caps/record")).toEqual(["Record a video"]);
-		expect(labels("/dashboard/analytics")).toEqual(["Analytics"]);
+		expect(labels("/dashboard/analytics")).toEqual(["Views and reactions"]);
 		expect(labels("/dashboard/import")).toEqual(["Import Media"]);
 		expect(labels("/dashboard/admin/loom-migrations")).toEqual([
 			"Migration Queue",

@@ -33,7 +33,9 @@ import SpaceDialog from "./SpaceDialog";
 const SPACE_DROP_CONCURRENCY = 4;
 
 const SpacesList = ({ toggleMobileNav }: { toggleMobileNav?: () => void }) => {
-	const { spacesData, sidebarCollapsed } = useDashboardContext();
+	const { spacesData, sidebarCollapsed: desktopCollapsed } =
+		useDashboardContext();
+	const sidebarCollapsed = !toggleMobileNav && desktopCollapsed;
 	const [showSpaceDialog, setShowSpaceDialog] = useState(false);
 	const [showAllSpaces, setShowAllSpaces] = useState(false);
 	const [activeDropTarget, setActiveDropTarget] = useState<string | null>(null);
@@ -156,12 +158,12 @@ const SpacesList = ({ toggleMobileNav }: { toggleMobileNav?: () => void }) => {
 					{ id: toastId },
 				);
 			} else {
-				toast.error(failure || "Failed to share cap", { id: toastId });
+				toast.error(failure || "Failed to share video", { id: toastId });
 			}
 			if (shared > 0) router.refresh();
 		} catch (error) {
 			console.error("Error sharing cap:", error);
-			toast.error("Failed to share cap", { id: toastId });
+			toast.error("Failed to share video", { id: toastId });
 		}
 	};
 
@@ -191,6 +193,7 @@ const SpacesList = ({ toggleMobileNav }: { toggleMobileNav?: () => void }) => {
 							sidebarCollapsed ? "size-8" : "size-6",
 						)}
 						variant="white"
+						aria-label="Create space"
 						onClick={() => {
 							setShowSpaceDialog(true);
 						}}
@@ -206,51 +209,53 @@ const SpacesList = ({ toggleMobileNav }: { toggleMobileNav?: () => void }) => {
 				</Tooltip>
 			</div>
 
-			<Tooltip
-				content="Browse spaces"
-				disable={sidebarCollapsed === false}
-				position="right"
-			>
-				<Link
-					passHref
-					onClick={() => toggleMobileNav?.()}
-					prefetch={true}
-					onMouseEnter={() => layersIconRef.current?.startAnimation()}
-					onMouseLeave={() => layersIconRef.current?.stopAnimation()}
-					href="/dashboard/spaces/browse"
-					className={clsx(
-						"relative border border-transparent transition z-3",
-						sidebarCollapsed
-							? "flex justify-center px-0 mb-0.5 items-center w-full size-9"
-							: "h-9 w-full px-3 mb-0.5",
-						pathname.includes("/dashboard/spaces/browse")
-							? "dashboard-nav-active pointer-events-none"
-							: "dashboard-nav-hover",
-						"flex items-center justify-start rounded-lg outline-none overflow-hidden",
-					)}
+			{hasMoreSpaces && !showAllSpaces && (
+				<Tooltip
+					content="Browse spaces"
+					disable={sidebarCollapsed === false}
+					position="right"
 				>
-					<LayersIcon
-						ref={layersIconRef}
+					<Link
+						passHref
+						onClick={() => toggleMobileNav?.()}
+						prefetch={true}
+						onMouseEnter={() => layersIconRef.current?.startAnimation()}
+						onMouseLeave={() => layersIconRef.current?.stopAnimation()}
+						href="/dashboard/spaces/browse"
 						className={clsx(
+							"relative border border-transparent transition z-3",
+							sidebarCollapsed
+								? "flex justify-center px-0 mb-0.5 items-center w-full size-9"
+								: "h-9 w-full px-3 mb-0.5",
 							pathname.includes("/dashboard/spaces/browse")
-								? "text-gray-12"
-								: "text-gray-10",
-						)}
-						size={sidebarCollapsed ? 18 : 16}
-					/>
-					<p
-						className={clsx(
-							"text-sm truncate",
-							pathname.includes("/dashboard/spaces/browse")
-								? "font-medium text-gray-12"
-								: "text-gray-11",
-							sidebarCollapsed ? "hidden" : "ml-2.5",
+								? "dashboard-nav-active pointer-events-none"
+								: "dashboard-nav-hover",
+							"flex items-center justify-start rounded-lg outline-none overflow-hidden",
 						)}
 					>
-						Browse spaces
-					</p>
-				</Link>
-			</Tooltip>
+						<LayersIcon
+							ref={layersIconRef}
+							className={clsx(
+								pathname.includes("/dashboard/spaces/browse")
+									? "text-gray-12"
+									: "text-gray-10",
+							)}
+							size={sidebarCollapsed ? 18 : 16}
+						/>
+						<p
+							className={clsx(
+								"text-sm truncate",
+								pathname.includes("/dashboard/spaces/browse")
+									? "font-medium text-gray-12"
+									: "text-gray-11",
+								sidebarCollapsed ? "hidden" : "ml-2.5",
+							)}
+						>
+							Browse spaces
+						</p>
+					</Link>
+				</Tooltip>
+			)}
 
 			<div>
 				{displayedSpaces.map((space: Spaces) => {

@@ -10,6 +10,7 @@ import { OmaShareMark } from "@/components/OmaShareMark";
 import { Tooltip } from "@/components/Tooltip";
 import { useDashboardContext } from "../../Contexts";
 import AdminNavItems from "./Items";
+import { SidebarAccount } from "./SidebarAccount";
 
 export const DesktopNav = () => {
 	const { toggleSidebarCollapsed, sidebarCollapsed } = useDashboardContext();
@@ -35,7 +36,7 @@ export const DesktopNav = () => {
 		<motion.aside
 			initial={false}
 			animate={{
-				width: sidebarCollapsed ? 64 : 240,
+				width: sidebarCollapsed ? 64 : 232,
 				transition: {
 					duration: 0.6,
 					type: "spring",
@@ -43,7 +44,7 @@ export const DesktopNav = () => {
 				},
 			}}
 			className={clsx(
-				"hidden relative z-50 flex-1 h-full [grid-area:sidebar] will-change-[width] lg:flex group",
+				"hidden relative z-50 flex-1 h-full min-h-0 border-r border-gray-5 col-start-1 row-start-1 will-change-[width] lg:flex group",
 			)}
 		>
 			<div className="flex flex-col mx-auto w-full h-full">
@@ -76,9 +77,10 @@ export const DesktopNav = () => {
 						</Button>
 					</Tooltip>
 				</div>
-				<div className="flex overflow-hidden flex-col flex-grow min-h-0">
-					<div className="flex flex-col px-2.5 h-full min-h-0">
+				<div className="flex flex-col flex-grow min-h-0">
+					<div className="flex flex-col px-3 pb-4 h-full min-h-0">
 						<AdminNavItems />
+						<SidebarAccount compact={sidebarCollapsed} />
 					</div>
 				</div>
 			</div>

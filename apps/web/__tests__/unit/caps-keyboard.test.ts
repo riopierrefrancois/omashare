@@ -17,7 +17,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/app/(org)/dashboard/caps/components/CapListHeader", () => ({
-	CapListHeader: () => null,
+	CapListHeader: () => createElement("div", { "data-list-header": true }),
 	PageSizeSelect: () => null,
 	SelectAllCheckbox: () => null,
 	listControlClass: "",
@@ -57,9 +57,15 @@ vi.mock("@/app/(org)/dashboard/caps/UploadingContext", () => ({
 vi.mock("@/app/(org)/dashboard/caps/components", () => ({
 	NewFolderDialog: () => null,
 	SelectedCapsBar: () => null,
-	UploadCapButton: () => null,
 	UploadPlaceholderCard: () => null,
 	WebRecorderDialog: () => null,
+}));
+vi.mock("@/app/(org)/dashboard/caps/components/UploadCapButton", () => ({
+	UploadCapButton: ({
+		renderTrigger,
+	}: {
+		renderTrigger: (onClick: () => void) => React.ReactNode;
+	}) => renderTrigger(() => {}),
 }));
 vi.mock("@/app/(org)/dashboard/caps/components/CapCard/CapCard", () => ({
 	CapCard: ({
@@ -77,7 +83,7 @@ vi.mock("@/app/(org)/dashboard/caps/components/CapCard/CapCard", () => ({
 		}),
 }));
 vi.mock("@/app/(org)/dashboard/caps/components/CapPagination", () => ({
-	CapPagination: () => null,
+	CapPagination: () => createElement("nav", { "aria-label": "Pagination" }),
 }));
 vi.mock("@/app/(org)/dashboard/caps/components/EmptyCapState", () => ({
 	EmptyCapState: () => null,
@@ -109,11 +115,11 @@ const data: VideoData = [
 ];
 
 let root: Root;
-const render = () =>
+const render = (count = 1) =>
 	root.render(
 		createElement(Caps, {
 			data,
-			count: 1,
+			count,
 			folders: [],
 			analyticsEnabled: false,
 		}),
@@ -130,7 +136,9 @@ beforeEach(async () => {
 	document.body.append(container);
 	root = createRoot(container);
 	await act(async () => render());
-	const button = container.querySelector<HTMLButtonElement>("button");
+	const button = container.querySelector<HTMLButtonElement>(
+		'button[aria-label="Select Cap"]',
+	);
 	if (!button) throw new Error("Selection button missing");
 	selection = button;
 	await act(async () => selection.click());
@@ -141,6 +149,20 @@ afterEach(async () => {
 	await act(async () => root.unmount());
 	container.remove();
 	vi.unstubAllGlobals();
+});
+
+it("keeps library search in the page header and paginates after 15 videos", async () => {
+	const search = container.querySelector('[aria-label="Search your videos"]');
+	expect(search).not.toBeNull();
+	window.dispatchEvent(
+		new KeyboardEvent("keydown", { key: "/", cancelable: true }),
+	);
+	expect(document.activeElement).toBe(search);
+	expect(container.querySelector("[data-list-header]")).toBeNull();
+	await act(async () => render(15));
+	expect(container.querySelector('[aria-label="Pagination"]')).toBeNull();
+	await act(async () => render(16));
+	expect(container.querySelector('[aria-label="Pagination"]')).not.toBeNull();
 });
 
 describe("Cap selection keyboard shortcuts", () => {
@@ -270,10 +292,10 @@ describe("bulk delete toast", () => {
 	it("replaces the loading toast with the result", async () => {
 		const { onMutate, onSuccess } = bulkDelete();
 		const toastId = onMutate(ids);
-		expect(mocks.toast.loading).toHaveBeenCalledWith("Deleting 2 caps...");
+		expect(mocks.toast.loading).toHaveBeenCalledWith("Deleting 2 videos...");
 		await act(async () => onSuccess({ success: 2 }, ids, toastId));
 		expect(mocks.toast.success).toHaveBeenCalledWith(
-			"Successfully deleted 2 caps",
+			"Successfully deleted 2 videos",
 			{ id: "bulk-delete-toast" },
 		);
 	});
@@ -283,7 +305,7 @@ describe("bulk delete toast", () => {
 		const toastId = onMutate(ids);
 		await act(async () => onSuccess({ success: 1, error: 1 }, ids, toastId));
 		expect(mocks.toast.success).toHaveBeenCalledWith(
-			"Successfully deleted 1 cap, but failed to delete 1 cap",
+			"Successfully deleted 1 video, but failed to delete 1 video",
 			{ id: "bulk-delete-toast" },
 		);
 	});

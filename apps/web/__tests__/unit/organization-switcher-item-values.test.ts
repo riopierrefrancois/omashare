@@ -126,7 +126,9 @@ async function openSwitcher() {
 		root.render(createElement(AdminNavItems));
 	});
 	await act(async () => {
-		document.querySelector<HTMLElement>('[role="combobox"]')?.click();
+		container
+			.querySelector<HTMLButtonElement>('[aria-label="Switch organization"]')
+			?.click();
 	});
 	await settle();
 }
@@ -142,6 +144,26 @@ async function type(value: string) {
 	});
 	await settle();
 }
+
+it("keeps the sidebar focused on the library, analytics and settings", async () => {
+	mocks.organizations = [{ id: "org-1", name: "Acme" }];
+	await act(async () => root.render(createElement(AdminNavItems)));
+	const links = Array.from(container.querySelectorAll("nav a"), (link) =>
+		link.getAttribute("href"),
+	);
+	expect(links).toEqual(
+		expect.arrayContaining([
+			"/dashboard/caps",
+			"/dashboard/analytics",
+			"/dashboard/settings/organization",
+		]),
+	);
+	expect(links).not.toContain("/dashboard/caps/record");
+	expect(links.some((href) => href?.startsWith("/dashboard/import"))).toBe(
+		false,
+	);
+	expect(container.textContent).not.toContain("No custom domain set");
+});
 
 describe("organization switcher", () => {
 	it.each(hostileText)(

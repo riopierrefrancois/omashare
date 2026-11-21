@@ -31,7 +31,10 @@ import {
 } from "drizzle-orm";
 import { type Array, Effect } from "effect";
 import { redirect } from "next/navigation";
-import { resolveDashboardPageSize } from "@/lib/dashboard-page-size";
+import {
+	DEFAULT_DASHBOARD_PAGE_SIZE,
+	resolveDashboardPageSize,
+} from "@/lib/dashboard-page-size";
 import { parsePageParam } from "@/lib/page-param";
 import { seedThumbnailUrls } from "@/lib/seeded-thumbnails";
 import { runPromise } from "@/lib/server";
@@ -146,11 +149,13 @@ export async function CapsPageView({
 	}
 
 	const page = parsePageParam(searchParams.page);
-	const limit = resolveDashboardPageSize({
-		limitParam: searchParams.limit,
-		preferences: user.preferences,
-	});
 	const isArchivedView = view === "archived";
+	const limit = isArchivedView
+		? resolveDashboardPageSize({
+				limitParam: searchParams.limit,
+				preferences: user.preferences,
+			})
+		: DEFAULT_DASHBOARD_PAGE_SIZE;
 
 	const search =
 		!isArchivedView && typeof searchParams.q === "string"
@@ -324,6 +329,10 @@ export async function CapsPageView({
 	const totalCount = isArchivedView
 		? (totalCountResult[0]?.archivedCount ?? 0)
 		: (totalCountResult[0]?.count ?? 0);
+	if (!isArchivedView && page > Math.max(1, Math.ceil(totalCount / limit))) {
+		const query = new URLSearchParams(search ? { q: search } : {});
+		redirect(query.size ? `/dashboard/caps?${query}` : "/dashboard/caps");
+	}
 	const archivedCount = totalCountResult[0]?.archivedCount ?? 0;
 	const organizationSettings = organizationSettingsRow?.settings ?? null;
 

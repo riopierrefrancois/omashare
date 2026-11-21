@@ -655,9 +655,9 @@ export const CapCard = ({
 											toast.promise(
 												duplicateMutation.mutateAsync().then(rejectOnFailure),
 												{
-													loading: "Duplicating cap...",
-													success: "video duplicated successfully",
-													error: "Failed to duplicate cap",
+													loading: "Duplicating video...",
+													success: "Video duplicated successfully",
+													error: "Failed to duplicate video",
 												},
 											);
 										}}
@@ -761,7 +761,7 @@ export const CapCard = ({
 						open={confirmOpen}
 						icon={<FontAwesomeIcon icon={faVideo} />}
 						title="Delete video"
-						description={`Are you sure you want to delete the cap "${cap.name}"? This action cannot be undone.`}
+						description={`Are you sure you want to delete the video "${cap.name}"? This action cannot be undone.`}
 						confirmLabel={deleteMutation.isPending ? "Deleting..." : "Delete"}
 						cancelLabel="Cancel"
 						loading={deleteMutation.isPending}
@@ -778,7 +778,7 @@ export const CapCard = ({
 						title="Shift-click to select a range"
 						className={clsx(
 							"absolute top-2.5 left-2.5 z-[49] duration-200 rounded-md focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-9",
-							isSelected || anyCapSelected || isDropdownOpen
+							isSelected || anyCapSelected || (!libraryCard && isDropdownOpen)
 								? "opacity-100"
 								: "group-hover:opacity-100 opacity-0",
 						)}

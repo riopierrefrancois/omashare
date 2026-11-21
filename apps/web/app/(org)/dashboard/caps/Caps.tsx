@@ -8,10 +8,10 @@ import { faBoxArchive } from "@fortawesome/free-solid-svg-icons/faBoxArchive";
 import clsx from "clsx";
 import { Effect, Exit } from "effect";
 import { AnimatePresence } from "framer-motion";
-import { Upload } from "lucide-react";
+import { Search, Upload } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { FontAwesomeIcon } from "@/components/FontAwesomeIcon";
 import {
@@ -112,6 +112,7 @@ export const Caps = ({
 	const page = parsePageParam(params.get("page"));
 	const { user } = useDashboardContext();
 	const isArchivedView = view === "archived";
+	const searchRef = useRef<HTMLInputElement>(null);
 	const [openNewFolderDialog, setOpenNewFolderDialog] = useState(false);
 	const totalPages = Math.ceil(count / pageSize);
 	const moveLocation = { type: "personal" } as const;
@@ -193,14 +194,14 @@ export const Caps = ({
 			} else {
 				return yield* Effect.fail(
 					new Error(
-						`Failed to delete ${errorCount} cap${errorCount === 1 ? "" : "s"}`,
+						`Failed to delete ${errorCount} video${errorCount === 1 ? "" : "s"}`,
 					),
 				);
 			}
 		}),
 		onMutate: (ids: Video.VideoId[]) =>
 			toast.loading(
-				`Deleting ${ids.length} cap${ids.length === 1 ? "" : "s"}...`,
+				`Deleting ${ids.length} video${ids.length === 1 ? "" : "s"}...`,
 			),
 		onSuccess: (
 			data: { success: number; error?: number },
@@ -211,16 +212,16 @@ export const Caps = ({
 			router.refresh();
 			if (data.error) {
 				toast.success(
-					`Successfully deleted ${data.success} cap${
+					`Successfully deleted ${data.success} video${
 						data.success === 1 ? "" : "s"
-					}, but failed to delete ${data.error} cap${
+					}, but failed to delete ${data.error} video${
 						data.error === 1 ? "" : "s"
 					}`,
 					{ id: toastId },
 				);
 			} else {
 				toast.success(
-					`Successfully deleted ${data.success} cap${
+					`Successfully deleted ${data.success} video${
 						data.success === 1 ? "" : "s"
 					}`,
 					{ id: toastId },
@@ -235,7 +236,7 @@ export const Caps = ({
 			const message =
 				error instanceof Error
 					? error.message
-					: "An error occurred while deleting caps";
+					: "An error occurred while deleting videos";
 			toast.error(message, { id: toastId });
 		},
 	});
@@ -245,10 +246,10 @@ export const Caps = ({
 			yield* rpc.VideoDelete(id);
 		}),
 		onSuccess: () => {
-			toast.success("video deleted successfully");
+			toast.success("Video deleted successfully");
 			router.refresh();
 		},
-		onError: (_error: unknown) => toast.error("Failed to delete cap"),
+		onError: (_error: unknown) => toast.error("Failed to delete video"),
 	});
 
 	useEffect(() => {
@@ -289,6 +290,28 @@ export const Caps = ({
 		};
 	}, [selectedCaps, deleteCaps, isDeletingCaps, pageIds]);
 
+	useEffect(() => {
+		if (isArchivedView) return;
+		const focusSearch = (event: KeyboardEvent) => {
+			if (
+				event.key !== "/" ||
+				event.defaultPrevented ||
+				event.metaKey ||
+				event.ctrlKey ||
+				event.altKey ||
+				(event.target instanceof HTMLElement &&
+					event.target.closest(
+						'input, textarea, select, [contenteditable], [role="dialog"], [role="alertdialog"]',
+					))
+			)
+				return;
+			event.preventDefault();
+			searchRef.current?.focus();
+		};
+		window.addEventListener("keydown", focusSearch);
+		return () => window.removeEventListener("keydown", focusSearch);
+	}, [isArchivedView]);
+
 	const archivedLink =
 		!isArchivedView && shownArchivedCount > 0 ? (
 			<Link
@@ -307,7 +330,7 @@ export const Caps = ({
 		<div
 			className={clsx(
 				"flex relative flex-col w-full h-full",
-				!isArchivedView && "mx-auto max-w-[1240px]",
+				!isArchivedView && "mx-auto max-w-[1000px]",
 			)}
 		>
 			{isArchivedView ? (
@@ -323,7 +346,7 @@ export const Caps = ({
 						open={openNewFolderDialog}
 						onOpenChange={setOpenNewFolderDialog}
 					/>
-					<div className="mb-5 flex flex-wrap items-center gap-3">
+					<div className="mb-6 flex flex-wrap items-center gap-3">
 						<h1 className="text-[28px] font-semibold tracking-[-0.02em]">
 							My videos
 						</h1>
@@ -332,39 +355,41 @@ export const Caps = ({
 						</span>
 						<form
 							action="/dashboard/caps"
-							className="flex h-[42px] w-full items-center rounded-[10px] border border-gray-5 px-3 sm:w-[280px]"
+							className="flex h-10 w-full items-center gap-2 rounded-[10px] border border-gray-5 px-3 focus-within:ring-2 focus-within:ring-blue-9 sm:w-[260px]"
 						>
+							<Search className="size-4 shrink-0 text-gray-10" aria-hidden />
 							<input
+								ref={searchRef}
 								key={search}
 								name="q"
 								type="search"
 								defaultValue={search}
-								placeholder="Search"
-								aria-label="Search videos"
+								placeholder="Search your videos"
+								aria-label="Search your videos"
 								className="min-w-0 flex-1 bg-transparent text-sm outline-none"
 							/>
-							{params.has("limit") && (
-								<input type="hidden" name="limit" value={pageSize} />
-							)}
+							<kbd className="hidden rounded border border-gray-5 px-1.5 font-mono text-xs text-gray-11 sm:inline">
+								/
+							</kbd>
 						</form>
+						<button
+							type="button"
+							onClick={() => setOpenNewFolderDialog(true)}
+							className="inline-flex h-10 shrink-0 items-center rounded-[10px] border border-gray-5 px-3.5 text-sm font-medium hover:bg-gray-3"
+						>
+							New folder
+						</button>
 						<UploadCapButton
 							renderTrigger={(onClick) => (
 								<button
 									type="button"
 									onClick={onClick}
-									className="inline-flex h-[42px] items-center gap-2 rounded-[10px] bg-[#2959C4] px-4 text-sm font-semibold text-white hover:bg-[#244EAB]"
+									className="inline-flex h-10 items-center gap-2 rounded-[10px] bg-[#2959C4] px-4 text-sm font-semibold text-white hover:bg-[#244EAB]"
 								>
 									<Upload className="size-4" aria-hidden="true" /> Upload
 								</button>
 							)}
 						/>
-						<button
-							type="button"
-							onClick={() => setOpenNewFolderDialog(true)}
-							className={clsx(listControlClass, "px-3")}
-						>
-							New folder
-						</button>
 					</div>
 					<FoldersSection
 						title="Folders"
@@ -415,26 +440,25 @@ export const Caps = ({
 			)}
 			{(visibleVideos.length > 0 || (!isArchivedView && isUploading)) && (
 				<>
-					<CapListHeader
-						title={isArchivedView ? "Archived" : undefined}
-						count={isArchivedView ? shownCount : undefined}
-						selectionState={selection.pageState}
-						onToggleSelectAll={selection.togglePage}
-						actions={
-							<>
-								{archivedLink}
-								<PageSizeSelect pageSize={pageSize} />
-							</>
-						}
-					/>
+					{isArchivedView ? (
+						<CapListHeader
+							title="Archived"
+							count={shownCount}
+							selectionState={selection.pageState}
+							onToggleSelectAll={selection.togglePage}
+							actions={<PageSizeSelect pageSize={pageSize} />}
+						/>
+					) : archivedLink ? (
+						<div className="mb-5 flex justify-end">{archivedLink}</div>
+					) : null}
 
 					<SeededThumbnailsProvider value={thumbnails}>
 						<div
 							className={clsx(
-								"grid relative gap-[18px]",
+								"grid relative gap-x-5 gap-y-6",
 								isArchivedView
 									? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
-									: "grid-cols-[repeat(auto-fill,minmax(min(100%,270px),1fr))]",
+									: "grid-cols-[repeat(auto-fill,minmax(min(100%,260px),1fr))]",
 							)}
 						>
 							{!isArchivedView && isUploading && (
@@ -493,7 +517,9 @@ export const Caps = ({
 					</SeededThumbnailsProvider>
 				</>
 			)}
-			{(data.length >= pageSize || page !== 1) && (
+			{(isArchivedView
+				? data.length >= pageSize || page !== 1
+				: totalPages > 1) && (
 				<div className="mt-7">
 					<CapPagination
 						currentPage={page}
@@ -501,6 +527,7 @@ export const Caps = ({
 						hrefForPage={(target) => {
 							const query = new URLSearchParams(params.toString());
 							query.set("page", String(target));
+							if (!isArchivedView) query.delete("limit");
 							return `/dashboard/caps${isArchivedView ? "/archived" : ""}?${query}`;
 						}}
 					/>

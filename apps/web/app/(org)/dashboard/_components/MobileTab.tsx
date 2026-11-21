@@ -23,6 +23,7 @@ import {
 } from "@/lib/permissions/roles";
 import { useDashboardContext } from "../Contexts";
 import { CapIcon, CodeIcon, CogIcon, LayersIcon } from "./AnimatedIcons";
+import MobileNav from "./Navbar/Mobile";
 import { updateActiveOrganization } from "./Navbar/server";
 
 const Tabs = [
@@ -81,7 +82,7 @@ const MobileTab = () => {
 		}
 	});
 	return (
-		<div className="flex sticky bottom-0 z-50 flex-1 gap-4 justify-between items-center px-4 w-screen h-16 border-t lg:hidden border-gray-3 bg-gray-1">
+		<div className="flex sticky bottom-0 z-50 flex-1 gap-2 justify-between items-center px-4 w-screen h-16 border-t lg:hidden border-gray-3 bg-gray-1">
 			<div className="relative flex-1 min-w-0">
 				<AnimatePresence>
 					{open && <OrgsMenu setOpen={setOpen} menuRef={menuRef} />}
@@ -103,7 +104,7 @@ const MobileTab = () => {
 								aria-current={isActive ? "page" : undefined}
 								prefetch={tab.infraOnly ? false : undefined}
 								className={clsx(
-									"flex justify-center items-center rounded-lg transition-colors size-10",
+									"flex justify-center items-center rounded-lg transition-colors size-9",
 									isActive
 										? "bg-gray-3 text-gray-12"
 										: "text-gray-10 hover:bg-gray-3 hover:text-gray-12",
@@ -114,6 +115,7 @@ const MobileTab = () => {
 						);
 					})}
 			</div>
+			<MobileNav />
 		</div>
 	);
 };

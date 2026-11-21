@@ -18,6 +18,9 @@ vi.mock("next/navigation", () => ({
 	useRouter: () => ({ push: vi.fn() }),
 	usePathname: () => context.pathname,
 }));
+vi.mock("@/app/(org)/dashboard/_components/Navbar/Mobile", () => ({
+	default: () => null,
+}));
 vi.mock("@/app/(org)/dashboard/_components/Navbar/server", () => ({
 	updateActiveOrganization: vi.fn(),
 }));

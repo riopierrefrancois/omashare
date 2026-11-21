@@ -20,8 +20,6 @@ import {
 } from "@cap/ui";
 import { classNames } from "@cap/utils";
 import { faBuilding } from "@fortawesome/free-solid-svg-icons/faBuilding";
-import { faCircleInfo } from "@fortawesome/free-solid-svg-icons/faCircleInfo";
-import { faLink } from "@fortawesome/free-solid-svg-icons/faLink";
 import clsx from "clsx";
 import { motion } from "framer-motion";
 import { Check, ChevronsUpDown, Gift, Plus } from "lucide-react";
@@ -42,10 +40,6 @@ import { SignedImageUrl } from "@/components/SignedImageUrl";
 import { Tooltip } from "@/components/Tooltip";
 import { canUseInfra } from "@/lib/infra-access";
 import { INFRA_BASE_PATH } from "@/lib/infra-routes";
-import {
-	loomImportDestinationFromPathname,
-	loomImportPageHref,
-} from "@/lib/loom-import-destination";
 import { MESSENGER_ADMIN_EMAIL } from "@/lib/messenger/constants";
 import {
 	canViewOrganizationSettings,
@@ -58,10 +52,8 @@ import {
 	CodeIcon,
 	CogIcon,
 	ImportIcon,
-	RecordIcon,
 } from "../AnimatedIcons";
 import type { CogIconHandle } from "../AnimatedIcons/Cog";
-import { MemberAvatars } from "./MemberAvatars";
 import SpacesList from "./SpacesList";
 import { updateActiveOrganization } from "./server";
 
@@ -72,7 +64,12 @@ interface Props {
 const AdminNavItems = ({ toggleMobileNav }: Props) => {
 	const pathname = usePathname();
 	const [open, setOpen] = useState(false);
-	const { user, sidebarCollapsed, userCapsCount } = useDashboardContext();
+	const {
+		user,
+		sidebarCollapsed: desktopCollapsed,
+		userCapsCount,
+	} = useDashboardContext();
+	const sidebarCollapsed = !toggleMobileNav && desktopCollapsed;
 
 	const showDeveloperDashboard =
 		buildEnv.NEXT_PUBLIC_IS_CAP === "true" && canUseInfra(user.email);
@@ -89,27 +86,14 @@ const AdminNavItems = ({ toggleMobileNav }: Props) => {
 			subNav: [],
 		},
 		{
-			name: "Analytics",
+			name: "Views and reactions",
 			href: `/dashboard/analytics`,
 			matchChildren: true,
 			icon: <ChartLineIcon />,
 			subNav: [],
 		},
 		{
-			name: "Record a video",
-			href: `/dashboard/caps/record`,
-			icon: <RecordIcon />,
-			subNav: [],
-		},
-		{
-			name: "Import Media",
-			href: loomImportPageHref(loomImportDestinationFromPathname(pathname)),
-			matchChildren: true,
-			icon: <ImportIcon />,
-			subNav: [],
-		},
-		{
-			name: "Organization Settings",
+			name: "Settings",
 			href: `/dashboard/settings/organization`,
 			adminOnly: true,
 			matchChildren: true,
@@ -166,7 +150,6 @@ const AdminNavItems = ({ toggleMobileNav }: Props) => {
 		memberRole: currentMember?.role,
 	});
 	const canViewSettings = canViewOrganizationSettings(currentRole);
-	const [_openAIDialog, _setOpenAIDialog] = useState(false);
 	const router = useRouter();
 
 	const scrollRef = useRef<HTMLDivElement>(null);
@@ -207,10 +190,6 @@ const AdminNavItems = ({ toggleMobileNav }: Props) => {
 		return pathname === basePath;
 	};
 
-	const isDomainSetupVerified =
-		activeOrg?.organization.customDomain &&
-		activeOrg?.organization.domainVerified;
-
 	return (
 		<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
 			<div className="flex flex-col flex-1 w-full min-h-0">
@@ -222,188 +201,121 @@ const AdminNavItems = ({ toggleMobileNav }: Props) => {
 							content={activeOrg?.organization.name ?? "No organization found"}
 						>
 							<PopoverTrigger suppressHydrationWarning asChild>
-								<motion.div
-									transition={{
-										ease: "easeInOut",
-										duration: 0.2,
-									}}
+								<button
+									type="button"
+									aria-label="Switch organization"
 									className={clsx(
-										"mx-auto rounded-xl transition-colors cursor-pointer dashboard-nav-hover data-[state=open]:bg-gray-3",
-										sidebarCollapsed ? "w-fit p-1.5" : "w-full px-2 py-1.5",
+										"flex items-center gap-2.5 rounded-[10px] border border-gray-5 bg-gray-1 text-left transition-colors hover:bg-gray-3",
+										sidebarCollapsed
+											? "mx-auto size-9 justify-center"
+											: "h-12 w-full px-2",
 									)}
 								>
-									<div
-										className={clsx(
-											"flex flex-col items-center cursor-pointer",
-											sidebarCollapsed ? "justify-center" : "justify-between",
-										)}
-										role="combobox"
-										aria-expanded={open}
-										tabIndex={0}
-									>
-										<div
-											className={clsx(
-												"flex items-center",
-												sidebarCollapsed
-													? "justify-center w-fit"
-													: "justify-between gap-2.5 w-full",
-											)}
-										>
-											<div className="flex items-center">
-												<SignedImageUrl
-													image={activeOrg?.organization.iconUrl}
-													name={
-														activeOrg?.organization.name ??
-														"No organization found"
-													}
-													letterClass={clsx(
-														sidebarCollapsed ? "text-sm" : "text-[13px]",
-													)}
-													className={clsx(
-														"relative flex-shrink-0 mx-auto",
-														sidebarCollapsed ? "size-7" : "size-8",
-													)}
-												/>
-											</div>
-											<div
-												className={clsx(
-													"flex flex-col flex-1 gap-0.5 justify-center min-w-0",
-													sidebarCollapsed && "hidden",
-												)}
-											>
-												<div className="flex gap-1 justify-between items-center w-full">
-													{!sidebarCollapsed && (
-														<p
-															title={activeOrg?.organization.name}
-															className="text-sm font-medium leading-tight truncate text-gray-12"
-														>
-															{activeOrg?.organization.name ??
-																"No organization found"}
-														</p>
-													)}
-													{!sidebarCollapsed && (
-														<ChevronsUpDown className="size-3.5 shrink-0 text-gray-9" />
-													)}
-												</div>
-												{!sidebarCollapsed && (
-													<Link
-														href={
-															isDomainSetupVerified
-																? `https://${activeOrg.organization.customDomain}`
-																: "/dashboard/settings/organization"
-														}
-														rel={
-															isDomainSetupVerified
-																? "noopener noreferrer"
-																: undefined
-														}
-														target={isDomainSetupVerified ? "_blank" : "_self"}
-														className="flex overflow-hidden gap-1 items-center self-start w-full truncate group/domain"
-													>
-														<FontAwesomeIcon
-															icon={
-																isDomainSetupVerified ? faLink : faCircleInfo
-															}
-															className="size-2.5 shrink-0 text-gray-9"
-														/>
-														<p className="flex-1 w-full text-xs leading-tight truncate transition-colors text-gray-10 group-hover/domain:text-gray-12">
-															{isDomainSetupVerified
-																? activeOrg?.organization.customDomain
-																: "No custom domain set"}
-														</p>
-													</Link>
-												)}
-											</div>
-										</div>
-									</div>
-									<PopoverContent
-										className={clsx(
-											"p-0 w-[300px] z-[120]",
-											sidebarCollapsed ? "ml-3" : "mx-auto",
-										)}
-									>
-										<Command
-											filter={(value, search) =>
-												commandScore(
-													organizationSearchText.get(value) ?? value,
-													search,
-												)
-											}
-										>
-											<CommandInput placeholder="Search organizations..." />
-											<CommandEmpty>No organizations found</CommandEmpty>
-											<CommandGroup className="overflow-y-auto max-h-[min(60vh,440px)]">
-												{orgData?.map((organization) => {
-													const isSelected =
-														activeOrg?.organization.id ===
-														organization.organization.id;
-													return (
-														<CommandItem
-															className={clsx(
-																"rounded-lg transition-colors duration-300 group",
-																isSelected
-																	? "pointer-events-none"
-																	: "text-gray-10 hover:text-gray-12 hover:bg-gray-3",
-															)}
-															key={`${organization.organization.name}-organization-${organization.organization.id}`}
-															value={organization.organization.id}
-															onSelect={async () => {
-																await updateActiveOrganization(
-																	organization.organization.id,
-																);
-																setOpen(false);
-																router.push("/dashboard/caps");
-															}}
-														>
-															<div className="flex gap-2 items-center w-full min-w-0">
-																<SignedImageUrl
-																	image={organization.organization.iconUrl}
-																	name={organization.organization.name}
-																	letterClass="text-xs"
-																	className="relative flex-shrink-0 size-5"
-																/>
-																<p
-																	title={organization.organization.name}
-																	className={clsx(
-																		"flex-1 min-w-0 text-sm truncate transition-colors duration-200 group-hover:text-gray-12",
-																		isSelected
-																			? "text-gray-12"
-																			: "text-gray-10",
-																	)}
-																>
-																	{organization.organization.name}
-																</p>
-															</div>
-															{isSelected && (
-																<Check
-																	size={16}
-																	className="ml-auto shrink-0 text-gray-12"
-																/>
-															)}
-														</CommandItem>
-													);
-												})}
-											</CommandGroup>
-											<div className="p-1 border-t border-gray-3">
-												<DialogTrigger asChild>
-													<button
-														type="button"
-														className="flex gap-2 items-center px-2 w-full h-9 text-sm rounded-lg transition-colors text-gray-11 hover:bg-gray-3 hover:text-gray-12"
-													>
-														<span className="flex justify-center items-center rounded-md border border-dashed size-5 border-gray-7">
-															<Plus className="size-3" />
-														</span>
-														New organization
-													</button>
-												</DialogTrigger>
-											</div>
-										</Command>
-									</PopoverContent>
-								</motion.div>
+									<SignedImageUrl
+										image={activeOrg?.organization.iconUrl}
+										name={
+											activeOrg?.organization.name ?? "No organization found"
+										}
+										letterClass="text-xs"
+										className="size-6 shrink-0"
+									/>
+									{!sidebarCollapsed && (
+										<>
+											<span className="min-w-0 flex-1 truncate text-sm font-medium text-gray-12">
+												{activeOrg?.organization.name ??
+													"No organization found"}
+											</span>
+											<ChevronsUpDown
+												className="size-3.5 shrink-0 text-gray-10"
+												aria-hidden
+											/>
+										</>
+									)}
+								</button>
 							</PopoverTrigger>
 						</Tooltip>
+						<PopoverContent
+							className={clsx(
+								"p-0 w-[300px] z-[120]",
+								sidebarCollapsed ? "ml-3" : "mx-auto",
+							)}
+						>
+							<Command
+								filter={(value, search) =>
+									commandScore(
+										organizationSearchText.get(value) ?? value,
+										search,
+									)
+								}
+							>
+								<CommandInput placeholder="Search organizations..." />
+								<CommandEmpty>No organizations found</CommandEmpty>
+								<CommandGroup className="overflow-y-auto max-h-[min(60vh,440px)]">
+									{orgData?.map((organization) => {
+										const isSelected =
+											activeOrg?.organization.id ===
+											organization.organization.id;
+										return (
+											<CommandItem
+												className={clsx(
+													"rounded-lg transition-colors duration-300 group",
+													isSelected
+														? "pointer-events-none"
+														: "text-gray-10 hover:text-gray-12 hover:bg-gray-3",
+												)}
+												key={`${organization.organization.name}-organization-${organization.organization.id}`}
+												value={organization.organization.id}
+												onSelect={async () => {
+													await updateActiveOrganization(
+														organization.organization.id,
+													);
+													setOpen(false);
+													router.push("/dashboard/caps");
+												}}
+											>
+												<div className="flex gap-2 items-center w-full min-w-0">
+													<SignedImageUrl
+														image={organization.organization.iconUrl}
+														name={organization.organization.name}
+														letterClass="text-xs"
+														className="relative flex-shrink-0 size-5"
+													/>
+													<p
+														title={organization.organization.name}
+														className={clsx(
+															"flex-1 min-w-0 text-sm truncate transition-colors duration-200 group-hover:text-gray-12",
+															isSelected ? "text-gray-12" : "text-gray-10",
+														)}
+													>
+														{organization.organization.name}
+													</p>
+												</div>
+												{isSelected && (
+													<Check
+														size={16}
+														className="ml-auto shrink-0 text-gray-12"
+													/>
+												)}
+											</CommandItem>
+										);
+									})}
+								</CommandGroup>
+								<div className="p-1 border-t border-gray-3">
+									<DialogTrigger asChild>
+										<button
+											type="button"
+											className="flex gap-2 items-center px-2 w-full h-9 text-sm rounded-lg transition-colors text-gray-11 hover:bg-gray-3 hover:text-gray-12"
+										>
+											<span className="flex justify-center items-center rounded-md border border-dashed size-5 border-gray-7">
+												<Plus className="size-3" />
+											</span>
+											New organization
+										</button>
+									</DialogTrigger>
+								</div>
+							</Command>
+						</PopoverContent>
 					</Popover>
-					<MemberAvatars />
 				</div>
 				<nav
 					className="flex flex-col flex-1 w-full min-h-0"
@@ -433,7 +345,7 @@ const AdminNavItems = ({ toggleMobileNav }: Props) => {
 								.map((item) => (
 									<div
 										key={item.name}
-										className="flex relative justify-center items-center mb-0.5 w-full"
+										className="flex relative justify-center items-center mb-1 w-full"
 									>
 										{isPathActive(item.href, item.matchChildren ?? false) && (
 											<motion.div
@@ -451,7 +363,7 @@ const AdminNavItems = ({ toggleMobileNav }: Props) => {
 													},
 												}}
 												layoutId="navlinks"
-												className="absolute w-full h-9 rounded-lg pointer-events-none dashboard-nav-active"
+												className="absolute w-full h-10 rounded-lg pointer-events-none dashboard-nav-active"
 											/>
 										)}
 
@@ -468,7 +380,7 @@ const AdminNavItems = ({ toggleMobileNav }: Props) => {
 									</div>
 								))}
 
-							<SpacesList toggleMobileNav={() => toggleMobileNav?.()} />
+							<SpacesList toggleMobileNav={toggleMobileNav} />
 						</div>
 					</div>
 					<div className="pt-2 pb-3 w-full shrink-0">
@@ -498,7 +410,7 @@ const AdminNavItems = ({ toggleMobileNav }: Props) => {
 			<DialogContent className="p-0 w-full max-w-md rounded-xl bg-gray-2">
 				<DialogHeader
 					icon={<FontAwesomeIcon icon={faBuilding} />}
-					description="A new organization to share caps with your team"
+					description="A new organization to share videos with your team"
 				>
 					<DialogTitle className="text-lg text-gray-12">
 						Create New Organization
@@ -560,6 +472,7 @@ const NavItem = ({
 		<Tooltip disable={!sidebarCollapsed} content={name} position="right">
 			<Link
 				href={href}
+				aria-current={isPathActive(href, matchChildren) ? "page" : undefined}
 				onClick={() => toggleMobileNav?.()}
 				onMouseEnter={() => {
 					iconRef.current?.startAnimation();
@@ -573,7 +486,7 @@ const NavItem = ({
 					"relative border border-transparent transition z-3",
 					sidebarCollapsed
 						? "flex justify-center items-center px-0 w-full size-9"
-						: "px-3 w-full h-9",
+						: "px-2.5 w-full h-10",
 					isPathActive(href, matchChildren)
 						? "bg-transparent pointer-events-none"
 						: "dashboard-nav-hover",
@@ -599,8 +512,8 @@ const NavItem = ({
 				>
 					{name}
 				</p>
-				{extraText !== null && !sidebarCollapsed && (
-					<p className="ml-auto text-xs tabular-nums text-gray-10">
+				{extraText != null && !sidebarCollapsed && (
+					<p className="ml-auto font-mono text-xs tabular-nums text-gray-10">
 						{extraText}
 					</p>
 				)}

@@ -287,7 +287,7 @@ async function loadAllSpacesEntry(
 			id: activeOrgInfo.id,
 			primary: true,
 			privacy: "Public",
-			name: `All ${activeOrgInfo.name}`,
+			name: `Everyone at ${activeOrgInfo.name}`,
 			description: `View all content in ${activeOrgInfo.name}`,
 			organizationId: activeOrgInfo.id,
 			iconUrl: iconUrl ? yield* imageUploads.resolveImageUrl(iconUrl) : null,

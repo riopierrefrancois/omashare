@@ -7,7 +7,7 @@ const exact: Record<string, DashboardCrumb[]> = {
 		{ label: "Archived" },
 	],
 	"/dashboard/caps/record": [{ label: "Record a video" }],
-	"/dashboard/analytics": [{ label: "Analytics" }],
+	"/dashboard/analytics": [{ label: "Views and reactions" }],
 	"/dashboard/import": [{ label: "Import Media" }],
 	"/dashboard/import/file": [
 		{ label: "Import Media", href: "/dashboard/import" },

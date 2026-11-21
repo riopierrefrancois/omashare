@@ -110,12 +110,17 @@ const input = () => {
 
 async function openSearch() {
 	await act(async () => {
-		root.render(createElement(DashboardSearch));
+		root.render(createElement(DashboardSearch, { showTrigger: false }));
 	});
+	expect(container.querySelector('[aria-label="Search dashboard"]')).toBeNull();
 	await act(async () => {
-		document
-			.querySelector<HTMLButtonElement>('[aria-label="Search dashboard"]')
-			?.click();
+		window.dispatchEvent(
+			new KeyboardEvent("keydown", {
+				key: "k",
+				ctrlKey: true,
+				cancelable: true,
+			}),
+		);
 	});
 	await settle();
 }
