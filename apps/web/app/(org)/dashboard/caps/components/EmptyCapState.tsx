@@ -1,50 +1,52 @@
 "use client";
 
-import { useCapChromeExtension } from "hooks/useCapChromeExtension";
-import { ChromeRecorderButton } from "@/components/ChromeRecorderButton";
-import { CHROME_EXTENSION_BUTTON_CLASS } from "@/lib/chrome-extension";
-import { useRive } from "@/lib/rive";
-import { useTheme } from "../../Contexts";
+import { Upload } from "lucide-react";
 import { UploadCapButton } from "./UploadCapButton";
-import { WebRecorderDialog } from "./web-recorder-dialog/web-recorder-dialog";
 
 interface EmptyCapStateProps {
 	userName?: string;
 }
 
-export const EmptyCapState: React.FC<EmptyCapStateProps> = ({ userName }) => {
-	const { theme } = useTheme();
-	const { isChromeBrowser, isInstalled } = useCapChromeExtension();
-	const showChromeButton = isChromeBrowser || isInstalled;
-	const { RiveComponent: EmptyCap } = useRive({
-		src: "/rive/main.riv",
-		artboard: theme === "light" ? "empty" : "darkempty",
-		autoplay: true,
-	});
+// Browser recording stays reachable from Ctrl K (/dashboard/caps/record).
+export const EmptyCapState: React.FC<EmptyCapStateProps> = () => {
 	return (
-		<div className="flex flex-col flex-1 justify-center items-center w-full h-full">
-			<div className="flex flex-col gap-3 justify-center items-center h-full text-center">
-				<div className="mx-auto w-full mb-10 max-w-[450px] flex justify-center items-center">
-					<EmptyCap key={`${theme}empty-cap`} className="h-[150px] w-[400px]" />
-				</div>
-				<div className="flex flex-col items-center px-5">
-					<p className="mb-1 text-xl font-semibold tracking-tight text-gray-12">
-						Hey{userName ? ` ${userName}` : ""}! Record your first video
-					</p>
-					<p className="max-w-md text-sm text-gray-10">
-						Share a screen recording or upload a video.
-					</p>
-				</div>
-				<div className="flex flex-wrap gap-2 justify-center items-center mt-4">
-					<WebRecorderDialog />
-					{showChromeButton && (
-						<ChromeRecorderButton
-							className={`${CHROME_EXTENSION_BUTTON_CLASS} font-medium h-9 px-4`}
-						/>
-					)}
-					<UploadCapButton size="sm" />
-				</div>
+		<div className="flex flex-col gap-3 items-center px-6 py-16 text-center rounded-2xl border border-dashed border-gray-5">
+			<svg
+				width="28"
+				height="28"
+				viewBox="0 0 18 18"
+				aria-hidden="true"
+				className="text-gray-9"
+			>
+				<rect
+					x="1"
+					y="1"
+					width="16"
+					height="16"
+					rx="4"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="1.5"
+				/>
+				<path d="M7 5.5v7l5.5-3.5z" fill="currentColor" />
+			</svg>
+			<div className="flex flex-col gap-1 items-center">
+				<p className="text-base font-medium text-gray-12">No videos yet</p>
+				<p className="max-w-sm text-sm text-gray-10 text-pretty">
+					Upload a video, or press Share link in Omacut, Omareel or Omaedit.
+				</p>
 			</div>
+			<UploadCapButton
+				renderTrigger={(onClick) => (
+					<button
+						type="button"
+						onClick={onClick}
+						className="inline-flex gap-2 items-center px-3.5 mt-1 h-10 text-sm font-medium rounded-[10px] border border-gray-5 hover:bg-gray-3"
+					>
+						<Upload className="size-4" aria-hidden="true" /> Upload
+					</button>
+				)}
+			/>
 		</div>
 	);
 };
