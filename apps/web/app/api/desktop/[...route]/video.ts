@@ -20,12 +20,14 @@ import { Effect, Option } from "effect";
 import { Hono } from "hono";
 import { after } from "next/server";
 import { z } from "zod";
+import { validateAiContent } from "@/lib/ai-content";
 import { readInstantCleanupReport } from "@/lib/desktop-instant-cleanup";
 import { getDesktopShareUrl } from "@/lib/desktop-share-url";
 import { invalidateGoogleDriveStorageQuotaCache } from "@/lib/google-drive-storage-quota";
 import { maybeStartLiveTranscription } from "@/lib/live-transcribe";
 import { runPromise } from "@/lib/server";
 import { trackServerEvent } from "@/lib/server-analytics";
+import { decodeStorageVideo } from "@/lib/video-storage";
 import {
 	GOOGLE_DRIVE_UPLOAD_FEATURE,
 	hasDesktopFeature,
@@ -463,6 +465,94 @@ app.delete(
 		} catch (error) {
 			console.error("Error in video delete endpoint:", error);
 			return c.json({ error: "Internal server error" }, { status: 500 });
+		}
+	},
+);
+
+app.post(
+	"/ai-content",
+	zValidator(
+		"json",
+		z.object({
+			videoId: z.string(),
+			title: z.string().min(1).max(200).optional(),
+			summary: z.string().optional(),
+			chapters: z
+				.array(z.object({ title: z.string(), start: z.number() }))
+				.optional(),
+			vtt: z
+				.string()
+				.refine((value) => Buffer.byteLength(value, "utf8") <= 2 * 1024 * 1024)
+				.optional(),
+		}),
+	),
+	async (c) => {
+		const {
+			videoId: rawVideoId,
+			title,
+			summary,
+			chapters,
+			vtt,
+		} = c.req.valid("json");
+		const videoId = Video.VideoId.make(rawVideoId);
+		const user = c.get("user");
+
+		try {
+			const [video] = await db()
+				.select()
+				.from(videos)
+				.where(eq(videos.id, videoId));
+			if (!video) return c.json({ error: "Video not found" }, 404);
+			if (video.ownerId !== user.id) return c.json({ error: "Forbidden" }, 403);
+
+			const validationError = validateAiContent(
+				{ summary: summary ?? "", chapters: chapters ?? [] },
+				video.duration,
+			);
+			if (validationError) return c.text(validationError, 400);
+			if (vtt !== undefined && !vtt.startsWith("WEBVTT"))
+				return c.text("Transcript must start with WEBVTT.", 400);
+
+			if (vtt !== undefined) {
+				const [bucket] = await Storage.getAccessForVideo(
+					decodeStorageVideo(video),
+				).pipe(runPromise);
+				await bucket
+					.putObject(`${video.ownerId}/${videoId}/transcription.vtt`, vtt, {
+						contentType: "text/vtt",
+					})
+					.pipe(runPromise);
+			}
+
+			const hasDetails =
+				title !== undefined || summary !== undefined || chapters !== undefined;
+			if (vtt !== undefined || hasDetails) {
+				await db()
+					.update(videos)
+					.set({
+						...(title !== undefined ? { name: title } : {}),
+						...(vtt !== undefined
+							? { transcriptionStatus: "COMPLETE" as const }
+							: {}),
+						...(hasDetails
+							? {
+									metadata: {
+										...video.metadata,
+										...(title !== undefined ? { aiTitle: title } : {}),
+										...(summary !== undefined ? { summary } : {}),
+										...(chapters !== undefined ? { chapters } : {}),
+										aiGenerationStatus: "COMPLETE" as const,
+									},
+								}
+							: {}),
+					})
+					.where(and(eq(videos.id, videoId), eq(videos.ownerId, user.id)));
+			}
+
+			return c.json({ ok: true });
+		} catch (error) {
+			console.error("Error in video ai-content endpoint:", error);
+			return c.json({ error: "Internal server error" }, 500);
 		}
 	},
 );
