@@ -231,6 +231,7 @@ export async function createVideoAndGetUploadUrl({
 			bucket: Option.getOrNull(bucketId),
 			storageIntegrationId: Option.getOrNull(storageIntegrationId),
 			public: await getNewVideoPublic(orgId),
+			settings: { disableDownloads: true },
 			...(folderId ? { folderId } : {}),
 		};
 

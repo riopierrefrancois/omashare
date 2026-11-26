@@ -333,6 +333,7 @@ app.get(
 					bucket: Option.getOrNull(writable.bucketId),
 					storageIntegrationId: Option.getOrNull(writable.storageIntegrationId),
 					public: await getNewVideoPublic(videoOrgId),
+					settings: { disableDownloads: true },
 					duration: durationInSecs,
 					width,
 					height,

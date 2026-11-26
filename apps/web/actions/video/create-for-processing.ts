@@ -103,6 +103,7 @@ export async function createVideoForServerProcessing({
 			bucket: Option.getOrNull(uploadResult.bucketId),
 			storageIntegrationId: Option.getOrNull(uploadResult.storageIntegrationId),
 			public: await getNewVideoPublic(orgId),
+			settings: { disableDownloads: true },
 			...(folderId ? { folderId } : {}),
 		});
 
