@@ -1113,15 +1113,7 @@ async function AuthorizedContent({
 			data-share-font={shareBrand.font}
 		>
 			<Share
-				topBar={
-					<ShareTopBar
-						brand={shareBrand}
-						videoId={video.id}
-						title={video.name}
-						customDomain={customDomain}
-						domainVerified={domainVerified}
-					/>
-				}
+				topBar={<ShareTopBar brand={shareBrand} />}
 				footer={
 					<SourceCredit
 						website={

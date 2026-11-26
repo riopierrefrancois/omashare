@@ -1,6 +1,7 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
+import { CopyLinkButton } from "@/app/s/[videoId]/_components/CopyLinkButton";
 import { ShareTopBar } from "@/app/s/[videoId]/_components/ShareTopBar";
 import { getShareBrand, shareBrandStyle } from "@/lib/share-branding";
 
@@ -9,15 +10,7 @@ vi.mock("@/utils/public-env", () => ({
 }));
 
 function renderHeader(brand: ReturnType<typeof getShareBrand>) {
-	return renderToStaticMarkup(
-		createElement(ShareTopBar, {
-			brand,
-			title: "Example video",
-			videoId: "example-video",
-			customDomain: null,
-			domainVerified: false,
-		}),
-	);
+	return renderToStaticMarkup(createElement(ShareTopBar, { brand }));
 }
 
 describe("share page chrome", () => {
@@ -28,7 +21,7 @@ describe("share page chrome", () => {
 			"--share-ink": "#1F2335",
 			"--share-accent": "#2959C4",
 		});
-		expect(renderHeader(brand)).toContain("Copy link");
+		expect(renderHeader(brand)).not.toContain("Copy link");
 		expect(renderHeader(brand)).not.toContain("href=");
 	});
 
@@ -52,6 +45,19 @@ describe("share page chrome", () => {
 		expect(html).toContain("Example organization");
 		expect(html).toContain('href="https://example.org/"');
 		expect(html).toContain("Visit Example");
+	});
+
+	it("draws Copy link in the brand accent beside the name", () => {
+		const html = renderToStaticMarkup(
+			createElement(CopyLinkButton, {
+				shareUrl: "https://example.org/s/example-video",
+				title: "Example video",
+				videoId: "example-video",
+			}),
+		);
+		expect(html).toContain("Copy link");
+		expect(html).toContain("border-[var(--share-accent)]");
+		expect(html).toContain("text-[var(--share-accent-text)]");
 	});
 
 	it("uses the former player color only when the accent is unset", () => {

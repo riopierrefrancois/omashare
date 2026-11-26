@@ -16,7 +16,6 @@ import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
 import { faEllipsis } from "@fortawesome/free-solid-svg-icons/faEllipsis";
 import { faGear } from "@fortawesome/free-solid-svg-icons/faGear";
 import { faLock } from "@fortawesome/free-solid-svg-icons/faLock";
-import { faShare } from "@fortawesome/free-solid-svg-icons/faShare";
 import { faTrash } from "@fortawesome/free-solid-svg-icons/faTrash";
 import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
@@ -47,6 +46,7 @@ import { formatClock } from "@/lib/player-time";
 import type { ShareDashboardDestination } from "@/lib/share-dashboard-destination";
 import { usePublicEnv } from "@/utils/public-env";
 import type { VideoData } from "../types";
+import { CopyLinkButton } from "./CopyLinkButton";
 import { DashboardBackLink } from "./DashboardBackLink";
 import { RelativeTime } from "./RelativeTime";
 import { describeShareAudience } from "./share-audience";
@@ -59,8 +59,6 @@ import { VideoDownloadMenu } from "./VideoDownloadMenu";
  * weight for the (many) viewers who never open the share sheet. Hovering the
  * button warms the chunk, so the click still feels instant.
  */
-const importShareLinkDialog = () => import("./ShareLinkDialog");
-const ShareLinkDialog = dynamic(importShareLinkDialog, { ssr: false });
 
 /**
  * Same treatment for the rest of the header's interaction-only surfaces. The
@@ -128,6 +126,9 @@ const OWNER_DATE = new Intl.DateTimeFormat("en-US", {
 });
 
 const TITLE_PLACEHOLDER = "video title";
+
+const VIEWER_BUTTON_CLASS =
+	"inline-flex h-10 items-center justify-center gap-1.5 rounded-[10px] border border-gray-5 bg-white px-3.5 text-sm font-medium text-gray-12 transition-colors hover:bg-gray-2 disabled:opacity-60";
 
 const ACTION_BAR_BUTTON_CLASS =
 	"h-9 min-w-0 shrink-0 gap-1.5 rounded-[10px] bg-white px-2 text-sm sm:px-3";
@@ -198,10 +199,8 @@ export const ShareHeader = ({
 	const [isTitleRevealing, setIsTitleRevealing] = useState(false);
 	const [upgradeModalOpen, setUpgradeModalOpenRaw] = useState(false);
 	const [isSharingDialogOpen, setIsSharingDialogOpenRaw] = useState(false);
-	const [isShareLinkDialogOpen, setIsShareLinkDialogOpen] = useState(false);
 	// Latched so each lazy chunk is only ever pulled in once, and so a dialog
 	// keeps its exit animation instead of being torn out of the tree on close.
-	const [shareLinkDialogMounted, setShareLinkDialogMounted] = useState(false);
 	const [upgradeModalMounted, setUpgradeModalMounted] = useState(false);
 	const [sharingDialogMounted, setSharingDialogMounted] = useState(false);
 	const [settingsDialogMounted, setSettingsDialogMounted] = useState(false);
@@ -412,11 +411,6 @@ export const ShareHeader = ({
 		return `${webUrl}/s/${data.id}`;
 	};
 
-	const openShareLinkDialog = () => {
-		setShareLinkDialogMounted(true);
-		setIsShareLinkDialogOpen(true);
-	};
-
 	const handleSharingUpdated = () => {
 		refresh();
 	};
@@ -484,31 +478,6 @@ export const ShareHeader = ({
 		);
 	};
 
-	/**
-	 * Distribution, next to the audience pill that says who it can reach. The
-	 * pill answers "who can see this"; this answers "get it in front of them".
-	 * Signed-out viewers get it too on a public Cap — passing a link on is the
-	 * one thing they can usefully do here.
-	 */
-	const renderShareButton = (className?: string) => (
-		<Button
-			className={clsx("gap-1.5 px-3", className)}
-			size="xs"
-			variant="blue"
-			aria-label="Share this video"
-			onClick={openShareLinkDialog}
-			onPointerEnter={() => {
-				void importShareLinkDialog();
-			}}
-			onFocus={() => {
-				void importShareLinkDialog();
-			}}
-		>
-			<FontAwesomeIcon className="size-3" icon={faShare} />
-			Share
-		</Button>
-	);
-
 	const analyticsHref = `/dashboard/analytics?capId=${data.id}`;
 	const canSeeAnalytics =
 		isOwner || data.organizationMembers?.some((id) => id === user?.id);
@@ -538,22 +507,6 @@ export const ShareHeader = ({
 					user={user}
 					onUpgradeRequest={setUpgradeModalOpen}
 					shareUrl={getVideoLink()}
-				/>
-			)}
-			{shareLinkDialogMounted && (
-				<ShareLinkDialog
-					open={isShareLinkDialogOpen}
-					onOpenChange={setIsShareLinkDialogOpen}
-					videoId={data.id}
-					videoTitle={displayTitle}
-					shareUrl={getVideoLink()}
-					isPublic={Boolean(data.public)}
-					canManageAccess={Boolean(isOwner)}
-					onManageAccess={() => {
-						setIsShareLinkDialogOpen(false);
-						setIsSharingDialogOpen(true);
-					}}
-					ownerIsPro={data.owner.isPro}
 				/>
 			)}
 			{isOwner && (
@@ -869,108 +822,79 @@ export const ShareHeader = ({
 							</div>
 						</div>
 					</div>
-					<div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-						<div className="flex min-w-0 items-center justify-between gap-3 lg:justify-start lg:gap-5">
-							<div className="flex min-w-0 items-center gap-2">
-								{data.name && (
-									<SignedImageUrl
-										name={data.owner.name ?? "Someone"}
-										image={data.owner.image}
-										className="size-6 shrink-0 rounded-full"
-										letterClass="text-xs"
-									/>
-								)}
-								<div className="flex min-w-0 flex-wrap items-center gap-x-2 text-left">
-									<p className="truncate text-sm font-medium">
-										{data.owner.name}
-									</p>
-									<p
-										className={clsx(
-											"truncate text-gray-10",
-											canSeeAnalytics ? "text-sm" : "text-xs",
-										)}
-									>
-										·{" "}
-										{canSeeAnalytics && dateIsValid ? (
-											<time dateTime={data.createdAt.toISOString()}>
-												{OWNER_DATE.format(data.createdAt)}
-											</time>
-										) : (
-											<RelativeTime date={data.createdAt} format={fromNow} />
-										)}
-										{canSeeAnalytics &&
-											data.duration != null &&
-											!data.isScreenshot && (
-												<> · {formatClock(data.duration)}</>
-											)}
-									</p>
-									{canSeeAnalytics && (
-										<Suspense fallback={null}>
-											<ViewCount views={views} href={analyticsHref} />
-										</Suspense>
+					<div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+						<div className="flex min-w-0 flex-1 items-center gap-2">
+							{data.name && (
+								<SignedImageUrl
+									name={data.owner.name ?? "Someone"}
+									image={data.owner.image}
+									className="size-6 shrink-0 rounded-full"
+									letterClass="text-xs"
+								/>
+							)}
+							<div className="flex min-w-0 flex-wrap items-center gap-x-2 text-left">
+								<p className="truncate text-sm font-medium">
+									{data.owner.name}
+								</p>
+								<p
+									className={clsx(
+										"truncate text-gray-10",
+										canSeeAnalytics ? "text-sm" : "text-xs",
 									)}
-								</div>
+								>
+									·{" "}
+									{canSeeAnalytics && dateIsValid ? (
+										<time dateTime={data.createdAt.toISOString()}>
+											{OWNER_DATE.format(data.createdAt)}
+										</time>
+									) : (
+										<RelativeTime date={data.createdAt} format={fromNow} />
+									)}
+									{canSeeAnalytics &&
+										data.duration != null &&
+										!data.isScreenshot && <> · {formatClock(data.duration)}</>}
+								</p>
+								{canSeeAnalytics && (
+									<Suspense fallback={null}>
+										<ViewCount views={views} href={analyticsHref} />
+									</Suspense>
+								)}
 							</div>
-							{isOwner ? null : user !== null ? (
-								<div className="flex min-w-0 max-w-[60%] justify-end lg:max-w-xs">
-									{renderSharedStatus()}
-								</div>
-							) : canDownload ? (
-								<div className="flex shrink-0 items-center gap-2">
-									<Button
-										variant="gray"
-										size="xs"
-										className="gap-1.5 px-3"
+						</div>
+						<div className="flex shrink-0 flex-wrap items-center gap-2">
+							{!isOwner && user !== null && renderSharedStatus()}
+							{!isOwner &&
+								canDownload &&
+								(hasEdits ? (
+									<VideoDownloadMenu
+										videoId={data.id}
+										hasEdits
+										triggerLabel="Download"
+										triggerClassName={VIEWER_BUTTON_CLASS}
+										trigger={
+											<>
+												<Download className="size-4" aria-hidden />
+												Download
+											</>
+										}
+									/>
+								) : (
+									<button
+										type="button"
+										className={VIEWER_BUTTON_CLASS}
 										disabled={isDownloading}
 										onClick={() => download("current")}
 									>
-										<Download className="size-3.5 text-gray-12" />
+										<Download className="size-4" aria-hidden />
 										Download
-									</Button>
-									{data.public && renderShareButton()}
-								</div>
-							) : (
-								data.public && renderShareButton("shrink-0")
-							)}
+									</button>
+								))}
+							<CopyLinkButton
+								shareUrl={getVideoLink()}
+								title={displayTitle}
+								videoId={data.id}
+							/>
 						</div>
-						{!isOwner && user !== null && (
-							<div className="flex flex-wrap items-center gap-2">
-								{renderShareButton()}
-								{/* Space and org members can download someone else's
-									    Cap, and they never see "Manage Cap", so the action
-									    has to stand on its own for them. */}
-								{!isOwner &&
-									canDownload &&
-									(hasEdits ? (
-										<VideoDownloadMenu
-											videoId={data.id}
-											hasEdits
-											triggerLabel="Download"
-											triggerClassName={clsx(
-												ACTION_BAR_BUTTON_CLASS,
-												"flex items-center justify-center border border-gray-5 bg-gray-3 text-gray-12 transition hover:bg-gray-6",
-											)}
-											trigger={
-												<>
-													<Download className="size-3.5" aria-hidden />
-													Download
-												</>
-											}
-										/>
-									) : (
-										<Button
-											variant="gray"
-											size="xs"
-											className={ACTION_BAR_BUTTON_CLASS}
-											disabled={isDownloading}
-											onClick={() => download("current")}
-										>
-											<Download className="size-3.5 text-gray-12" />
-											Download
-										</Button>
-									))}
-							</div>
-						)}
 					</div>
 				</div>
 			</div>
